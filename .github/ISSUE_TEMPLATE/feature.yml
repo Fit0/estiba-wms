@@ -1,0 +1,41 @@
+name: Feature
+description: Propose a new feature or improvement
+labels: ["feature"]
+body:
+  - type: dropdown
+    id: context
+    attributes:
+      label: Area
+      options:
+        - Catalog
+        - Warehouse
+        - Inventory
+        - Inbound
+        - Outbound
+        - API
+        - Frontend
+        - Picking PWA
+        - Infrastructure
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: As a warehouse operator, I want to ... so that ...
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - Given ... when ... then ...
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Technical notes
+      description: Domain rules, events involved, related ADRs.

@@ -1,0 +1,20 @@
+#!/bin/sh
+# Rejects commit messages that do not follow Conventional Commits.
+# Enable with: git config core.hooksPath .githooks
+
+msg_file="$1"
+first_line=$(head -n 1 "$msg_file")
+
+# Let git-generated messages through (merges, reverts, fixups).
+case "$first_line" in
+  Merge\ *|Revert\ *|fixup!\ *|squash!\ *) exit 0 ;;
+esac
+
+pattern='^(feat|fix|refactor|test|docs|build|ci|perf|style|chore)(\([a-z0-9-]+\))?!?: .{1,72}$'
+
+if ! printf '%s' "$first_line" | grep -Eq "$pattern"; then
+  echo "Invalid commit message: \"$first_line\"" >&2
+  echo "Expected: <type>(<scope>): <description>  (see CONTRIBUTING.md)" >&2
+  echo "Example:  feat(warehouse): add LocationCode value object" >&2
+  exit 1
+fi
