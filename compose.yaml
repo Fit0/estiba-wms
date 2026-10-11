@@ -1,0 +1,57 @@
+name: estiba
+
+services:
+  php:
+    build:
+      context: ./backend
+      target: frankenphp_dev
+    environment:
+      SERVER_NAME: ":80"
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-estiba}:${POSTGRES_PASSWORD:-estiba}@database:5432/${POSTGRES_DB:-estiba}?serverVersion=17&charset=utf8"
+      REDIS_URL: "redis://redis:6379"
+      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+    volumes:
+      - ./backend:/app
+      # vendor/ and var/ live in Docker volumes: reading thousands of files
+      # through a Windows or macOS bind mount makes every request ~15x slower.
+      - php_vendor:/app/vendor
+      - php_var:/app/var
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  database:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: "${POSTGRES_DB:-estiba}"
+      POSTGRES_USER: "${POSTGRES_USER:-estiba}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:-estiba}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - database_data:/var/lib/postgresql/data
+    ports:
+      - "${DATABASE_PORT:-5433}:5432"
+
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  database_data:
+  php_vendor:
+  php_var:

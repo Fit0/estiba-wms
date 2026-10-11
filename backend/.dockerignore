@@ -1,0 +1,9 @@
+**/*.log
+**/*.md
+**/.git
+**/.DS_Store
+/.env.local
+/.env.*.local
+/vendor/
+/var/
+/.phpunit.cache/

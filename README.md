@@ -69,7 +69,40 @@ estiba-wms/
 
 ## Getting started
 
-Setup instructions will be added together with the Docker environment.
+Requirements: [Docker](https://docs.docker.com/get-docker/) with Docker Compose v2.
+
+```bash
+git clone git@github.com:Fit0/estiba-wms.git
+cd estiba-wms
+git config core.hooksPath .githooks
+docker compose up -d --wait
+```
+
+The first start builds the PHP image and installs Composer dependencies, so it takes a few minutes. Then check that everything is up:
+
+```bash
+curl http://localhost:8080/health
+# {"status":"ok","checks":{"database":"up","redis":"up"}}
+```
+
+| Service | Address |
+|---|---|
+| API | http://localhost:8080 |
+| PostgreSQL 17 | `localhost:5433` (user, password and database: `estiba`) |
+| Redis 7.4 | internal to the Docker network |
+
+Common commands:
+
+```bash
+docker compose exec php bin/console about    # Symfony console
+docker compose exec php composer <command>   # Composer
+docker compose logs -f php                   # Follow PHP logs
+docker compose down                          # Stop everything
+```
+
+Composer dependencies (`vendor/`) live in a Docker volume for speed, so always run Composer through the container. To give your IDE a copy for autocompletion, run `docker compose cp php:/app/vendor backend/`.
+
+Ports can be changed with `HTTP_PORT` and `DATABASE_PORT` in a `.env` file next to `compose.yaml`. To debug with Xdebug, start with `XDEBUG_MODE=debug docker compose up -d`.
 
 ## Contributing
 
