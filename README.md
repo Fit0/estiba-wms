@@ -91,14 +91,26 @@ curl http://localhost:8080/health
 | PostgreSQL 17 | `localhost:5433` (user, password and database: `estiba`) |
 | Redis 7.4 | internal to the Docker network |
 
-Common commands:
+Common commands (run `make` to list them all):
 
 ```bash
-docker compose exec php bin/console about    # Symfony console
-docker compose exec php composer <command>   # Composer
-docker compose logs -f php                   # Follow PHP logs
-docker compose down                          # Stop everything
+make up                      # Start the stack
+make down                    # Stop it
+make console c=about         # Symfony console
+make composer c="require x"  # Composer
+make sh                      # Shell in the PHP container
 ```
+
+## Quality checks
+
+| Command | What it does |
+|---|---|
+| `make test` | PHPUnit test suite |
+| `make stan` | PHPStan at max level with strict, Symfony, Doctrine and PHPUnit rules |
+| `make cs` | PHP-CS-Fixer check (Symfony rules, strict types) |
+| `make rector` | Rector dry run (PHP 8.4, dead code, code quality, type declarations) |
+| `make fix` | Apply Rector and PHP-CS-Fixer changes |
+| `make qa` | Every check above, as CI runs them |
 
 Composer dependencies (`vendor/`) live in a Docker volume for speed, so always run Composer through the container. To give your IDE a copy for autocompletion, run `docker compose cp php:/app/vendor backend/`.
 

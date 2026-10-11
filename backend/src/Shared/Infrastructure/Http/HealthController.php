@@ -26,7 +26,7 @@ final readonly class HealthController
     public function __invoke(): JsonResponse
     {
         $checks = [
-            'database' => $this->check(fn () => $this->connection->executeQuery('SELECT 1')->fetchOne()),
+            'database' => $this->check(fn (): mixed => $this->connection->executeQuery('SELECT 1')->fetchOne()),
             'redis' => $this->check($this->pingRedis(...)),
         ];
 
@@ -54,7 +54,11 @@ final readonly class HealthController
 
     private function pingRedis(): void
     {
-        $url = parse_url($this->redisUrl) ?: [];
+        $url = parse_url($this->redisUrl);
+        if (false === $url) {
+            throw new \InvalidArgumentException('REDIS_URL is not a valid URL.');
+        }
+
         $redis = new \Redis();
         $redis->connect($url['host'] ?? 'localhost', $url['port'] ?? 6379, 1.0);
         $redis->ping();
