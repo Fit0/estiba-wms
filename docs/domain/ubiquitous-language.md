@@ -1,0 +1,69 @@
+# Ubiquitous language
+
+One term, one meaning, in code, tests, screens and documents. Code is in English. The Spanish column is the term warehouse staff actually use, and the one to use in the user interface.
+
+## Master data
+
+| Term | Spanish | Meaning | Context |
+|---|---|---|---|
+| Tenant | Cliente, inquilino | The company whose goods and data the system holds. Every aggregate belongs to one tenant, and no query crosses tenants. | Shared |
+| Warehouse | Almacén | A physical site with its own layout of locations. | Warehouse |
+| Zone | Zona | A named area of a warehouse with one storage class and one picking sequence, for example "chilled" or "fast movers". | Warehouse |
+| Location | Ubicación | The smallest place where stock can be put, identified by a location code. | Warehouse |
+| Location code | Código de ubicación | `aisle-module-level`, for example `A-03-02`. Unique within a warehouse. | Warehouse |
+| Location type | Tipo de ubicación | Reserve (bulk storage), pick face (picking position), dock (receiving or shipping), staging (waiting area), packing, quarantine. | Warehouse |
+| Storage class | Clase de almacenamiento | Ambient, chilled, frozen or hazmat. A product can only go to locations of a compatible zone. | Catalog, Warehouse |
+| Product | Artículo | Something the warehouse stores. | Catalog |
+| SKU | Referencia | The tenant's own product code. Unique per tenant. | Catalog |
+| GTIN | EAN, código de barras | GS1 barcode number with a check digit. A product can have several. | Catalog |
+| Base unit | Unidad base | The smallest unit stock is counted in, usually "each". All quantities in the domain are integers of this unit. | Catalog |
+| Packaging level | Nivel de embalaje | A larger pack of the base unit: inner pack, case, pallet. It knows how many base units it holds. | Catalog |
+| Tracking policy | Política de trazabilidad | Whether the product is tracked by lot, by expiry date, and its minimum remaining shelf life at receipt and at shipment. | Catalog |
+| Lot | Lote | A production batch. Stock of different lots is never mixed in one `StockItem`. | Inventory |
+| Expiry date | Fecha de caducidad | Last day the stock can be sold. | Inventory |
+| Minimum shelf life | Vida útil mínima | Days of validity that must remain when stock is received or shipped. | Catalog |
+
+## Stock
+
+| Term | Spanish | Meaning |
+|---|---|---|
+| Stock item | Existencia | The quantity of one product, in one location, of one lot and expiry date, with one stock status. |
+| Stock status | Estado del stock | Available, quarantine, damaged, on hold. Only available stock can be allocated. |
+| Movement | Movimiento | An immutable record that stock changed: receipt, transfer, issue, adjustment. The ledger is the list of all movements. |
+| On hand | Existencias físicas | Units physically in a stock item. |
+| Reserved | Reservado | Units promised to an order and not yet picked. |
+| Available | Disponible | On hand minus reserved, of stock that is in available status. |
+| Adjustment | Regularización | A movement that corrects stock after a count or a loss. It always has a reason and an author. |
+| Reservation | Reserva de stock | The stock set aside for one order line, possibly spread over several stock items. |
+| Allocation | Asignación | Choosing which stock items cover an order line. Uses FEFO or FIFO. |
+| FEFO | Primero en caducar, primero en salir | First expired, first out. Used for products tracked by expiry. |
+| FIFO | Primero en entrar, primero en salir | First in, first out. Used for the rest. |
+
+## Inbound
+
+| Term | Spanish | Meaning |
+|---|---|---|
+| ASN | Aviso de envío, entrada prevista | Advance shipping notice: what a supplier says it will deliver. Receiving is always against an ASN. |
+| Receipt | Recepción | One receiving session at a dock, recording what physically arrived. |
+| Discrepancy | Discrepancia, incidencia | A difference between the ASN and what arrived: shortage, excess, unexpected product, damage. |
+| Putaway | Ubicación de entrada, almacenaje | Moving received goods from the dock to a storage location. |
+| Putaway strategy | Estrategia de ubicación | The rule that proposes the destination: first free, by product family, by turnover. |
+
+## Outbound
+
+| Term | Spanish | Meaning |
+|---|---|---|
+| Order | Pedido | A customer's request for products, imported from the ERP. |
+| Order line | Línea de pedido | One product and quantity within an order. |
+| Cut-off | Hora de corte | The time by which an order must be shipped to meet its delivery promise. |
+| Backorder | Pendiente de servir | The part of an order that could not be served for lack of stock. |
+| Wave | Ola | A group of orders released to the floor together. |
+| Pick list | Hoja de picking | The list of lines one operator picks, ordered by route. |
+| Pick line | Línea de picking | One location, product and quantity to take. |
+| Short pick | Rotura de picking | The operator finds less stock than the system said. |
+| Serpentine route | Ruta en serpentina | Walking aisles alternately up and down, so the operator never backtracks. |
+| Packing | Embalaje | Putting picked goods into parcels. |
+| Parcel | Bulto | One physical package, identified by an SSCC. |
+| SSCC | Código de serie de unidad de envío | 18-digit GS1 code that identifies one parcel or pallet. Printed as a label. |
+| Shipment | Expedición | The parcels of one order, handed to the carrier. |
+| Dispatch | Salida, despacho | The moment a shipment leaves the warehouse. |

@@ -41,7 +41,7 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 - [0002](docs/adr/0002-doctrine-xml-mapping-outside-the-domain.md) Doctrine XML mapping outside the domain
 - [0003](docs/adr/0003-cross-context-communication-through-published-contracts.md) Cross-context communication through published contracts
 
-See also the [system context diagram](docs/architecture/c4-context.md).
+See also the [system context diagram](docs/architecture/c4-context.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
 
 ## Tech stack
 
@@ -66,7 +66,7 @@ estiba-wms/
 
 ## Roadmap
 
-- [ ] **Foundations**: Docker environment, quality tooling, CI, architecture (domain model pending)
+- [x] **Foundations**: Docker environment, quality tooling, CI, architecture, domain model
 - [ ] **Warehouse and catalog**: locations, products, API, auth, multi-tenancy
 - [ ] **Inventory and receiving**: stock ledger, CQRS, ASN receiving, putaway
 - [ ] **Shipping**: allocation, waves, picking, packing, SSCC labels (`v0.1`)

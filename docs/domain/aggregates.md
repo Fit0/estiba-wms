@@ -1,0 +1,229 @@
+# Aggregates and invariants
+
+An aggregate is the unit that is loaded, changed and saved as a whole, and the unit that protects its own rules. Each rule has an identifier so tests and code comments can point to it, for example `// STK-01`.
+
+Every aggregate carries a `TenantId`. Identifiers are UUID v7. A context refers to another context's aggregate by identifier only (ADR 0003).
+
+## Catalog
+
+### Product
+
+Identity: `ProductId`. Holds the `Sku`, the GTINs, the base unit, the packaging levels, the tracking policy, the storage class and the status (active, blocked, discontinued).
+
+| ID | Invariant |
+|---|---|
+| CAT-01 | The SKU is unique per tenant, ignoring case and surrounding spaces. |
+| CAT-02 | Every GTIN passes the GS1 check digit and belongs to one product of the tenant. |
+| CAT-03 | The base unit has quantity 1. Every packaging level holds a positive whole number of base units, and each level is larger than the one before. |
+| CAT-04 | A product tracked by expiry date is also tracked by lot. |
+| CAT-05 | The tracking policy is fixed when the product is registered. A product that needs another policy is registered again under a new SKU. |
+| CAT-06 | A blocked or discontinued product cannot be received or allocated. Consumers read the status from the product snapshot. |
+
+## Warehouse
+
+### Warehouse
+
+Identity: `WarehouseId`. Holds its zones (`ZoneId`, code, name, storage class, picking sequence). A warehouse has few zones, so they live inside it.
+
+| ID | Invariant |
+|---|---|
+| WH-01 | The warehouse code is unique per tenant. |
+| WH-02 | A zone code is unique within its warehouse. |
+
+### Location
+
+Identity: `LocationId`. A separate aggregate, because a warehouse has thousands of locations. Holds the warehouse and zone identifiers, the `LocationCode`, the type, the capacity (maximum weight, volume, pallet positions), the pick sequence and the status (active, blocked, with a reason).
+
+| ID | Invariant |
+|---|---|
+| WH-03 | The location code matches `aisle-module-level` and is unique within its warehouse. |
+| WH-04 | Every capacity value is positive. |
+| WH-05 | The zone belongs to the location's warehouse. |
+| WH-06 | A blocked location is never offered for putaway or allocation. Consumers read the status from the location snapshot. |
+| WH-07 | Locations are never deleted, only blocked, because stock history refers to them (DD-4). |
+
+## Inventory
+
+### StockItem
+
+Identity: `StockItemId`, with a unique constraint on tenant, product, location, lot, expiry date and status (DD-1). Holds `onHand`, `reserved` and a version for optimistic locking. Each change appends a `StockMovement` row (type, quantity change, reference, reason, author, time).
+
+| ID | Invariant |
+|---|---|
+| STK-01 | `onHand` is never negative. |
+| STK-02 | `reserved` never exceeds `onHand`. |
+| STK-03 | Every change of `onHand` is recorded by exactly one movement, in the same transaction. |
+| STK-04 | A movement is never updated or deleted. A mistake is fixed with a compensating movement. |
+| STK-05 | The sum of a stock item's movements equals its `onHand`. A reconciliation test checks it. |
+| STK-06 | Only stock in available status, in an active location, can be reserved. |
+| STK-07 | Lot and expiry date are present exactly when the product's tracking policy asks for them. |
+| STK-08 | A transfer takes from one stock item and adds to another, both or neither. |
+| STK-09 | An adjustment needs a reason and an author. |
+| STK-10 | Reserved units cannot change stock status. |
+
+### StockReservation
+
+Identity: `ReservationId`. Holds the order line it serves, the product, the requested quantity, the strategy (FEFO or FIFO), the allocations (stock item and quantity) and the status.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active
+    Active --> Consumed: stock issued at dispatch
+    Active --> Released: order cancelled or line shorted
+    Consumed --> [*]
+    Released --> [*]
+```
+
+| ID | Invariant |
+|---|---|
+| STK-11 | The allocated quantity is the sum of the allocations and never exceeds the requested quantity. Allocating less is allowed, and the shortage is reported. |
+| STK-12 | Stock is chosen by earliest expiry date first for expiry-tracked products (FEFO), then by earliest receipt date (FIFO). Stock that would expire before the product's minimum shelf life at shipment is skipped. |
+| STK-13 | A reservation is consumed once. Units that were not picked go back to available. |
+| STK-14 | Releasing a reservation is safe to repeat. |
+
+## Inbound
+
+### Asn
+
+Identity: `AsnId`. Holds the supplier, the expected date, the external reference and the lines (product, expected quantity, optional lot and expiry).
+
+```mermaid
+stateDiagram-v2
+    [*] --> Expected
+    Expected --> PartiallyReceived: first receipt closes
+    PartiallyReceived --> Received: all lines covered
+    Expected --> Received: all lines covered
+    Received --> Closed
+    Expected --> Cancelled
+    PartiallyReceived --> Closed: closed with shortage
+    Closed --> [*]
+    Cancelled --> [*]
+```
+
+| ID | Invariant |
+|---|---|
+| INB-01 | Every line's product exists and is active. |
+| INB-02 | Expected quantities are positive whole numbers of the base unit. |
+| INB-03 | The external reference is unique per tenant, so importing the same ASN twice changes nothing. |
+| INB-04 | A closed or cancelled ASN cannot be received against. |
+
+### Receipt
+
+Identity: `ReceiptId`. Holds the ASN, the dock location, the received lines (product, quantity, lot, expiry, condition) and the status (open, closed, cancelled). Discrepancies are derived by comparing received and expected quantities.
+
+| ID | Invariant |
+|---|---|
+| INB-05 | A receipt belongs to exactly one ASN. |
+| INB-06 | A scanned GTIN that is not on the ASN is recorded as an unexpected-product discrepancy. It is not refused. |
+| INB-07 | Lot and expiry date are required when the product tracks them, and the expiry date is not in the past. |
+| INB-08 | Receiving more than the ASN quantity is a discrepancy. Closing the receipt then needs supervisor approval. The default tolerance is zero. |
+| INB-09 | A closed receipt cannot change, and closing it publishes `ReceiptClosed` once. |
+| INB-10 | Damaged goods enter stock in quarantine status, never available. |
+
+### PutawayTask
+
+Identity: `PutawayTaskId`. Holds the receipt, the product, the quantity, lot and expiry, the source dock, the suggested location, the actual location, an override reason and the status (pending, confirmed, cancelled).
+
+| ID | Invariant |
+|---|---|
+| INB-11 | The destination is an active location whose zone suits the product's storage class and which has room for the quantity. |
+| INB-12 | Confirming moves exactly the task quantity. A smaller move is made by splitting the task first. |
+| INB-13 | Choosing a location other than the suggested one needs a reason. |
+| INB-14 | The putaway tasks of a received line add up to exactly the quantity received. |
+
+## Outbound
+
+### Order
+
+Identity: `OrderId`. Holds the external reference, the customer, the ship-to address, the priority, the cut-off time and the lines (product, ordered, allocated, picked and shipped quantities).
+
+```mermaid
+stateDiagram-v2
+    [*] --> Registered
+    Registered --> Allocated: all lines reserved
+    Registered --> PartiallyAllocated: some lines short
+    PartiallyAllocated --> Allocated: stock arrives
+    Allocated --> InWave
+    PartiallyAllocated --> InWave
+    InWave --> Picked
+    Picked --> Packed
+    Packed --> Shipped
+    Registered --> Cancelled
+    Allocated --> Cancelled
+    PartiallyAllocated --> Cancelled
+    InWave --> Cancelled
+    Shipped --> [*]
+    Cancelled --> [*]
+```
+
+| ID | Invariant |
+|---|---|
+| OUT-01 | The external reference is unique per tenant, so importing the same order twice changes nothing. |
+| OUT-02 | Ordered quantities are positive whole numbers of the base unit, and the product is active. |
+| OUT-03 | For every line, allocated never exceeds ordered, picked never exceeds allocated, and shipped never exceeds picked. |
+| OUT-04 | Cancelling an order releases its reservations. A shipped order cannot be cancelled. |
+| OUT-05 | An order belongs to at most one open wave. |
+
+### Wave
+
+Identity: `WaveId`. Holds the orders and the status (planned, released, completed, cancelled).
+
+| ID | Invariant |
+|---|---|
+| OUT-06 | Only orders that are allocated, or partially allocated with the backorder accepted, can join a wave. |
+| OUT-07 | Once released, the orders of a wave cannot change. |
+| OUT-08 | A wave completes when all its pick lists are completed or cancelled. |
+
+### PickList
+
+Identity: `PickListId`. Holds the wave, the assigned operator and the lines (order line, product, location, lot, expiry, quantity to pick, quantity picked).
+
+```mermaid
+stateDiagram-v2
+    [*] --> Generated
+    Generated --> InProgress: operator starts
+    InProgress --> Completed: every line picked or shorted
+    Generated --> Cancelled
+    InProgress --> Cancelled
+    Completed --> [*]
+    Cancelled --> [*]
+```
+
+| ID | Invariant |
+|---|---|
+| OUT-09 | Lines follow the serpentine route: pick sequence ascending in odd aisles, descending in even aisles. |
+| OUT-10 | The picked quantity never exceeds the quantity to pick. Picking less is a short pick and needs a reason. |
+| OUT-11 | Each pick is confirmed by scanning the location, then the product, and the lot when the product is tracked. All must match the line. |
+| OUT-12 | A pick list has one assigned operator at a time. |
+| OUT-13 | The list is complete only when every line is picked or shorted. |
+
+### Shipment
+
+Identity: `ShipmentId`. Holds the order, the carrier and the parcels (`SSCC`, contents, weight, open or closed).
+
+```mermaid
+stateDiagram-v2
+    [*] --> Packing
+    Packing --> Packed: all picked units packed
+    Packed --> Dispatched
+    Dispatched --> [*]
+```
+
+| ID | Invariant |
+|---|---|
+| OUT-14 | The SSCC passes the GS1 check digit, is unique, and is assigned once, when the parcel is closed. |
+| OUT-15 | For every product, the packed quantity never exceeds the picked quantity. |
+| OUT-16 | A shipment is packed only when all picked units are in parcels. |
+| OUT-17 | A dispatched shipment cannot change. |
+
+## Rules that span contexts
+
+These cannot be guaranteed inside one aggregate. Each is handled by a policy or a contract call, and the table says how strong the guarantee is.
+
+| Rule | How it holds | Guarantee |
+|---|---|---|
+| Stock is booked when a receipt closes | `ReceiptClosed` triggers `ReceiveStock` | Eventually, with retries |
+| An order is allocated when it is registered | `OrderRegistered` triggers a call to the Inventory contract | Eventually, with retries |
+| Reservations are released when an order is cancelled | `OrderCancelled` triggers the release | Eventually, with retries |
+| Putaway goes only to an active, suitable location | `ConfirmPutaway` reads the location snapshot in the same request | Checked at the moment of the call |
+| Stock never goes negative | `StockItem` enforces STK-01 on every change | Always |
