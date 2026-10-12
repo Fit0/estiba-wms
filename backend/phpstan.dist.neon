@@ -13,3 +13,10 @@ parameters:
         - config/bundles.php
         - config/preload.php
         - config/reference.php
+
+services:
+    # Architecture rules (PHPat): each class tagged phpat.test is read for rules.
+    -
+        class: App\Tests\Architecture\ArchitectureTest
+        tags:
+            - phpat.test
