@@ -111,7 +111,7 @@ jobs:
 
       # PHPStan's Symfony extension reads the compiled container.
       - name: Warm up the dev container
-        run: bin/console cache:warmup --env=dev
+        run: php bin/console cache:warmup --env=dev
 
       - name: Restore PHPStan result cache
         uses: actions/cache@v4
@@ -178,10 +178,10 @@ jobs:
         run: composer install --no-interaction --no-progress --prefer-dist
 
       - name: Create the test database
-        run: bin/console doctrine:database:create --if-not-exists --no-interaction
+        run: php bin/console doctrine:database:create --if-not-exists --no-interaction
 
       - name: PHPUnit
-        run: bin/phpunit
+        run: php bin/phpunit
 
   pr-title:
     name: PR title

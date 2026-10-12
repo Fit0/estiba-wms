@@ -115,6 +115,7 @@ Review every generated migration before keeping it. Committed migrations are nev
 
 - `vendor/` and `var/` live in Docker volumes for speed. Never run Composer on the host. To refresh the IDE copy: `docker compose cp php:/app/vendor backend/`.
 - PostgreSQL is exposed on host port **5433**; the API on **8080**.
+- Git for Windows runs with `core.fileMode=false`, so the executable bit of scripts is not reliable in commits. CI and any other Linux consumer must call scripts through their interpreter (`php bin/console`, `sh script.sh`) and never rely on `bin/console` being executable.
 - In Git Bash, prefix `docker` commands that take absolute container paths with `MSYS_NO_PATHCONV=1`.
 
 ## Business rules and constraints
