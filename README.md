@@ -33,7 +33,15 @@ The backend is organized by bounded context, each with `Domain`, `Application` a
 | **Inbound** | Purchase orders, ASNs, receiving, putaway |
 | **Outbound** | Orders, allocation, waves, picking, packing, shipping |
 
-Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr).
+The dependency rule is `Infrastructure → Application → Domain`. Contexts only reach each other through a published `Application/Contract`. Both rules are enforced by an architecture test (PHPat) that runs with `make stan` and in CI, so a violation fails the build.
+
+Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
+
+- [0001](docs/adr/0001-modular-monolith-with-hexagonal-bounded-contexts.md) Modular monolith with hexagonal bounded contexts
+- [0002](docs/adr/0002-doctrine-xml-mapping-outside-the-domain.md) Doctrine XML mapping outside the domain
+- [0003](docs/adr/0003-cross-context-communication-through-published-contracts.md) Cross-context communication through published contracts
+
+See also the [system context diagram](docs/architecture/c4-context.md).
 
 ## Tech stack
 
@@ -43,7 +51,7 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr).
 | Frontend | React 19, TypeScript, Vite, TanStack Query, React Router |
 | Data | PostgreSQL, Redis |
 | Real time | Mercure |
-| Quality | PHPStan (max level), PHP-CS-Fixer, Rector, PHPUnit, Vitest, Playwright |
+| Quality | PHPStan (max level), PHPat (architecture rules), PHP-CS-Fixer, Rector, PHPUnit, Vitest, Playwright |
 | Delivery | Docker, GitHub Actions |
 
 ## Repository layout
@@ -58,7 +66,7 @@ estiba-wms/
 
 ## Roadmap
 
-- [ ] **Foundations**: Docker environment, quality tooling, CI, architecture
+- [ ] **Foundations**: Docker environment, quality tooling, CI, architecture (domain model pending)
 - [ ] **Warehouse and catalog**: locations, products, API, auth, multi-tenancy
 - [ ] **Inventory and receiving**: stock ledger, CQRS, ASN receiving, putaway
 - [ ] **Shipping**: allocation, waves, picking, packing, SSCC labels (`v0.1`)
@@ -107,7 +115,7 @@ make sh                      # Shell in the PHP container
 | Command | What it does |
 |---|---|
 | `make test` | PHPUnit test suite |
-| `make stan` | PHPStan at max level with strict, Symfony, Doctrine and PHPUnit rules |
+| `make stan` | PHPStan at max level with strict, Symfony, Doctrine and PHPUnit rules, plus the architecture rules (PHPat) |
 | `make cs` | PHP-CS-Fixer check (Symfony rules, strict types) |
 | `make rector` | Rector dry run (PHP 8.4, dead code, code quality, type declarations) |
 | `make fix` | Apply Rector and PHP-CS-Fixer changes |
