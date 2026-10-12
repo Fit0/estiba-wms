@@ -1,6 +1,6 @@
 # Ubiquitous language
 
-One term, one meaning, in code, tests, screens and documents. Code is in English. The Spanish column is the term warehouse staff actually use, and the one to use in the user interface.
+One term, one meaning, in code, tests, screens and documents. Code is in English. The interface is bilingual ([ADR 0004](../adr/0004-bilingual-interface-spanish-by-default.md)): the Spanish column is the term warehouse staff actually use and the one the Spanish interface shows, and the English term is the one the English interface shows.
 
 ## Master data
 
