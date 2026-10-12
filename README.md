@@ -2,6 +2,7 @@
 
 > An open-source Warehouse Management System built with Symfony and React: receiving, putaway, inventory, picking and shipping, designed with hexagonal architecture and DDD.
 
+[![CI](https://github.com/Fit0/estiba-wms/actions/workflows/ci.yml/badge.svg)](https://github.com/Fit0/estiba-wms/actions/workflows/ci.yml)
 ![Status](https://img.shields.io/badge/status-in%20development-orange)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![PHP](https://img.shields.io/badge/PHP-8.4-777bb4)
@@ -111,6 +112,20 @@ make sh                      # Shell in the PHP container
 | `make rector` | Rector dry run (PHP 8.4, dead code, code quality, type declarations) |
 | `make fix` | Apply Rector and PHP-CS-Fixer changes |
 | `make qa` | Every check above, as CI runs them |
+
+### Continuous integration
+
+[GitHub Actions](.github/workflows/ci.yml) runs on every pull request and every push to `main`, as five independent jobs:
+
+| Job | Checks |
+|---|---|
+| Composer | `composer validate --strict`, install and `composer audit` for known vulnerabilities |
+| Code style | PHP-CS-Fixer and Rector (dry run) |
+| PHPStan | Static analysis at max level |
+| Tests | PHPUnit against real PostgreSQL 17 and Redis 7.4 services |
+| PR title | The title follows Conventional Commits, since it becomes the squash commit |
+
+A new push to the same branch cancels the run still in progress.
 
 Composer dependencies (`vendor/`) live in a Docker volume for speed, so always run Composer through the container. To give your IDE a copy for autocompletion, run `docker compose cp php:/app/vendor backend/`.
 

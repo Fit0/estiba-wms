@@ -5,7 +5,7 @@
 1. Open an issue (feature or bug) describing the change.
 2. Create a branch from `main`: `<type>/<issue-number>-<short-description>`, for example `feat/12-location-codes`.
 3. Commit using Conventional Commits.
-4. Open a pull request that references the issue (`Closes #12`). CI must pass before merging.
+4. Run `make qa` locally, then open a pull request that references the issue (`Closes #12`). The PR title must follow Conventional Commits. All CI jobs must pass before merging.
 5. Squash-merge into `main`. The squash commit message must also follow Conventional Commits.
 
 ## Commit messages
