@@ -41,7 +41,7 @@ src/
 
 Dependency rule: `Infrastructure → Application → Domain`. Never the other way round.
 
-Both this rule and the context boundaries below are enforced by `backend/tests/Architecture/ArchitectureTest.php` through PHPat, so they run in `make stan` and in CI. A new bounded context must be added to its `CONTEXTS` constant. Never weaken a rule to make a change pass: move the code instead.
+Both this rule and the context boundaries below are enforced by `backend/tests/Architecture/ArchitectureTest.php` through PHPat, so they run in `make stan` and in CI. A new bounded context must be registered in its `DEPENDS_ON` map, which also says which contexts it may depend on. Never weaken a rule to make a change pass: move the code instead.
 
 - `Domain` has **no** framework or library imports: no Symfony, no Doctrine, no attributes from either. Plain PHP only.
 - Doctrine mapping lives in XML under each context's `Infrastructure/Persistence/Doctrine/` and is registered in `config/packages/doctrine.yaml`. There is no `src/Entity`.
@@ -49,6 +49,14 @@ Both this rule and the context boundaries below are enforced by `backend/tests/A
 - A context may depend on another one only through that context's `Application/Contract` namespace (interfaces, DTOs and integration events). Never on its `Domain`, `Infrastructure` or the rest of its `Application`. Reference other contexts' data by id value, with no foreign keys or joins across contexts (ADR 0003).
 - `Shared` may be used by every context and must not depend on any of them.
 - Every architecture decision gets an ADR in `docs/adr/` (start from `docs/adr/template.md`).
+
+## Domain model
+
+The business model lives in `docs/domain/` and comes before the code: [ubiquitous language](docs/domain/ubiquitous-language.md), [event storming](docs/domain/event-storming.md), [aggregates and invariants](docs/domain/aggregates.md) and the [context map](docs/domain/context-map.md). Read the relevant part before implementing a context.
+
+- Use the terms of the ubiquitous language in class, method and test names. Do not invent synonyms.
+- Each invariant has an ID (`STK-01`, `OUT-10`…). Reference it in the test that proves it and in a short comment where the code enforces it.
+- If the code needs a rule the documents do not have, or contradicts one, update the document in the same pull request.
 
 ## Code conventions
 

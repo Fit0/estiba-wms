@@ -18,10 +18,20 @@ use PHPat\Test\PHPat;
  */
 final class ArchitectureTest
 {
-    private const array CONTEXTS = ['Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound'];
+    /**
+     * Each bounded context and the contexts it may depend on, through their Application\Contract only.
+     * Any other dependency is forbidden, so the graph has no cycles. See docs/domain/context-map.md.
+     */
+    private const array DEPENDS_ON = [
+        'Catalog' => [],
+        'Warehouse' => [],
+        'Inventory' => ['Catalog', 'Warehouse'],
+        'Inbound' => ['Catalog', 'Warehouse', 'Inventory'],
+        'Outbound' => ['Catalog', 'Warehouse', 'Inventory'],
+    ];
 
     /** Shared is not a bounded context, but it follows the same layering rules. */
-    private const array LAYERED = [...self::CONTEXTS, 'Shared'];
+    private const array LAYERED = ['Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Shared'];
 
     private const array FRAMEWORKS = ['Symfony', 'Doctrine', 'ApiPlatform', 'Lexik', 'Redis', 'Twig'];
 
@@ -70,18 +80,28 @@ final class ArchitectureTest
      */
     public function testContextsOnlyMeetThroughPublishedContracts(): iterable
     {
-        foreach (self::CONTEXTS as $context) {
-            foreach (self::CONTEXTS as $other) {
+        foreach (self::DEPENDS_ON as $context => $allowed) {
+            foreach (array_keys(self::DEPENDS_ON) as $other) {
                 if ($context === $other) {
                     continue;
                 }
 
-                yield "{$context} reaches {$other} only through its contract" => PHPat::rule()
+                if (\in_array($other, $allowed, true)) {
+                    yield "{$context} reaches {$other} only through its contract" => PHPat::rule()
+                        ->classes($this->namespace("App\\{$context}"))
+                        ->shouldNotDependOn()
+                        ->classes($this->namespace("App\\{$other}"))
+                        ->excluding($this->namespace("App\\{$other}\\Application\\Contract"))
+                        ->because("Only {$other}'s Application\\Contract is public. See ADR 0003.");
+
+                    continue;
+                }
+
+                yield "{$context} does not depend on {$other}" => PHPat::rule()
                     ->classes($this->namespace("App\\{$context}"))
                     ->shouldNotDependOn()
                     ->classes($this->namespace("App\\{$other}"))
-                    ->excluding($this->namespace("App\\{$other}\\Application\\Contract"))
-                    ->because("Only {$other}'s Application\\Contract is public. See ADR 0003.");
+                    ->because('Dependencies between contexts go one way and never form a cycle. See docs/domain/context-map.md.');
             }
 
             yield "Shared does not depend on {$context}" => PHPat::rule()

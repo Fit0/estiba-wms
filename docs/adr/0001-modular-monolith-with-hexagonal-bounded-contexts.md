@@ -40,4 +40,4 @@ The rule is enforced, not only documented: [`tests/Architecture/ArchitectureTest
 - Business rules can be tested with plain PHPUnit, with no kernel and no database.
 - More folders and more mapping code than the default layout. Each use case needs a handler, and each aggregate needs an XML mapping (see ADR 0002).
 - A context can later be extracted into its own service, because the only coupling is its published contract.
-- Adding a bounded context means adding it to `ArchitectureTest::CONTEXTS`.
+- Adding a bounded context means registering it in `ArchitectureTest`.
