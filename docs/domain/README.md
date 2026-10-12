@@ -47,5 +47,6 @@ Decisions that shape the model and could reasonably have gone another way. The o
 | DD-8 | Stock is allocated when the order is registered, so a shortage shows up at once and can be reported or left as a backorder. | Allocating when the wave is released, which keeps stock free longer but finds shortages with the operator already in the aisle. |
 | DD-9 | A released wave becomes one pick list per operator and zone, walked in a serpentine route. Each line goes into its order's container. | Batch picking with a put wall, which suits many small orders but adds a step and a new aggregate. |
 | DD-10 | Stock is tracked by lot and expiry date. | Tracking by pallet license plate, which changes the stock and receiving models substantially. |
+| DD-11 | The interface is bilingual (Spanish by default, English). Domain exceptions carry a stable error code and parameters, never a sentence. See [ADR 0004](../adr/0004-bilingual-interface-spanish-by-default.md). | Spanish only, which hides the demo from anyone who does not read it. |
 
 DD-6 and DD-8 to DD-10 were confirmed by the author, who works with warehouse systems. They can be revisited with a new ADR if the product grows.

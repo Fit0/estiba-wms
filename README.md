@@ -20,6 +20,7 @@ Most portfolio projects are CRUD apps. Estiba models a real business domain with
 - **Legacy integration**: an anti-corruption layer talks to a simulated legacy ERP over SOAP and CSV/SFTP, using the outbox pattern for reliable delivery.
 - **AI where it helps**: product classification, slotting suggestions and anomaly detection, with explainable results.
 - **Operator-first UX**: an installable PWA for barcode-driven picking that keeps working offline.
+- **Bilingual**: Spanish by default and English, with error codes that the API translates for each request.
 
 ## Architecture
 

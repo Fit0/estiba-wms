@@ -19,10 +19,11 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | API | API Platform | Planned (E02) |
 | Messaging | Symfony Messenger (command and query buses), Redis transport | Planned (E03) |
 | Auth | LexikJWTAuthenticationBundle | Planned (E02) |
+| Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Planned (E02, E05) |
 | Frontend | React 19, TypeScript (strict), Vite, TanStack Query, React Router, React Hook Form + Zod, shadcn/ui + Tailwind | Planned (E05) |
 | Frontend testing | Vitest, Testing Library, MSW, Playwright | Planned (E06) |
 | Real time | Mercure | Planned (E07) |
-| CI | GitHub Actions | Planned (E01-04) |
+| CI | GitHub Actions | In use |
 
 Do not add a dependency that is not in this table without asking first. When one is approved, add it here.
 
@@ -71,7 +72,7 @@ The business model lives in `docs/domain/` and comes before the code: [ubiquitou
 - Native types everywhere; PHPDoc only for what native types cannot express (generics, array shapes).
 - Imports: one `use` per class, ordered class, function, const. No unused imports. PHP-CS-Fixer enforces this.
 - Domain errors are specific exceptions named after the rule they protect (`NegativeStockNotAllowed`), not generic `\Exception`.
-- Code, comments, identifiers, commit messages and documentation are in **English**.
+- Code, comments, identifiers, commit messages and documentation are in **English**. Text the user sees is not: see "Languages and translations".
 
 ### PHPStan
 
@@ -89,6 +90,17 @@ The business model lives in `docs/domain/` and comes before the code: [ubiquitou
 - Every domain rule has a unit test. Every endpoint has a functional test.
 - Test names describe behavior: `testRejectsMovementThatMakesStockNegative`.
 - Unit tests in `tests/Unit/<Context>/`, functional tests in `tests/Functional/<Context>/`.
+
+### Languages and translations
+
+The interface is bilingual: Spanish (`es`, the default) and English (`en`). The reasoning is in [ADR 0004](docs/adr/0004-bilingual-interface-spanish-by-default.md).
+
+- Never write user-visible text in code. In the frontend use a translation key. In the backend use the Translation component. Do not build a sentence by gluing fragments, and use ICU for plurals.
+- Domain exceptions carry a **stable error code** and parameters, never a sentence. They implement `DomainError` (in `Shared\Domain`, introduced with the first domain exception). Codes are lowercase and dotted: `inventory.stock_negative`, `warehouse.location_code_invalid`.
+- Domain tests assert the error code, not the message.
+- Every new code or key needs an entry in both `es` and `en`. A parity test fails the build when one is missing.
+- Spanish and English UI terms follow the [ubiquitous language](docs/domain/ubiquitous-language.md). Do not invent translations for terms that are in it.
+- Data users type (product descriptions, supplier names) is stored as typed and not translated.
 
 ## Commands and workflows
 
