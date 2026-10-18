@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Architecture;
 
+use App\Shared\Domain\DomainError;
 use PHPat\Selector\Selector;
 use PHPat\Selector\SelectorInterface;
 use PHPat\Test\Builder\Rule;
@@ -109,6 +110,20 @@ final class ArchitectureTest
                 ->shouldNotDependOn()
                 ->classes($this->namespace("App\\{$context}"))
                 ->because('Contexts depend on Shared, never the other way round.');
+        }
+    }
+
+    /**
+     * @return iterable<string, Rule>
+     */
+    public function testDomainExceptionsCarryAnErrorCode(): iterable
+    {
+        foreach (self::LAYERED as $context) {
+            yield "{$context} domain exceptions implement DomainError" => PHPat::rule()
+                ->classes(Selector::AllOf($this->layer($context, 'Domain'), Selector::isException()))
+                ->shouldImplement()
+                ->classes(Selector::classname(DomainError::class))
+                ->because('A domain exception carries a stable error code that the API translates. See ADR 0004.');
         }
     }
 

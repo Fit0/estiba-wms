@@ -42,6 +42,10 @@ Identity: `LocationId`. A separate aggregate, because a warehouse has thousands 
 | WH-06 | A blocked location is never offered for putaway or allocation. Consumers read the status from the location snapshot. |
 | WH-07 | Locations are never deleted, only blocked, because stock history refers to them (DD-4). |
 
+A location is created only through `Warehouse::defineLocation()`, which checks WH-03 and WH-05.
+
+WH-01 and WH-03 need to know about other aggregates (the other warehouses of a tenant, the other locations of a warehouse). The factory receives a small registry interface (`WarehouseCodeRegistry`, `LocationCodeRegistry`), so the rule is enforced in the domain and a unit test can fake it. A unique database constraint backs it against two requests racing each other.
+
 ## Inventory
 
 ### StockItem

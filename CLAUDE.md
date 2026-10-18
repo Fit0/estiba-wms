@@ -90,14 +90,17 @@ The business model lives in `docs/domain/` and comes before the code: [ubiquitou
 - Every domain rule has a unit test. Every endpoint has a functional test.
 - Test names describe behavior: `testRejectsMovementThatMakesStockNegative`.
 - Unit tests in `tests/Unit/<Context>/`, functional tests in `tests/Functional/<Context>/`.
+- The domain never generates identifiers or reads the clock. Identifiers (UUID v7) and `\DateTimeImmutable` values are passed in, and unit tests use `Ids::next()` and fixed dates.
+- Rules that need to look at other aggregates (such as a unique code) go through a small registry interface that the factory receives, so a unit test can fake it. A unique database constraint backs it against races.
+- Build test objects with a "mother" class (for example `WarehouseMother`) so each test spells out only what it is about.
 
 ### Languages and translations
 
 The interface is bilingual: Spanish (`es`, the default) and English (`en`). The reasoning is in [ADR 0004](docs/adr/0004-bilingual-interface-spanish-by-default.md).
 
 - Never write user-visible text in code. In the frontend use a translation key. In the backend use the Translation component. Do not build a sentence by gluing fragments, and use ICU for plurals.
-- Domain exceptions carry a **stable error code** and parameters, never a sentence. They implement `DomainError` (in `Shared\Domain`, introduced with the first domain exception). Codes are lowercase and dotted: `inventory.stock_negative`, `warehouse.location_code_invalid`.
-- Domain tests assert the error code, not the message.
+- Domain exceptions carry a **stable error code** and parameters, never a sentence. They extend `DomainRuleViolation` (in `Shared\Domain`), which implements `DomainError`, and are built with a named constructor that holds the code, its parameters and an English message for logs (see `Warehouse/Domain/Exception/`). Codes are lowercase and dotted: `inventory.stock_negative`, `warehouse.location_code_invalid`. The architecture test fails any domain exception that does not implement `DomainError`.
+- Domain tests assert the error code and its parameters, not the message (`AssertsDomainErrors` in `tests/Unit/Support/`).
 - Every new code or key needs an entry in both `es` and `en`. A parity test fails the build when one is missing.
 - Spanish and English UI terms follow the [ubiquitous language](docs/domain/ubiquitous-language.md). Do not invent translations for terms that are in it.
 - Data users type (product descriptions, supplier names) is stored as typed and not translated.

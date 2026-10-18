@@ -4,7 +4,7 @@ DC  := docker compose
 PHP := $(DC) exec -T php
 
 .DEFAULT_GOAL := help
-.PHONY: help up down build logs sh composer console test stan cs fix rector qa
+.PHONY: help up down build logs sh composer console test test-unit stan cs fix rector qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -35,6 +35,9 @@ console: ## Run the Symfony console, e.g. make console c=about
 test: ## Run the PHPUnit test suite
 	$(PHP) bin/console doctrine:database:create --if-not-exists --env=test --quiet
 	$(PHP) bin/phpunit $(c)
+
+test-unit: ## Run only the unit tests (no database, about a second)
+	$(PHP) bin/phpunit tests/Unit
 
 stan: ## Run PHPStan static analysis
 	$(PHP) bin/console cache:warmup --env=dev --quiet
