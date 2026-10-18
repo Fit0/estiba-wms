@@ -7,6 +7,19 @@ doctrine:
         #server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
+
+        # Value objects are stored through custom types, so the domain stays free of Doctrine.
+        types:
+            tenant_id: App\Shared\Infrastructure\Persistence\Doctrine\Type\TenantIdType
+            warehouse_id: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\WarehouseIdType
+            zone_id: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\ZoneIdType
+            location_id: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\LocationIdType
+            warehouse_code: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\WarehouseCodeType
+            location_code: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\LocationCodeType
+            display_name: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\DisplayNameType
+            block_reason: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\BlockReasonType
+            pick_sequence: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\PickSequenceType
+            warehouse_zones: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\ZonesType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
@@ -15,7 +28,13 @@ doctrine:
         auto_mapping: true
         # Each bounded context registers its own XML mapping here,
         # so the domain model stays free of Doctrine attributes.
-        mappings: {}
+        mappings:
+            Warehouse:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Warehouse/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Warehouse\Domain'
+                alias: Warehouse
 
 when@test:
     doctrine:

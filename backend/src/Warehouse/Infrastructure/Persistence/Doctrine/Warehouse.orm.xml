@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Warehouse\Domain\Warehouse" table="warehouses">
+        <unique-constraints>
+            <!-- WH-01: the code is unique per tenant. Backs the registry check against races. -->
+            <unique-constraint name="uniq_warehouses_tenant_code" columns="tenant_id,code"/>
+        </unique-constraints>
+
+        <id name="id" type="warehouse_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="code" type="warehouse_code" length="12"/>
+        <field name="name" type="display_name" length="100"/>
+        <field name="zones" type="warehouse_zones"/>
+    </entity>
+</doctrine-mapping>

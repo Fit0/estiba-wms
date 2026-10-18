@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="App\Warehouse\Domain\LocationCapacity">
+        <field name="maxWeightKg" column="max_weight_kg" type="integer" nullable="true"/>
+        <field name="maxVolumeLitres" column="max_volume_litres" type="integer" nullable="true"/>
+        <field name="maxPalletPositions" column="max_pallet_positions" type="integer" nullable="true"/>
+    </embeddable>
+</doctrine-mapping>

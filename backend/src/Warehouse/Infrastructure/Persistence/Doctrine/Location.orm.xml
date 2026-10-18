@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Warehouse\Domain\Location" table="locations">
+        <unique-constraints>
+            <!-- WH-03: the code is unique within its warehouse. Backs the registry check against races. -->
+            <unique-constraint name="uniq_locations_warehouse_code" columns="warehouse_id,code"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_locations_zone" columns="zone_id"/>
+        </indexes>
+
+        <id name="id" type="location_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="warehouseId" column="warehouse_id" type="warehouse_id"/>
+        <field name="zoneId" column="zone_id" type="zone_id"/>
+        <field name="code" type="location_code" length="12"/>
+        <field name="type" enum-type="App\Warehouse\Domain\LocationType" length="20"/>
+        <field name="pickSequence" column="pick_sequence" type="pick_sequence"/>
+        <field name="status" enum-type="App\Warehouse\Domain\LocationStatus" length="20"/>
+        <field name="blockReason" column="block_reason" type="block_reason" length="200" nullable="true"/>
+        <embedded name="capacity" class="App\Warehouse\Domain\LocationCapacity" column-prefix="capacity_"/>
+    </entity>
+</doctrine-mapping>
