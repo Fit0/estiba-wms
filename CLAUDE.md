@@ -16,7 +16,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Testing | PHPUnit 13 | In use |
 | Static analysis and style | PHPStan 2 (max level), PHP-CS-Fixer, Rector 2 | In use |
 | Architecture tests | PHPat 0.12 (runs inside PHPStan, rules in `backend/tests/Architecture/`) | In use |
-| API | API Platform | Planned (E02) |
+| API | API Platform 5, plain JSON, DTO resources and our own state providers and processors (ADR 0006) | In use |
 | Messaging | Symfony Messenger (command and query buses), Redis transport | Planned (E03) |
 | Auth | LexikJWTAuthenticationBundle | Planned (E02) |
 | Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Planned (E02, E05) |
@@ -47,6 +47,7 @@ Both this rule and the context boundaries below are enforced by `backend/tests/A
 - `Domain` has **no** framework or library imports: no Symfony, no Doctrine, no attributes from either. Plain PHP only.
 - Doctrine mapping lives in XML under each context's `Infrastructure/Persistence/Doctrine/` and is registered in `config/packages/doctrine.yaml`. There is no `src/Entity`.
 - Controllers are invokable, `final readonly`, one action each, and only translate HTTP to a command or query.
+- API resources are DTOs in `Infrastructure/Http/Resource`, never domain entities. Each operation is a state provider or processor in `Http/State` that calls an `Application/<UseCase>` handler; the processor flushes until the command bus exists (ADR 0006). The tenant comes from `CurrentTenant`, never from the request body.
 - A context may depend on another one only through that context's `Application/Contract` namespace (interfaces, DTOs and integration events). Never on its `Domain`, `Infrastructure` or the rest of its `Application`. Reference other contexts' data by id value, with no foreign keys or joins across contexts (ADR 0003).
 - `Shared` may be used by every context and must not depend on any of them.
 - Every architecture decision gets an ADR in `docs/adr/` (start from `docs/adr/template.md`).

@@ -1,0 +1,28 @@
+api_platform:
+    title: Estiba WMS API
+    description: Warehouse management system. Errors are application/problem+json with a stable `code`; the detail is translated to the language of Accept-Language (Spanish by default).
+    version: 0.1.0
+
+    # Resources are plain classes in each context's Infrastructure layer, backed by our own
+    # state providers and processors. Nothing is mapped from Doctrine entities (ADR 0006).
+    doctrine:
+        enabled: false
+    mapping:
+        paths:
+            - '%kernel.project_dir%/src/Warehouse/Infrastructure/Http/Resource'
+            - '%kernel.project_dir%/src/Catalog/Infrastructure/Http/Resource'
+
+    formats:
+        json: ['application/json']
+    patch_formats:
+        json: ['application/merge-patch+json']
+    docs_formats:
+        jsonopenapi: ['application/vnd.openapi+json']
+        html: ['text/html']
+    error_formats:
+        jsonproblem: ['application/problem+json']
+
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']

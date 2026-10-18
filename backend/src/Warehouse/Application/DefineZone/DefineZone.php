@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Warehouse\Application\DefineZone;
+
+use App\Shared\Domain\StorageClass;
+
+final readonly class DefineZone
+{
+    public function __construct(
+        public string $warehouseId,
+        public string $code,
+        public string $name,
+        public StorageClass $storageClass,
+        public int $pickSequence,
+    ) {
+    }
+}
