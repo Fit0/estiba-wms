@@ -116,6 +116,7 @@ make sh                      # Shell in the PHP container
 | Command | What it does |
 |---|---|
 | `make test` | PHPUnit test suite |
+| `make test-unit` | Unit tests only: no database, about a second |
 | `make stan` | PHPStan at max level with strict, Symfony, Doctrine and PHPUnit rules, plus the architecture rules (PHPat) |
 | `make cs` | PHP-CS-Fixer check (Symfony rules, strict types) |
 | `make rector` | Rector dry run (PHP 8.4, dead code, code quality, type declarations) |
