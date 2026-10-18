@@ -274,4 +274,6 @@ Smaller flows that need no diagram.
 | `BlockLocation` | Supervisor | `Location` | `LocationBlocked` | The location stops receiving putaways and allocations. Stock already in it stays. |
 | `UnblockLocation` | Supervisor | `Location` | `LocationUnblocked` | |
 | `BlockProduct` | Supervisor | `Product` | `ProductBlocked` | The product cannot be received or allocated. Existing reservations stand. |
+| `UnblockProduct` | Supervisor | `Product` | `ProductUnblocked` | Rejected if the product is not blocked or is discontinued. |
+| `DiscontinueProduct` | Supervisor | `Product` | `ProductDiscontinued` | Final (CAT-08). Works from active or blocked. |
 | `CancelOrder` | ERP or supervisor | `Order` | `OrderCancelled` | Policy: whenever an order is cancelled, release its reservations. Not allowed after dispatch. |

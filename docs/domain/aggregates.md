@@ -18,6 +18,11 @@ Identity: `ProductId`. Holds the `Sku`, the GTINs, the base unit, the packaging 
 | CAT-04 | A product tracked by expiry date is also tracked by lot. |
 | CAT-05 | The tracking policy is fixed when the product is registered. A product that needs another policy is registered again under a new SKU. |
 | CAT-06 | A blocked or discontinued product cannot be received or allocated. Consumers read the status from the product snapshot. |
+| CAT-07 | The minimum shelf life, at receipt and at shipment, applies only to products tracked by expiry date and is zero or more days. |
+| CAT-08 | A discontinued product is final: it cannot be blocked, unblocked or changed. Products are never deleted, because stock history and orders refer to them. |
+| CAT-09 | The length, width, height (millimetres) and weight (grams) of the base unit are positive whole numbers. |
+
+GTIN-8, GTIN-12, GTIN-13 and GTIN-14 are all accepted. The same item printed as a UPC and as an EAN with a leading zero is one GTIN, so uniqueness (CAT-02) compares the numbers padded to 14 digits.
 
 ## Warehouse
 
