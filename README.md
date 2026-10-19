@@ -118,6 +118,7 @@ make sh                      # Shell in the PHP container
 | `make test` | PHPUnit test suite |
 | `make test-unit` | Unit tests only: no database, about a second |
 | `make stan` | PHPStan at max level with strict, Symfony, Doctrine and PHPUnit rules, plus the architecture rules (PHPat) |
+| `make validate` | `composer validate --strict` and `composer audit`, the same Composer checks as CI |
 | `make cs` | PHP-CS-Fixer check (Symfony rules, strict types) |
 | `make rector` | Rector dry run (PHP 8.4, dead code, code quality, type declarations) |
 | `make fix` | Apply Rector and PHP-CS-Fixer changes |

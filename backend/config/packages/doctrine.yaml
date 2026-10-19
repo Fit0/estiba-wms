@@ -20,6 +20,11 @@ doctrine:
             block_reason: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\BlockReasonType
             pick_sequence: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\PickSequenceType
             warehouse_zones: App\Warehouse\Infrastructure\Persistence\Doctrine\Type\ZonesType
+            product_id: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductIdType
+            sku: App\Catalog\Infrastructure\Persistence\Doctrine\Type\SkuType
+            product_name: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductNameType
+            product_gtins: App\Catalog\Infrastructure\Persistence\Doctrine\Type\GtinsType
+            product_packaging_levels: App\Catalog\Infrastructure\Persistence\Doctrine\Type\PackagingLevelsType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
@@ -35,6 +40,18 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Warehouse/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Warehouse\Domain'
                 alias: Warehouse
+            Catalog:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Catalog/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Catalog\Domain'
+                alias: Catalog
+            CatalogGtinIndex:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Catalog/Infrastructure/Persistence/GtinIndex'
+                prefix: 'App\Catalog\Infrastructure\Persistence\GtinIndex'
+                alias: CatalogGtinIndex
 
 when@test:
     doctrine:

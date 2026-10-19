@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Catalog\Domain\Product" table="products">
+        <unique-constraints>
+            <!-- CAT-01: the SKU is unique per tenant. Backs the registry check against races. -->
+            <unique-constraint name="uniq_products_tenant_sku" columns="tenant_id,sku"/>
+        </unique-constraints>
+
+        <id name="id" type="product_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="sku" type="sku" length="40"/>
+        <field name="name" type="product_name" length="150"/>
+        <field name="baseUnit" column="base_unit" enum-type="App\Catalog\Domain\UnitOfMeasure" length="20"/>
+        <field name="storageClass" column="storage_class" enum-type="App\Shared\Domain\StorageClass" length="20"/>
+        <field name="status" enum-type="App\Catalog\Domain\ProductStatus" length="20"/>
+        <field name="gtins" type="product_gtins"/>
+        <field name="packagingLevels" column="packaging_levels" type="product_packaging_levels"/>
+        <embedded name="dimensions" class="App\Catalog\Domain\Dimensions" column-prefix="dimensions_"/>
+        <embedded name="trackingPolicy" class="App\Catalog\Domain\TrackingPolicy" column-prefix="tracking_"/>
+    </entity>
+</doctrine-mapping>

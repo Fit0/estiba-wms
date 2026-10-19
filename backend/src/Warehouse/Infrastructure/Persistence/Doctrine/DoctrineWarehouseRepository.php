@@ -28,6 +28,20 @@ final readonly class DoctrineWarehouseRepository implements WarehouseRepository
     }
 
     #[\Override]
+    public function findAllOf(TenantId $tenantId): array
+    {
+        /** @var list<Warehouse> */
+        return $this->entityManager->createQueryBuilder()
+            ->select('w')
+            ->from(Warehouse::class, 'w')
+            ->where('w.tenantId = :tenant')
+            ->orderBy('w.code')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->getQuery()
+            ->getResult();
+    }
+
+    #[\Override]
     public function save(Warehouse $warehouse): void
     {
         $this->entityManager->persist($warehouse);
