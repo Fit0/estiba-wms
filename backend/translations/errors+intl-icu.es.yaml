@@ -1,0 +1,63 @@
+# Textos de error en español (idioma por defecto). Formato ICU, dominio `errors`.
+#
+# La clave es el código de error, que no cambia nunca. Los marcadores {nombre} son los
+# parámetros que lleva el error. No uses apóstrofos: son caracteres especiales de ICU.
+# Cada código y cada clave debe existir también en errors+intl-icu.en.yaml. Un test lo exige.
+
+shared:
+    identifier_invalid: '"{value}" no es un identificador válido de {type, select, ProductId {producto} WarehouseId {almacén} ZoneId {zona} LocationId {ubicación} TenantId {cliente} other {recurso}}. Debe ser un UUID.'
+    tenant_missing: 'La petición no indica para qué cliente se hace. Envía la cabecera X-Tenant-Id.'
+    request_malformed: 'No se ha podido leer el cuerpo de la petición. Comprueba que sea un JSON válido, con los campos obligatorios y los tipos esperados.'
+    not_found: 'No existe el recurso solicitado.'
+    method_not_allowed: 'Ese método no está permitido en este recurso.'
+    not_acceptable: 'El formato de respuesta solicitado no está disponible. Esta API responde en JSON.'
+    unsupported_media_type: 'El tipo de contenido de la petición no está soportado. Envía JSON con la cabecera Content-Type: application/json.'
+    request_invalid: 'La petición no es válida.'
+    internal_error: 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.'
+
+catalog:
+    dimensions_invalid: '{field, select, lengthMm {El largo} widthMm {El ancho} heightMm {El alto} weightGrams {El peso} other {La medida}} debe ser un número entero positivo, y se ha recibido {value}.'
+    expiry_requires_lot_tracking: 'Un producto controlado por fecha de caducidad debe controlarse también por lote.'
+    gtin_already_used: 'El GTIN {gtin} ya pertenece a otro producto del cliente.'
+    gtin_invalid: '"{value}" no es un GTIN válido. Debe tener 8, 12, 13 o 14 dígitos y un dígito de control GS1 correcto.'
+    packaging_level_invalid: 'El nivel de embalaje {type, select, inner_pack {paquete interior} case {caja} pallet {palé} other {{type}}} debe contener un número entero positivo de unidades base, y se ha recibido {baseUnits}.'
+    packaging_level_not_larger: 'El nivel de embalaje {type, select, inner_pack {paquete interior} case {caja} pallet {palé} other {{type}}}, con {baseUnits} unidades base, debe ser mayor que el nivel anterior, que tiene {previousBaseUnits}.'
+    product_already_blocked: 'El producto {sku} ya está bloqueado.'
+    product_discontinued: 'El producto {sku} está descatalogado y no admite cambios.'
+    product_name_invalid: 'El nombre de un producto debe tener entre 1 y 150 caracteres y no puede contener caracteres de control.'
+    product_not_blocked: 'El producto {sku} no está bloqueado.'
+    product_not_found: 'No existe ningún producto con el identificador {id}.'
+    shelf_life_invalid: '{field, select, minShelfLifeAtReceiptDays {La vida útil mínima en la recepción} minShelfLifeAtShipmentDays {La vida útil mínima en la expedición} other {La vida útil mínima}} {trackedByExpiry, select, true {debe ser de cero o más días, y se ha recibido {value}.} other {solo se puede indicar en productos controlados por fecha de caducidad.}}'
+    sku_already_used: 'El cliente ya tiene un producto con la referencia {sku}.'
+    sku_invalid: '"{value}" no es una referencia (SKU) válida. Usa de 1 a 40 letras, dígitos, puntos, guiones, guiones bajos o barras, empezando y terminando por una letra o un dígito.'
+
+warehouse:
+    block_reason_invalid: 'El motivo del bloqueo debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    capacity_invalid: '{field, select, maxWeightKg {El peso máximo} maxVolumeLitres {El volumen máximo} maxPalletPositions {El número máximo de posiciones de palé} other {El límite}} debe ser un número entero positivo, y se ha recibido {value}.'
+    location_already_blocked: 'La ubicación {code} ya está bloqueada.'
+    location_code_already_used: 'El almacén ya tiene una ubicación con el código {code}.'
+    location_code_invalid: '"{value}" no es un código de ubicación válido. Debe tener la forma pasillo-módulo-nivel, por ejemplo A-03-02.'
+    location_not_blocked: 'La ubicación {code} no está bloqueada.'
+    location_not_found: 'No existe ninguna ubicación con el identificador {id}.'
+    name_invalid: 'Un nombre debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    pick_sequence_invalid: 'La secuencia de picking no puede ser negativa, y se ha recibido {value}.'
+    warehouse_code_already_used: 'El cliente ya tiene un almacén con el código {code}.'
+    warehouse_code_invalid: '"{value}" no es un código de almacén válido. Usa de 2 a 12 letras o dígitos, con guiones sencillos entre grupos.'
+    warehouse_not_found: 'No existe ningún almacén con el identificador {id}.'
+    zone_code_already_used: 'El almacén ya tiene una zona con el código {code}.'
+    zone_code_invalid: '"{value}" no es un código de zona válido. Usa de 1 a 10 letras o dígitos.'
+    zone_not_found: 'No existe ninguna zona con el identificador {id} en este almacén.'
+    zone_unknown: 'El almacén no tiene la zona {zoneId}.'
+
+# Título de cada respuesta de error, según su estado HTTP.
+status:
+    '400': 'Solicitud incorrecta'
+    '401': 'No autorizado'
+    '404': 'No encontrado'
+    '405': 'Método no permitido'
+    '406': 'No aceptable'
+    '409': 'Conflicto'
+    '415': 'Tipo de contenido no soportado'
+    '422': 'Entidad no procesable'
+    '500': 'Error interno'
+    other: 'Error'

@@ -21,6 +21,12 @@ abstract class ApiTestCase extends WebTestCase
 
     protected string $tenant;
 
+    /**
+     * The `Accept-Language` the requests send. Null sends an empty one, because the test client would
+     * otherwise add `en-us` on its own. The API answers an empty header in Spanish.
+     */
+    protected ?string $acceptLanguage = null;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -44,6 +50,7 @@ abstract class ApiTestCase extends WebTestCase
     {
         $contentType = 'PATCH' === $method ? 'application/merge-patch+json' : 'application/json';
         $headers = ['CONTENT_TYPE' => $contentType, 'HTTP_ACCEPT' => 'application/json'];
+        $headers['HTTP_ACCEPT_LANGUAGE'] = $this->acceptLanguage ?? '';
         $tenant ??= $this->tenant;
         if ('' !== $tenant) {
             $headers['HTTP_'.strtoupper(str_replace('-', '_', HeaderCurrentTenant::HEADER))] = $tenant;
@@ -69,6 +76,19 @@ abstract class ApiTestCase extends WebTestCase
         self::assertIsString($id);
 
         return $id;
+    }
+
+    /**
+     * A text field of a problem response, such as `detail` or `title`.
+     *
+     * @param array<array-key, mixed> $problem
+     */
+    protected function text(array $problem, string $field): string
+    {
+        $value = $problem[$field] ?? null;
+        self::assertIsString($value, \sprintf('The problem has no text field "%s".', $field));
+
+        return $value;
     }
 
     /**

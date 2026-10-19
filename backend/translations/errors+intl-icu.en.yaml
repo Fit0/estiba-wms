@@ -1,0 +1,63 @@
+# Error texts in English. ICU format, domain `errors`.
+#
+# The key is the error code, which never changes. {name} placeholders are the parameters the
+# error carries. Do not use apostrophes: they are special characters in ICU.
+# Every code and key must also exist in errors+intl-icu.es.yaml. A test enforces it.
+
+shared:
+    identifier_invalid: '"{value}" is not a valid {type, select, ProductId {product} WarehouseId {warehouse} ZoneId {zone} LocationId {location} TenantId {tenant} other {resource}} identifier. It must be a UUID.'
+    tenant_missing: 'The request does not say which tenant it acts for. Send the X-Tenant-Id header.'
+    request_malformed: 'The request body could not be read. Check that it is valid JSON, with the required fields and the expected types.'
+    not_found: 'The requested resource does not exist.'
+    method_not_allowed: 'That method is not allowed on this resource.'
+    not_acceptable: 'The requested response format is not available. This API answers in JSON.'
+    unsupported_media_type: 'The content type of the request is not supported. Send JSON with the header Content-Type: application/json.'
+    request_invalid: 'The request is not valid.'
+    internal_error: 'An unexpected error happened. Try again later.'
+
+catalog:
+    dimensions_invalid: '{field, select, lengthMm {The length} widthMm {The width} heightMm {The height} weightGrams {The weight} other {The measure}} must be a positive whole number, got {value}.'
+    expiry_requires_lot_tracking: 'A product tracked by expiry date must also be tracked by lot.'
+    gtin_already_used: 'GTIN {gtin} already belongs to another product of the tenant.'
+    gtin_invalid: '"{value}" is not a valid GTIN. It must have 8, 12, 13 or 14 digits and a correct GS1 check digit.'
+    packaging_level_invalid: 'The {type, select, inner_pack {inner pack} case {case} pallet {pallet} other {{type}}} packaging level must hold a positive whole number of base units, got {baseUnits}.'
+    packaging_level_not_larger: 'The {type, select, inner_pack {inner pack} case {case} pallet {pallet} other {{type}}} packaging level, with {baseUnits} base units, must be larger than the previous level, which has {previousBaseUnits}.'
+    product_already_blocked: 'Product {sku} is already blocked.'
+    product_discontinued: 'Product {sku} is discontinued and cannot change.'
+    product_name_invalid: 'A product name must have 1 to 150 characters and no control characters.'
+    product_not_blocked: 'Product {sku} is not blocked.'
+    product_not_found: 'There is no product with id {id}.'
+    shelf_life_invalid: '{field, select, minShelfLifeAtReceiptDays {The minimum shelf life at receipt} minShelfLifeAtShipmentDays {The minimum shelf life at shipment} other {The minimum shelf life}} {trackedByExpiry, select, true {must be zero or more days, got {value}.} other {can only be set on products tracked by expiry date.}}'
+    sku_already_used: 'The tenant already has a product with SKU {sku}.'
+    sku_invalid: '"{value}" is not a valid SKU. Use 1 to 40 letters, digits, dots, dashes, underscores or slashes, starting and ending with a letter or digit.'
+
+warehouse:
+    block_reason_invalid: 'A block reason must have 1 to {maxLength} characters and no control characters.'
+    capacity_invalid: '{field, select, maxWeightKg {The maximum weight} maxVolumeLitres {The maximum volume} maxPalletPositions {The maximum number of pallet positions} other {The limit}} must be a positive whole number, got {value}.'
+    location_already_blocked: 'Location {code} is already blocked.'
+    location_code_already_used: 'The warehouse already has a location with code {code}.'
+    location_code_invalid: '"{value}" is not a valid location code. It must be written aisle-module-level, for example A-03-02.'
+    location_not_blocked: 'Location {code} is not blocked.'
+    location_not_found: 'There is no location with id {id}.'
+    name_invalid: 'A name must have 1 to {maxLength} characters and no control characters.'
+    pick_sequence_invalid: 'A pick sequence cannot be negative, got {value}.'
+    warehouse_code_already_used: 'The tenant already has a warehouse with code {code}.'
+    warehouse_code_invalid: '"{value}" is not a valid warehouse code. Use 2 to 12 letters or digits, with single hyphens between groups.'
+    warehouse_not_found: 'There is no warehouse with id {id}.'
+    zone_code_already_used: 'The warehouse already has a zone with code {code}.'
+    zone_code_invalid: '"{value}" is not a valid zone code. Use 1 to 10 letters or digits.'
+    zone_not_found: 'There is no zone with id {id} in this warehouse.'
+    zone_unknown: 'The warehouse has no zone {zoneId}.'
+
+# Title of each error response, by HTTP status.
+status:
+    '400': 'Bad request'
+    '401': 'Unauthorized'
+    '404': 'Not found'
+    '405': 'Method not allowed'
+    '406': 'Not acceptable'
+    '409': 'Conflict'
+    '415': 'Unsupported media type'
+    '422': 'Unprocessable entity'
+    '500': 'Internal error'
+    other: 'Error'
