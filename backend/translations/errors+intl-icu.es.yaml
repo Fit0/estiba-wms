@@ -48,6 +48,16 @@ identity:
     user_not_disabled: 'El usuario {email} no está deshabilitado.'
     user_not_found: 'No existe ningún usuario con el correo {email}.'
 
+inventory:
+    lot_number_invalid: 'Un número de lote debe tener entre 1 y 40 caracteres y no puede contener caracteres de control.'
+    movement_quantity_not_positive: 'Un movimiento de tipo {type, select, receipt {recepción} issue {salida} transfer_out {salida por traspaso} transfer_in {entrada por traspaso} adjustment {regularización} other {{type}}} debe cambiar el stock al menos en una unidad.'
+    movement_text_invalid: '{field, select, reason {El motivo} reference {La referencia} other {El texto}} de un movimiento debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    quantity_invalid: 'Una cantidad no puede ser negativa, y se ha recibido {units}.'
+    stock_negative: 'No se pueden sacar {requested} unidades de una existencia que solo tiene {onHand}. El stock no puede quedar en negativo.'
+    transfer_across_tenants: 'Solo se puede traspasar stock entre existencias del mismo cliente.'
+    transfer_product_mismatch: 'Solo se puede traspasar stock entre existencias del mismo producto.'
+    transfer_same_stock_item: 'Una existencia no se puede traspasar a sí misma.'
+
 warehouse:
     block_reason_invalid: 'El motivo del bloqueo debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
     capacity_invalid: '{field, select, maxWeightKg {El peso máximo} maxVolumeLitres {El volumen máximo} maxPalletPositions {El número máximo de posiciones de palé} other {El límite}} debe ser un número entero positivo, y se ha recibido {value}.'
