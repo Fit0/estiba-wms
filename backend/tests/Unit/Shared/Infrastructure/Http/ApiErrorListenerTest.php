@@ -79,12 +79,12 @@ final class ApiErrorListenerTest extends TestCase
         self::assertSame('English text for developers.', $this->text($response, 'detail'));
     }
 
-    public function testAnswersAMissingTenantWithA401(): void
+    public function testAnswersAMissingTenantAsNotSignedIn(): void
     {
         $response = $this->handle(TenantNotResolved::missing());
 
         self::assertSame(Response::HTTP_UNAUTHORIZED, $response->getStatusCode());
-        self::assertSame('shared.tenant_missing', $this->text($response, 'code'));
+        self::assertSame('shared.unauthenticated', $this->text($response, 'code'));
         self::assertSame('No autorizado', $this->text($response, 'title'));
     }
 

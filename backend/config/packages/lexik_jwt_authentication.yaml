@@ -1,0 +1,17 @@
+lexik_jwt_authentication:
+    # RS256: the private key signs, the public key verifies. Generate them with `make jwt-keys`.
+    # They are never committed. In production the key files and the passphrase come from the
+    # environment, never from the development defaults in .env (ADR 0008).
+    secret_key: '%env(resolve:JWT_SECRET_KEY)%'
+    public_key: '%env(resolve:JWT_PUBLIC_KEY)%'
+    pass_phrase: '%env(JWT_PASSPHRASE)%'
+
+    # One hour. A token cannot be revoked on its own, but the user is loaded from the database on
+    # every request, so a disabled user stops at once. A refresh token arrives with the frontend.
+    token_ttl: 3600
+
+    # Documents the login route in the OpenAPI description.
+    api_platform:
+        check_path: /api/auth/login
+        username_path: email
+        password_path: password

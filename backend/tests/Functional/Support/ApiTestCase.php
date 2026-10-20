@@ -4,16 +4,31 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Support;
 
-use App\Shared\Infrastructure\Http\HeaderCurrentTenant;
+use App\Identity\Domain\Email;
+use App\Identity\Domain\PasswordHash;
+use App\Identity\Domain\Role;
+use App\Identity\Domain\Tenant;
+use App\Identity\Domain\TenantName;
+use App\Identity\Domain\User;
+use App\Identity\Domain\UserId;
+use App\Identity\Infrastructure\Persistence\Doctrine\DoctrineUserRepository;
+use App\Identity\Infrastructure\Security\SecurityUser;
+use App\Shared\Domain\Language;
+use App\Shared\Domain\TenantId;
 use App\Tests\Unit\Support\Ids;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaTool;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 /**
- * Base of the API tests: a client, an empty database built from the mapping, and a tenant
- * to act as. Requests send and receive JSON.
+ * Base of the API tests: a client, an empty database built from the mapping, and a signed-in user.
+ * Requests send and receive JSON and carry a real JWT.
+ *
+ * By default the requests act as an admin of {@see $tenant}. Pass another tenant to a request to
+ * act as an admin of that one, set {@see $role} to act with fewer rights, or pass an empty tenant
+ * to send no token at all.
  */
 abstract class ApiTestCase extends WebTestCase
 {
@@ -22,10 +37,21 @@ abstract class ApiTestCase extends WebTestCase
     protected string $tenant;
 
     /**
+     * The role of the user the requests act as.
+     */
+    protected Role $role = Role::Admin;
+
+    /**
      * The `Accept-Language` the requests send. Null sends an empty one, because the test client would
      * otherwise add `en-us` on its own. The API answers an empty header in Spanish.
      */
     protected ?string $acceptLanguage = null;
+
+    /** @var array<string, string> the token of each tenant and role, made on first use */
+    private array $tokens = [];
+
+    /** @var array<string, true> the tenants already created in this test */
+    private array $tenants = [];
 
     #[\Override]
     protected function setUp(): void
@@ -53,11 +79,59 @@ abstract class ApiTestCase extends WebTestCase
         $headers['HTTP_ACCEPT_LANGUAGE'] = $this->acceptLanguage ?? '';
         $tenant ??= $this->tenant;
         if ('' !== $tenant) {
-            $headers['HTTP_'.strtoupper(str_replace('-', '_', HeaderCurrentTenant::HEADER))] = $tenant;
+            $headers['HTTP_AUTHORIZATION'] = 'Bearer '.$this->tokenFor($tenant, $this->role);
         }
 
         $this->client->request($method, $uri, $query, [], $headers, null === $body ? null : json_encode($body, \JSON_THROW_ON_ERROR));
 
+        return $this->decodedResponse();
+    }
+
+    /**
+     * A token for a user of the tenant with the role. The tenant and the user are created in the
+     * database the first time they are needed, the way a real sign-in would find them.
+     */
+    protected function tokenFor(string $tenantId, Role $role): string
+    {
+        $key = $tenantId.'|'.$role->value;
+        if (isset($this->tokens[$key])) {
+            return $this->tokens[$key];
+        }
+
+        $container = self::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $at = new \DateTimeImmutable('2026-10-20T10:00:00+00:00');
+        $tenant = TenantId::fromString($tenantId);
+
+        if (!isset($this->tenants[$tenantId])) {
+            $entityManager->persist(Tenant::register($tenant, TenantName::fromString('Tenant '.substr($tenantId, -4)), Language::Spanish, $at));
+            $this->tenants[$tenantId] = true;
+        }
+
+        $user = User::register(
+            UserId::fromString(Ids::next()),
+            $tenant,
+            Email::fromString(\sprintf('%s-%s@example.test', $role->value, substr($tenantId, -12))),
+            new PasswordHash('not-a-real-hash'),
+            [$role],
+            new DoctrineUserRepository($entityManager),
+            $at,
+        );
+        $entityManager->persist($user);
+        $entityManager->flush();
+
+        $token = $container->get(JWTTokenManagerInterface::class)->create(SecurityUser::fromDomain($user));
+
+        return $this->tokens[$key] = $token;
+    }
+
+    /**
+     * The response of the last request, decoded.
+     *
+     * @return array<array-key, mixed>
+     */
+    protected function decodedResponse(): array
+    {
         $content = (string) $this->client->getResponse()->getContent();
         $decoded = '' === $content ? [] : json_decode($content, true, 512, \JSON_THROW_ON_ERROR);
         \assert(\is_array($decoded));

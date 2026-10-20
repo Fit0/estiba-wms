@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Shared\Infrastructure\Http;
 
+use App\Shared\Domain\Language;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -14,13 +15,10 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final readonly class RequestLanguage
 {
-    public const string DEFAULT = 'es';
-
-    /** @var list<string> */
-    public const array SUPPORTED = ['es', 'en'];
-
     public function of(Request $request): string
     {
-        return $request->getPreferredLanguage(self::SUPPORTED) ?? self::DEFAULT;
+        $supported = array_map(static fn (Language $language): string => $language->value, Language::cases());
+
+        return $request->getPreferredLanguage($supported) ?? Language::DEFAULT->value;
     }
 }

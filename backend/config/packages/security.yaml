@@ -1,0 +1,60 @@
+security:
+    # Passwords are hashed with the best algorithm available. The domain only sees the PasswordHasher
+    # port, so this is the one place that chooses it (ADR 0008).
+    password_hashers:
+        App\Identity\Infrastructure\Security\SecurityUser: 'auto'
+
+    # Every request loads its user from the database, so a disabled user stops at once.
+    providers:
+        users:
+            id: App\Identity\Infrastructure\Security\DoctrineUserProvider
+
+    # Each role includes the ones below it.
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_SUPERVISOR
+        ROLE_SUPERVISOR: ROLE_OPERATOR
+
+    firewalls:
+        dev:
+            # Ensure dev tools and static assets are always allowed
+            pattern: ^/(_profiler|_wdt|assets|build)/
+            security: false
+
+        login:
+            pattern: ^/api/auth/login
+            stateless: true
+            provider: users
+            user_checker: App\Identity\Infrastructure\Security\UserChecker
+            json_login:
+                check_path: api_login_check
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: users
+            user_checker: App\Identity\Infrastructure\Security\UserChecker
+            jwt: ~
+            access_denied_handler: App\Identity\Infrastructure\Security\AccessDeniedHandler
+
+    # Note: Only the *first* matching rule is applied.
+    # Reading needs any signed-in user. Changing anything needs a supervisor or an admin.
+    access_control:
+        - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/docs, roles: PUBLIC_ACCESS }
+        - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
+        - { path: ^/api, roles: ROLE_SUPERVISOR }
+
+when@test:
+    security:
+        password_hashers:
+            # Password hashers are resource-intensive by design to ensure security.
+            # In tests, it's safe to reduce their cost to improve performance.
+            App\Identity\Infrastructure\Security\SecurityUser:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon

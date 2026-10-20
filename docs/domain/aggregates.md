@@ -2,7 +2,30 @@
 
 An aggregate is the unit that is loaded, changed and saved as a whole, and the unit that protects its own rules. Each rule has an identifier so tests and code comments can point to it, for example `// STK-01`.
 
-Every aggregate carries a `TenantId`. Identifiers are UUID v7. A context refers to another context's aggregate by identifier only (ADR 0003).
+Every aggregate, except the tenant itself, carries a `TenantId`. Identifiers are UUID v7. A context refers to another context's aggregate by identifier only (ADR 0003).
+
+## Identity
+
+### Tenant
+
+Identity: `TenantId`, the same identifier every other aggregate carries. Holds the name and the default language, which is the language used where no request says otherwise (background jobs, printed documents).
+
+| ID | Invariant |
+|---|---|
+| IDN-07 | The name has 1 to 100 characters and no control characters. |
+
+### User
+
+Identity: `UserId`. Holds the tenant, the email address, the password hash, the roles and the status (active or disabled). Roles are `admin`, `supervisor` and `operator`, and each includes the ones below it. A user is created with `User::register()`, which checks IDN-01 through the `EmailRegistry`.
+
+| ID | Invariant |
+|---|---|
+| IDN-01 | An email address belongs to one user in the whole system, ignoring case. A unique database constraint backs the check against races. |
+| IDN-02 | An email address is valid, at most 254 characters, and is kept in lower case. |
+| IDN-03 | A password has 12 to 72 characters (72 is bcrypt's limit in bytes). It exists as plain text only inside `PlainPassword`, which cannot be printed, logged or serialized, and only a hash is ever stored. |
+| IDN-04 | A user has at least one role. |
+| IDN-05 | A user belongs to one tenant for its whole life: nothing can move it. |
+| IDN-06 | A disabled user cannot sign in, and a token it already holds stops working at once, because the user is loaded on every request. Enforced by the security layer's user checker. |
 
 ## Catalog
 

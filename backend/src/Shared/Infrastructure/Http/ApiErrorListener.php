@@ -15,6 +15,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Serializer\Exception\ExceptionInterface as SerializerException;
 
 /**
@@ -24,6 +26,8 @@ use Symfony\Component\Serializer\Exception\ExceptionInterface as SerializerExcep
  * - A broken domain rule keeps its own code and parameters.
  * - A request the serializer cannot read, a route that does not exist, a method or a format the
  *   API does not offer: a generic `shared.*` code, with the HTTP status it already had.
+ * - Not signed in (401) and not allowed (403) are answered by the security layer, through the same
+ *   {@see ProblemFactory}.
  * - Anything unexpected becomes `shared.internal_error`, so no internal detail leaves the API.
  *   While debugging (`dev` and `test`) it is left alone, so the stack trace stays visible.
  */
@@ -51,13 +55,20 @@ final readonly class ApiErrorListener
             return;
         }
 
+        // No authenticated user to take the tenant from: the caller is not signed in.
         if ($error instanceof TenantNotResolved) {
-            $event->setResponse($this->problems->create($request, Response::HTTP_UNAUTHORIZED, HttpProblem::TenantMissing->value, [], $error->getMessage()));
+            $event->setResponse($this->problems->create($request, Response::HTTP_UNAUTHORIZED, HttpProblem::Unauthenticated->value, [], $error->getMessage()));
 
             return;
         }
 
         if (!$this->isApiRequest($request)) {
+            return;
+        }
+
+        // The firewall answers these itself (401 through the JWT entry point, 403 through the
+        // access denied handler), in the same problem shape.
+        if ($error instanceof AuthenticationException || $error instanceof AccessDeniedException) {
             return;
         }
 
@@ -106,6 +117,7 @@ final readonly class ApiErrorListener
             str_ends_with($code, '_not_found') => Response::HTTP_NOT_FOUND,
             str_contains($code, '_already_'),
             str_ends_with($code, '_not_blocked'),
+            str_ends_with($code, '_not_disabled'),
             str_ends_with($code, '_discontinued') => Response::HTTP_CONFLICT,
             default => Response::HTTP_UNPROCESSABLE_ENTITY,
         };

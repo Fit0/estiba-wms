@@ -6,7 +6,10 @@
 
 shared:
     identifier_invalid: '"{value}" no es un identificador válido de {type, select, ProductId {producto} WarehouseId {almacén} ZoneId {zona} LocationId {ubicación} TenantId {cliente} other {recurso}}. Debe ser un UUID.'
-    tenant_missing: 'La petición no indica para qué cliente se hace. Envía la cabecera X-Tenant-Id.'
+    unauthenticated: 'Necesitas iniciar sesión para usar este recurso. Envía el token en la cabecera Authorization: Bearer.'
+    token_invalid: 'El token no es válido. Inicia sesión de nuevo.'
+    token_expired: 'El token ha caducado. Inicia sesión de nuevo.'
+    forbidden: 'Tu rol no permite hacer esto.'
     request_malformed: 'No se ha podido leer el cuerpo de la petición. Comprueba que sea un JSON válido, con los campos obligatorios y los tipos esperados.'
     not_found: 'No existe el recurso solicitado.'
     method_not_allowed: 'Ese método no está permitido en este recurso.'
@@ -31,6 +34,20 @@ catalog:
     sku_already_used: 'El cliente ya tiene un producto con la referencia {sku}.'
     sku_invalid: '"{value}" no es una referencia (SKU) válida. Usa de 1 a 40 letras, dígitos, puntos, guiones, guiones bajos o barras, empezando y terminando por una letra o un dígito.'
 
+identity:
+    credentials_invalid: 'El correo o la contraseña no son correctos.'
+    email_already_used: 'Ya existe otro usuario con el correo {email}.'
+    email_invalid: '"{value}" no es una dirección de correo válida.'
+    language_invalid: '"{value}" no es un idioma. Usa es o en.'
+    password_invalid: 'La contraseña debe tener entre {minLength} y {maxLength} caracteres.'
+    role_invalid: '"{value}" no es un rol. Usa admin, supervisor u operator.'
+    roles_required: 'Un usuario necesita al menos un rol.'
+    tenant_name_invalid: 'El nombre de un cliente debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    tenant_not_found: 'No existe ningún cliente con el identificador {id}.'
+    user_already_disabled: 'El usuario {email} ya está deshabilitado.'
+    user_not_disabled: 'El usuario {email} no está deshabilitado.'
+    user_not_found: 'No existe ningún usuario con el correo {email}.'
+
 warehouse:
     block_reason_invalid: 'El motivo del bloqueo debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
     capacity_invalid: '{field, select, maxWeightKg {El peso máximo} maxVolumeLitres {El volumen máximo} maxPalletPositions {El número máximo de posiciones de palé} other {El límite}} debe ser un número entero positivo, y se ha recibido {value}.'
@@ -53,6 +70,7 @@ warehouse:
 status:
     '400': 'Solicitud incorrecta'
     '401': 'No autorizado'
+    '403': 'Prohibido'
     '404': 'No encontrado'
     '405': 'Método no permitido'
     '406': 'No aceptable'

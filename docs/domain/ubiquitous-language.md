@@ -2,6 +2,16 @@
 
 One term, one meaning, in code, tests, screens and documents. Code is in English. The interface is bilingual ([ADR 0004](../adr/0004-bilingual-interface-spanish-by-default.md)): the Spanish column is the term warehouse staff actually use and the one the Spanish interface shows, and the English term is the one the English interface shows.
 
+## Access
+
+| Term | Spanish | Meaning | Context |
+|---|---|---|---|
+| User | Usuario | A person who signs in. It belongs to one tenant for its whole life. | Identity |
+| Role | Rol | What a user may do: administrator (`admin`), supervisor or operator (`operator`, "operario" on the floor). Each includes the ones below it. | Identity |
+| Sign in | Iniciar sesión | Proving who you are with an email and a password, to get a token. | Identity |
+| Token | Token de acceso | What a sign-in returns. It lasts one hour and is sent with every request. | Identity |
+| Disabled user | Usuario deshabilitado | A user that cannot sign in, nor use a token it already holds. | Identity |
+
 ## Master data
 
 | Term | Spanish | Meaning | Context |

@@ -14,6 +14,7 @@ flowchart TB
     inventory["<b>Inventory</b><br/>stock ledger, reservations"]:::core
     catalog["<b>Catalog</b><br/>products"]:::up
     warehouse["<b>Warehouse</b><br/>locations"]:::up
+    identity["<b>Identity</b><br/>tenants, users, sign-in"]:::up
 
     inbound --> inventory
     outbound --> inventory
@@ -35,6 +36,7 @@ flowchart TB
 
 | Context | Role | Depends on |
 |---|---|---|
+| Identity | Upstream. Who may use the system, and for which tenant. Nothing depends on it: the other contexts learn the tenant through the `CurrentTenant` port in `Shared`. | Nothing |
 | Catalog | Upstream. Defines what the warehouse handles. | Nothing |
 | Warehouse | Upstream. Defines where stock can go. | Nothing |
 | Inventory | Core. The authority on how much stock exists and where. | Catalog, Warehouse |
@@ -46,6 +48,10 @@ Inbound and Outbound talk to the ERP through an anti-corruption layer (E08), so 
 ## Published contracts
 
 Everything below lives in the context's `Application/Contract` namespace. Other contexts may use these and nothing else. Names are a design sketch; signatures settle when each context is implemented.
+
+### Identity
+
+None. The other contexts need no contract from it. The tenant of a request reaches them through the `CurrentTenant` port in `Shared`, which Identity implements from the signed-in user ([ADR 0008](../adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md)).
 
 ### Catalog
 
