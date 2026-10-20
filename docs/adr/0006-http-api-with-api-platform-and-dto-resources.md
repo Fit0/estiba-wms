@@ -1,6 +1,6 @@
 # 0006. HTTP API with API Platform and DTO resources
 
-- Status: Accepted
+- Status: Accepted. The paragraph on errors the serializer finds is superseded by [ADR 0007](0007-one-translated-problem-shape-for-every-api-error.md).
 - Date: 2026-10-18
 
 ## Context

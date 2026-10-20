@@ -19,7 +19,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | API | API Platform 5, plain JSON, DTO resources and our own state providers and processors (ADR 0006) | In use |
 | Messaging | Symfony Messenger (command and query buses), Redis transport | Planned (E03) |
 | Auth | LexikJWTAuthenticationBundle | Planned (E02) |
-| Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Planned (E02, E05) |
+| Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Backend in use, frontend planned (E05) |
 | Frontend | React 19, TypeScript (strict), Vite, TanStack Query, React Router, React Hook Form + Zod, shadcn/ui + Tailwind | Planned (E05) |
 | Frontend testing | Vitest, Testing Library, MSW, Playwright | Planned (E06) |
 | Real time | Mercure | Planned (E07) |
@@ -103,6 +103,9 @@ The interface is bilingual: Spanish (`es`, the default) and English (`en`). The 
 - Domain exceptions carry a **stable error code** and parameters, never a sentence. They extend `DomainRuleViolation` (in `Shared\Domain`), which implements `DomainError`, and are built with a named constructor that holds the code, its parameters and an English message for logs (see `Warehouse/Domain/Exception/`). Codes are lowercase and dotted: `inventory.stock_negative`, `warehouse.location_code_invalid`. The architecture test fails any domain exception that does not implement `DomainError`.
 - Domain tests assert the error code and its parameters, not the message (`AssertsDomainErrors` in `tests/Unit/Support/`).
 - Every new code or key needs an entry in both `es` and `en`. A parity test fails the build when one is missing.
+- Backend error texts live in `backend/translations/errors+intl-icu.es.yaml` and `.en.yaml`, keyed by error code, in ICU format. A parameter that picks the wording (a field name, a status) is an ICU `select`. **Avoid apostrophes**: ICU treats them as special. `ErrorCatalogTest` reads every code from the source and fails when a text is missing, left over, invalid ICU, or uses a parameter the error does not carry. How to add a code: [docs/api/errors.md](docs/api/errors.md).
+- Every API error is `application/problem+json`, built only by `ProblemFactory` through `ApiErrorListener` ([ADR 0007](docs/adr/0007-one-translated-problem-shape-for-every-api-error.md)). Errors that are not domain rules use the generic `shared.*` codes of the `HttpProblem` enum. Never return an error response by hand.
+- The language comes from `Accept-Language`: Spanish by default, English on request. In functional tests set `$this->acceptLanguage`, which defaults to an empty header, because the test client otherwise adds `en-us` on its own.
 - Spanish and English UI terms follow the [ubiquitous language](docs/domain/ubiquitous-language.md). Do not invent translations for terms that are in it.
 - Data users type (product descriptions, supplier names) is stored as typed and not translated.
 

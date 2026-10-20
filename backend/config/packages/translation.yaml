@@ -1,0 +1,8 @@
+framework:
+    # Spanish is the default language (ADR 0004). A request picks English with Accept-Language.
+    default_locale: es
+    enabled_locales: ['es', 'en']
+    translator:
+        default_path: '%kernel.project_dir%/translations'
+        fallbacks: ['es']
+        providers:

@@ -43,9 +43,9 @@ final class WarehouseApiTest extends ApiTestCase
 
     public function testRejectsABodyWithoutTheRequiredFields(): void
     {
-        $this->request('POST', '/api/warehouses', ['code' => 'MAD1']);
+        $problem = $this->request('POST', '/api/warehouses', ['code' => 'MAD1']);
 
-        $this->assertStatus(400);
+        $this->assertProblem(400, 'shared.request_malformed', $problem);
     }
 
     public function testListsOnlyTheWarehousesOfTheTenantOrderedByCode(): void
