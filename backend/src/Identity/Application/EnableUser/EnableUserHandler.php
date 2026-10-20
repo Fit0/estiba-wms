@@ -8,12 +8,13 @@ use App\Identity\Domain\Email;
 use App\Identity\Domain\Exception\UserNotFound;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserRepository;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 
 /**
- * The caller owns the transaction and flushes.
+ * The command bus owns the transaction and flushes.
  */
-final readonly class EnableUserHandler
+final readonly class EnableUserHandler implements CommandHandler
 {
     public function __construct(
         private UserRepository $users,

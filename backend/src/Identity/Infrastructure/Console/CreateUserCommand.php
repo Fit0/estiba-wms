@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Identity\Infrastructure\Console;
 
 use App\Identity\Application\RegisterUser\RegisterUser;
-use App\Identity\Application\RegisterUser\RegisterUserHandler;
+use App\Shared\Application\Bus\CommandBus;
 use App\Shared\Domain\DomainError;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,8 +19,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class CreateUserCommand extends Command
 {
     public function __construct(
-        private readonly RegisterUserHandler $handler,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly CommandBus $commandBus,
         private readonly PasswordPrompt $passwords,
     ) {
         parent::__construct();
@@ -47,8 +45,7 @@ final class CreateUserCommand extends Command
         \assert(\is_string($tenantId) && \is_string($email));
 
         try {
-            $user = ($this->handler)(new RegisterUser($tenantId, $email, $this->passwords->ask($input, $io), $roles));
-            $this->entityManager->flush();
+            $user = $this->commandBus->dispatch(new RegisterUser($tenantId, $email, $this->passwords->ask($input, $io), $roles));
         } catch (DomainError $error) {
             $io->error($error->getMessage());
 

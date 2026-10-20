@@ -8,9 +8,10 @@ use App\Catalog\Application\ProductLookup;
 use App\Catalog\Domain\Gtin;
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductRepository;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 
-final readonly class AssignGtinHandler
+final readonly class AssignGtinHandler implements CommandHandler
 {
     public function __construct(
         private ProductLookup $lookup,

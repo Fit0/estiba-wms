@@ -15,16 +15,17 @@ use App\Identity\Domain\TenantRepository;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserId;
 use App\Identity\Domain\UserRepository;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\Language;
 use App\Shared\Domain\TenantId;
 
 /**
- * The caller owns the transaction and flushes, so the tenant and its administrator are saved
+ * The command bus owns the transaction and flushes, so the tenant and its administrator are saved
  * together or not at all.
  */
-final readonly class RegisterTenantHandler
+final readonly class RegisterTenantHandler implements CommandHandler
 {
     public function __construct(
         private TenantRepository $tenants,

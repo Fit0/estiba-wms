@@ -7,9 +7,10 @@ namespace App\Warehouse\Infrastructure\Http\State;
 use ApiPlatform\Metadata\CollectionOperationInterface;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
+use App\Shared\Application\Bus\QueryBus;
 use App\Shared\Infrastructure\Http\UriVariable;
-use App\Warehouse\Application\ListWarehouses\ListWarehousesHandler;
-use App\Warehouse\Application\WarehouseLookup;
+use App\Warehouse\Application\GetWarehouse\GetWarehouse;
+use App\Warehouse\Application\ListWarehouses\ListWarehouses;
 use App\Warehouse\Infrastructure\Http\Resource\WarehouseResource;
 
 /**
@@ -17,10 +18,8 @@ use App\Warehouse\Infrastructure\Http\Resource\WarehouseResource;
  */
 final readonly class WarehouseProvider implements ProviderInterface
 {
-    public function __construct(
-        private WarehouseLookup $lookup,
-        private ListWarehousesHandler $listWarehouses,
-    ) {
+    public function __construct(private QueryBus $queryBus)
+    {
     }
 
     /**
@@ -30,9 +29,9 @@ final readonly class WarehouseProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): WarehouseResource|array
     {
         if ($operation instanceof CollectionOperationInterface) {
-            return array_map(WarehouseResource::fromDomain(...), ($this->listWarehouses)());
+            return array_map(WarehouseResource::fromDomain(...), $this->queryBus->ask(new ListWarehouses()));
         }
 
-        return WarehouseResource::fromDomain($this->lookup->get(UriVariable::string($uriVariables, 'id')));
+        return WarehouseResource::fromDomain($this->queryBus->ask(new GetWarehouse(UriVariable::string($uriVariables, 'id'))));
     }
 }

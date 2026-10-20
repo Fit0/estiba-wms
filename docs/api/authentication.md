@@ -83,4 +83,4 @@ A password has 12 to 72 characters.
 
 ## Keys
 
-Tokens are signed with RS256. `make jwt-keys` creates the key pair in `backend/config/jwt/`, which git ignores, and the development container does it on first start. In production the key files and `JWT_PASSPHRASE` come from the environment: never use the development value that `.env` carries.
+Tokens are signed with RS256. `make jwt-keys` creates the key pair in `backend/config/jwt/`, which git ignores, and the development container does it on first start. `JWT_PASSPHRASE` is random per machine: `make up` writes it to `backend/.env`, which git ignores. In production the key files and `JWT_PASSPHRASE` come from the environment. To rotate them in development, delete `backend/.env` and `backend/config/jwt/*.pem` and run `make up` again; existing tokens stop working.

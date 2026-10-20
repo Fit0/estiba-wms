@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Warehouse\Application\DefineLocation;
 
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Warehouse\Application\WarehouseLookup;
@@ -15,7 +16,7 @@ use App\Warehouse\Domain\LocationRepository;
 use App\Warehouse\Domain\PickSequence;
 use App\Warehouse\Domain\ZoneId;
 
-final readonly class DefineLocationHandler
+final readonly class DefineLocationHandler implements CommandHandler
 {
     public function __construct(
         private WarehouseLookup $lookup,

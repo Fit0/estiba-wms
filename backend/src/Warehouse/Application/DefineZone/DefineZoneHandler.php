@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Warehouse\Application\DefineZone;
 
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Warehouse\Application\WarehouseLookup;
@@ -14,7 +15,7 @@ use App\Warehouse\Domain\WarehouseRepository;
 use App\Warehouse\Domain\ZoneCode;
 use App\Warehouse\Domain\ZoneId;
 
-final readonly class DefineZoneHandler
+final readonly class DefineZoneHandler implements CommandHandler
 {
     public function __construct(
         private WarehouseLookup $lookup,

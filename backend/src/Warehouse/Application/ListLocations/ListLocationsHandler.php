@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Warehouse\Application\ListLocations;
 
+use App\Shared\Application\Bus\QueryHandler;
 use App\Shared\Domain\Page;
 use App\Warehouse\Application\WarehouseLookup;
 use App\Warehouse\Domain\Location;
 use App\Warehouse\Domain\LocationRepository;
 use App\Warehouse\Domain\ZoneId;
 
-final readonly class ListLocationsHandler
+final readonly class ListLocationsHandler implements QueryHandler
 {
     public function __construct(
         private WarehouseLookup $lookup,

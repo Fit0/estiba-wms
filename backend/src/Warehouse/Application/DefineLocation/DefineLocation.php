@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace App\Warehouse\Application\DefineLocation;
 
+use App\Shared\Application\Bus\Command;
+use App\Warehouse\Domain\Location;
 use App\Warehouse\Domain\LocationType;
 
-final readonly class DefineLocation
+/**
+ * @implements Command<Location>
+ */
+final readonly class DefineLocation implements Command
 {
     public function __construct(
         public string $warehouseId,

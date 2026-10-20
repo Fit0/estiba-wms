@@ -30,4 +30,4 @@ Unique constraints back the registry checks against races: `(tenant_id, code)` o
 - The domain stays free of Doctrine, and invalid data in the database fails loudly when read.
 - Each new value object that is persisted needs a small type class and an entry in `doctrine.yaml`.
 - Zones cannot be filtered or joined in SQL without JSON operators. If that becomes a need, zones can move to their own table in a new migration, with the same domain API.
-- Until the command bus exists (E03), whoever calls a repository must call `flush()`.
+- The command bus flushes at the end of every command ([ADR 0009](0009-command-and-query-buses-with-symfony-messenger.md)). Outside a command, such as a demo loader or a test, whoever calls a repository must call `flush()`.

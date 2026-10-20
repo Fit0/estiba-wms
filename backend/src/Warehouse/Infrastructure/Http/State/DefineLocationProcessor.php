@@ -6,28 +6,25 @@ namespace App\Warehouse\Infrastructure\Http\State;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
+use App\Shared\Application\Bus\CommandBus;
 use App\Shared\Infrastructure\Http\UriVariable;
 use App\Warehouse\Application\DefineLocation\DefineLocation;
-use App\Warehouse\Application\DefineLocation\DefineLocationHandler;
 use App\Warehouse\Infrastructure\Http\Input\DefineLocationInput;
 use App\Warehouse\Infrastructure\Http\Resource\LocationResource;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * @implements ProcessorInterface<DefineLocationInput, LocationResource>
  */
 final readonly class DefineLocationProcessor implements ProcessorInterface
 {
-    public function __construct(
-        private DefineLocationHandler $handler,
-        private EntityManagerInterface $entityManager,
-    ) {
+    public function __construct(private CommandBus $commandBus)
+    {
     }
 
     #[\Override]
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): LocationResource
     {
-        $location = ($this->handler)(new DefineLocation(
+        return LocationResource::fromDomain($this->commandBus->dispatch(new DefineLocation(
             UriVariable::string($uriVariables, 'warehouseId'),
             $data->zoneId,
             $data->code,
@@ -36,9 +33,6 @@ final readonly class DefineLocationProcessor implements ProcessorInterface
             $data->maxWeightKg,
             $data->maxVolumeLitres,
             $data->maxPalletPositions,
-        ));
-        $this->entityManager->flush();
-
-        return LocationResource::fromDomain($location);
+        )));
     }
 }

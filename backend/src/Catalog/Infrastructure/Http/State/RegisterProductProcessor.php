@@ -7,28 +7,23 @@ namespace App\Catalog\Infrastructure\Http\State;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProcessorInterface;
 use App\Catalog\Application\RegisterProduct\RegisterProduct;
-use App\Catalog\Application\RegisterProduct\RegisterProductHandler;
 use App\Catalog\Infrastructure\Http\Input\RegisterProductInput;
 use App\Catalog\Infrastructure\Http\Resource\ProductResource;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Shared\Application\Bus\CommandBus;
 
 /**
- * Owns the transaction: it flushes after the use case, until the command bus does (E03-02).
- *
  * @implements ProcessorInterface<RegisterProductInput, ProductResource>
  */
 final readonly class RegisterProductProcessor implements ProcessorInterface
 {
-    public function __construct(
-        private RegisterProductHandler $handler,
-        private EntityManagerInterface $entityManager,
-    ) {
+    public function __construct(private CommandBus $commandBus)
+    {
     }
 
     #[\Override]
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): ProductResource
     {
-        $product = ($this->handler)(new RegisterProduct(
+        return ProductResource::fromDomain($this->commandBus->dispatch(new RegisterProduct(
             $data->sku,
             $data->name,
             $data->baseUnit,
@@ -41,9 +36,6 @@ final readonly class RegisterProductProcessor implements ProcessorInterface
             $data->trackedByExpiry,
             $data->minShelfLifeAtReceiptDays,
             $data->minShelfLifeAtShipmentDays,
-        ));
-        $this->entityManager->flush();
-
-        return ProductResource::fromDomain($product);
+        )));
     }
 }

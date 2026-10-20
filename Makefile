@@ -4,13 +4,16 @@ DC  := docker compose
 PHP := $(DC) exec -T php
 
 .DEFAULT_GOAL := help
-.PHONY: help up down build logs sh composer console jwt-keys tenant demo validate test test-unit stan cs fix rector qa
+.PHONY: help env up down build logs sh composer console jwt-keys tenant demo validate test test-unit stan cs fix rector qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
 
 ## —— Environment ————————————————————————————————————————————
-up: ## Start the stack and wait until it is healthy
+env: ## Create backend/.env from .env.example with new secrets (leaves an existing one alone)
+	@sh backend/scripts/create-env.sh
+
+up: env ## Start the stack and wait until it is healthy
 	$(DC) up -d --wait
 
 down: ## Stop the stack

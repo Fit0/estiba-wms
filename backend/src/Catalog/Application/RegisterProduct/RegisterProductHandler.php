@@ -11,15 +11,16 @@ use App\Catalog\Domain\ProductName;
 use App\Catalog\Domain\ProductRepository;
 use App\Catalog\Domain\Sku;
 use App\Catalog\Domain\TrackingPolicy;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Application\IdGenerator;
 
 /**
- * The events the product raises stay on it until the event bus exists (E03-02).
- * The caller owns the transaction and flushes.
+ * The events the product raises stay on it until events are published (E03-05).
+ * The command bus owns the transaction and flushes.
  */
-final readonly class RegisterProductHandler
+final readonly class RegisterProductHandler implements CommandHandler
 {
     public function __construct(
         private ProductRepository $products,

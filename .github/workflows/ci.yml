@@ -39,6 +39,11 @@ jobs:
       - name: Validate composer.json and the lock file
         run: composer validate --strict
 
+      # .env is not in the repository. Composer's scripts boot the kernel, so every job that installs
+      # dependencies needs it. The secrets are new and random on every run.
+      - name: Create the environment file
+        run: sh scripts/create-env.sh
+
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
 
@@ -68,6 +73,11 @@ jobs:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
+
+      # .env is not in the repository. Composer's scripts boot the kernel, so every job that installs
+      # dependencies needs it. The secrets are new and random on every run.
+      - name: Create the environment file
+        run: sh scripts/create-env.sh
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
@@ -105,6 +115,11 @@ jobs:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
+
+      # .env is not in the repository. Composer's scripts boot the kernel, so every job that installs
+      # dependencies needs it. The secrets are new and random on every run.
+      - name: Create the environment file
+        run: sh scripts/create-env.sh
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist
@@ -173,6 +188,11 @@ jobs:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: composer-${{ runner.os }}-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-${{ runner.os }}-
+
+      # .env is not in the repository. Composer's scripts boot the kernel, so every job that installs
+      # dependencies needs it. The secrets are new and random on every run.
+      - name: Create the environment file
+        run: sh scripts/create-env.sh
 
       - name: Install dependencies
         run: composer install --no-interaction --no-progress --prefer-dist

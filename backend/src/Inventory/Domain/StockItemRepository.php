@@ -17,7 +17,7 @@ interface StockItemRepository
 
     /**
      * Saves the stock item and, with it, the movements it recorded since it was loaded, so the
-     * change and its movement are never apart (STK-03). The caller owns the transaction.
+     * change and its movement are never apart (STK-03). The command bus owns the transaction.
      */
     public function save(StockItem $stockItem): void;
 }

@@ -19,5 +19,22 @@ services:
     App\:
         resource: '../src/'
 
+    # Every handler is registered on its bus through the interface it implements (ADR 0009).
+    # Messenger finds the message from the type of the argument of __invoke().
+    _instanceof:
+        App\Shared\Application\Bus\CommandHandler:
+            tags: [{ name: messenger.message_handler, bus: command.bus }]
+        App\Shared\Application\Bus\QueryHandler:
+            tags: [{ name: messenger.message_handler, bus: query.bus }]
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+when@test:
+    services:
+        # Messages and handlers that only exist to test the buses. Their handlers are registered by
+        # the #[AsMessageHandler] attribute, so the test keeps working if the interfaces change.
+        App\Tests\Functional\Shared\Messaging\Fixtures\:
+            resource: '../tests/Functional/Shared/Messaging/Fixtures/'
+            autowire: true
+            autoconfigure: true

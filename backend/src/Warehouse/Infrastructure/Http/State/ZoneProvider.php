@@ -6,8 +6,9 @@ namespace App\Warehouse\Infrastructure\Http\State;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
+use App\Shared\Application\Bus\QueryBus;
 use App\Shared\Infrastructure\Http\UriVariable;
-use App\Warehouse\Application\ListWarehouses\ListWarehousesHandler;
+use App\Warehouse\Application\ListWarehouses\ListWarehouses;
 use App\Warehouse\Domain\Exception\ZoneNotFound;
 use App\Warehouse\Domain\ZoneId;
 use App\Warehouse\Infrastructure\Http\Resource\ZoneResource;
@@ -19,7 +20,7 @@ use App\Warehouse\Infrastructure\Http\Resource\ZoneResource;
  */
 final readonly class ZoneProvider implements ProviderInterface
 {
-    public function __construct(private ListWarehousesHandler $listWarehouses)
+    public function __construct(private QueryBus $queryBus)
     {
     }
 
@@ -28,7 +29,7 @@ final readonly class ZoneProvider implements ProviderInterface
     {
         $id = ZoneId::fromString(UriVariable::string($uriVariables, 'id'));
 
-        foreach (($this->listWarehouses)() as $warehouse) {
+        foreach ($this->queryBus->ask(new ListWarehouses()) as $warehouse) {
             foreach ($warehouse->zones() as $zone) {
                 if ($zone->id->equals($id)) {
                     return ZoneResource::fromDomain($warehouse->id(), $zone);
