@@ -48,6 +48,16 @@ identity:
     user_not_disabled: 'User {email} is not disabled.'
     user_not_found: 'There is no user with email {email}.'
 
+inventory:
+    lot_number_invalid: 'A lot number must have 1 to 40 characters and no control characters.'
+    movement_quantity_not_positive: 'A {type, select, receipt {receipt} issue {issue} transfer_out {transfer out} transfer_in {transfer in} adjustment {adjustment} other {{type}}} movement must change the stock by at least one unit.'
+    movement_text_invalid: 'The {field, select, reason {reason} reference {reference} other {text}} of a movement must have 1 to {maxLength} characters and no control characters.'
+    quantity_invalid: 'A quantity cannot be negative, and {units} was received.'
+    stock_negative: 'Cannot take {requested} units from a stock item that holds only {onHand}. Stock cannot go negative.'
+    transfer_across_tenants: 'Stock can only be transferred between stock items of the same customer.'
+    transfer_product_mismatch: 'Stock can only be transferred between stock items of the same product.'
+    transfer_same_stock_item: 'A stock item cannot be transferred to itself.'
+
 warehouse:
     block_reason_invalid: 'A block reason must have 1 to {maxLength} characters and no control characters.'
     capacity_invalid: '{field, select, maxWeightKg {The maximum weight} maxVolumeLitres {The maximum volume} maxPalletPositions {The maximum number of pallet positions} other {The limit}} must be a positive whole number, got {value}.'
