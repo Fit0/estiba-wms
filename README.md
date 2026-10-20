@@ -122,7 +122,10 @@ make console c=about         # Symfony console
 make composer c="require x"  # Composer
 make sh                      # Shell in the PHP container
 make tenant name="X" email=a@b.co  # A tenant and its admin
+make demo                    # A fashion company with its warehouse and collection (dev only)
 ```
+
+`make demo` loads **Marea Moda**, a fashion company that receives its collection from factories and ships it to its own stores and to franchises. It creates an admin, a supervisor and an operator (`admin@`, `supervisor@` and `operario@marea.test`, sharing the password you type), a distribution centre in Zaragoza with 6 zones and 42 locations, and 39 products: a spring-summer collection in sizes and colours. Loading it twice does nothing.
 
 ## Quality checks
 

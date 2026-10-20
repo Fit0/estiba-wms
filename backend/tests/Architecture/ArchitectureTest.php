@@ -117,6 +117,20 @@ final class ArchitectureTest
     /**
      * @return iterable<string, Rule>
      */
+    public function testNothingDependsOnTheDemoData(): iterable
+    {
+        foreach (self::LAYERED as $context) {
+            yield "{$context} does not depend on the demo data" => PHPat::rule()
+                ->classes($this->namespace("App\\{$context}"))
+                ->shouldNotDependOn()
+                ->classes($this->namespace('App\Demo'))
+                ->because('The demo data exists only in dev and test and builds on the contexts. Nothing in production may need it.');
+        }
+    }
+
+    /**
+     * @return iterable<string, Rule>
+     */
     public function testDomainExceptionsCarryAnErrorCode(): iterable
     {
         foreach (self::LAYERED as $context) {
