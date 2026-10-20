@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 namespace App\Identity\Application\RegisterUser;
 
-final readonly class RegisterUser
+use App\Identity\Domain\User;
+use App\Shared\Application\Bus\Command;
+
+/**
+ * @implements Command<User>
+ */
+final readonly class RegisterUser implements Command
 {
     /**
      * @param list<string> $roles

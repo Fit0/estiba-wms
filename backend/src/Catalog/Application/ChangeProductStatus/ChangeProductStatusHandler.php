@@ -7,9 +7,10 @@ namespace App\Catalog\Application\ChangeProductStatus;
 use App\Catalog\Application\ProductLookup;
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductStatus;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 
-final readonly class ChangeProductStatusHandler
+final readonly class ChangeProductStatusHandler implements CommandHandler
 {
     public function __construct(
         private ProductLookup $lookup,

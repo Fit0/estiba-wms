@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace App\Catalog\Application\RegisterProduct;
 
+use App\Catalog\Domain\Product;
 use App\Catalog\Domain\UnitOfMeasure;
+use App\Shared\Application\Bus\Command;
 use App\Shared\Domain\StorageClass;
 
-final readonly class RegisterProduct
+/**
+ * @implements Command<Product>
+ */
+final readonly class RegisterProduct implements Command
 {
     public function __construct(
         public string $sku,

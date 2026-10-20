@@ -8,8 +8,9 @@ use App\Catalog\Application\ProductLookup;
 use App\Catalog\Domain\Dimensions;
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductName;
+use App\Shared\Application\Bus\CommandHandler;
 
-final readonly class UpdateProductDetailsHandler
+final readonly class UpdateProductDetailsHandler implements CommandHandler
 {
     public function __construct(private ProductLookup $lookup)
     {

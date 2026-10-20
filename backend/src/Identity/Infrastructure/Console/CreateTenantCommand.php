@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace App\Identity\Infrastructure\Console;
 
 use App\Identity\Application\RegisterTenant\RegisterTenant;
-use App\Identity\Application\RegisterTenant\RegisterTenantHandler;
+use App\Shared\Application\Bus\CommandBus;
 use App\Shared\Domain\DomainError;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -20,8 +19,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 final class CreateTenantCommand extends Command
 {
     public function __construct(
-        private readonly RegisterTenantHandler $handler,
-        private readonly EntityManagerInterface $entityManager,
+        private readonly CommandBus $commandBus,
         private readonly PasswordPrompt $passwords,
     ) {
         parent::__construct();
@@ -47,8 +45,7 @@ final class CreateTenantCommand extends Command
         \assert(\is_string($name) && \is_string($email) && \is_string($language));
 
         try {
-            $registered = ($this->handler)(new RegisterTenant($name, $language, $email, $this->passwords->ask($input, $io)));
-            $this->entityManager->flush();
+            $registered = $this->commandBus->dispatch(new RegisterTenant($name, $language, $email, $this->passwords->ask($input, $io)));
         } catch (DomainError $error) {
             $io->error($error->getMessage());
 

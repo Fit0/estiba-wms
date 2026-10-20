@@ -87,8 +87,11 @@ Requirements: [Docker](https://docs.docker.com/get-docker/) with Docker Compose 
 git clone git@github.com:Fit0/estiba-wms.git
 cd estiba-wms
 git config core.hooksPath .githooks
+sh backend/scripts/create-env.sh   # creates backend/.env with new random secrets
 docker compose up -d --wait
 ```
+
+`backend/.env` is not in the repository: it holds secrets, and `backend/.env.example` is its template. `make up` runs the script for you, and it never overwrites an existing `.env`.
 
 The first start builds the PHP image and installs Composer dependencies, so it takes a few minutes. Then check that everything is up:
 

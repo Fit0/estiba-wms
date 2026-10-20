@@ -14,14 +14,15 @@ use App\Identity\Domain\TenantRepository;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserId;
 use App\Identity\Domain\UserRepository;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\TenantId;
 
 /**
- * The caller owns the transaction and flushes.
+ * The command bus owns the transaction and flushes.
  */
-final readonly class RegisterUserHandler
+final readonly class RegisterUserHandler implements CommandHandler
 {
     public function __construct(
         private TenantRepository $tenants,

@@ -8,11 +8,11 @@ use ApiPlatform\Metadata\CollectionOperationInterface;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\Pagination\TraversablePaginator;
 use ApiPlatform\State\ProviderInterface;
+use App\Shared\Application\Bus\QueryBus;
 use App\Shared\Domain\PageRequest;
 use App\Shared\Infrastructure\Http\UriVariable;
+use App\Warehouse\Application\GetLocation\GetLocation;
 use App\Warehouse\Application\ListLocations\ListLocations;
-use App\Warehouse\Application\ListLocations\ListLocationsHandler;
-use App\Warehouse\Application\LocationLookup;
 use App\Warehouse\Domain\LocationStatus;
 use App\Warehouse\Infrastructure\Http\Resource\LocationResource;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,8 +26,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 final readonly class LocationProvider implements ProviderInterface
 {
     public function __construct(
-        private LocationLookup $lookup,
-        private ListLocationsHandler $listLocations,
+        private QueryBus $queryBus,
     ) {
     }
 
@@ -38,13 +37,13 @@ final readonly class LocationProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): LocationResource|TraversablePaginator
     {
         if (!$operation instanceof CollectionOperationInterface) {
-            return LocationResource::fromDomain($this->lookup->get(UriVariable::string($uriVariables, 'id')));
+            return LocationResource::fromDomain($this->queryBus->ask(new GetLocation(UriVariable::string($uriVariables, 'id'))));
         }
 
         $request = $context['request'] ?? null;
         \assert($request instanceof Request);
 
-        $page = ($this->listLocations)(new ListLocations(
+        $page = $this->queryBus->ask(new ListLocations(
             UriVariable::string($uriVariables, 'warehouseId'),
             PageRequest::of($request->query->getInt('page', 1), $request->query->getInt('itemsPerPage', PageRequest::DEFAULT_ITEMS_PER_PAGE)),
             $request->query->has('zoneId') ? $request->query->getString('zoneId') : null,

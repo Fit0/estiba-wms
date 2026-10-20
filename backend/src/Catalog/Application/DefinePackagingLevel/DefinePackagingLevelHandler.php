@@ -7,9 +7,10 @@ namespace App\Catalog\Application\DefinePackagingLevel;
 use App\Catalog\Application\ProductLookup;
 use App\Catalog\Domain\PackagingLevel;
 use App\Catalog\Domain\Product;
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 
-final readonly class DefinePackagingLevelHandler
+final readonly class DefinePackagingLevelHandler implements CommandHandler
 {
     public function __construct(
         private ProductLookup $lookup,

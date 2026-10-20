@@ -6,10 +6,11 @@ namespace App\Catalog\Application\ListProducts;
 
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductRepository;
+use App\Shared\Application\Bus\QueryHandler;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Domain\Page;
 
-final readonly class ListProductsHandler
+final readonly class ListProductsHandler implements QueryHandler
 {
     public function __construct(
         private ProductRepository $products,

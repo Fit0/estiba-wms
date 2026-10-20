@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace App\Warehouse\Application\BlockLocation;
 
+use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Warehouse\Application\LocationLookup;
 use App\Warehouse\Domain\BlockReason;
 use App\Warehouse\Domain\Location;
 
-final readonly class BlockLocationHandler
+final readonly class BlockLocationHandler implements CommandHandler
 {
     public function __construct(
         private LocationLookup $lookup,
