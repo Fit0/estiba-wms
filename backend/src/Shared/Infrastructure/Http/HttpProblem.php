@@ -7,12 +7,16 @@ namespace App\Shared\Infrastructure\Http;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Error codes for problems that are not a broken domain rule: the request itself is wrong,
- * or something unexpected failed. Each has a translation in `translations/errors+intl-icu.*.yaml`.
+ * Error codes for problems that are not a broken domain rule: the request itself is wrong, the
+ * caller is not who it must be, or something unexpected failed. Each has a translation in `translations/errors+intl-icu.*.yaml`.
  */
 enum HttpProblem: string
 {
-    case TenantMissing = 'shared.tenant_missing';
+    case Unauthenticated = 'shared.unauthenticated';
+    case TokenInvalid = 'shared.token_invalid';
+    case TokenExpired = 'shared.token_expired';
+    case CredentialsInvalid = 'identity.credentials_invalid';
+    case Forbidden = 'shared.forbidden';
     case RequestMalformed = 'shared.request_malformed';
     case NotFound = 'shared.not_found';
     case MethodNotAllowed = 'shared.method_not_allowed';
@@ -28,6 +32,8 @@ enum HttpProblem: string
     {
         return match (true) {
             Response::HTTP_BAD_REQUEST === $status => self::RequestMalformed,
+            Response::HTTP_UNAUTHORIZED === $status => self::Unauthenticated,
+            Response::HTTP_FORBIDDEN === $status => self::Forbidden,
             Response::HTTP_NOT_FOUND === $status => self::NotFound,
             Response::HTTP_METHOD_NOT_ALLOWED === $status => self::MethodNotAllowed,
             Response::HTTP_NOT_ACCEPTABLE === $status => self::NotAcceptable,

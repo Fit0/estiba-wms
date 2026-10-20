@@ -24,6 +24,7 @@ final class ArchitectureTest
      * Any other dependency is forbidden, so the graph has no cycles. See docs/domain/context-map.md.
      */
     private const array DEPENDS_ON = [
+        'Identity' => [],
         'Catalog' => [],
         'Warehouse' => [],
         'Inventory' => ['Catalog', 'Warehouse'],
@@ -32,7 +33,7 @@ final class ArchitectureTest
     ];
 
     /** Shared is not a bounded context, but it follows the same layering rules. */
-    private const array LAYERED = ['Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Shared'];
+    private const array LAYERED = ['Identity', 'Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Shared'];
 
     private const array FRAMEWORKS = ['Symfony', 'Doctrine', 'ApiPlatform', 'Lexik', 'Redis', 'Twig'];
 

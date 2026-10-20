@@ -1,0 +1,4 @@
+# The firewall answers this route (see security.yaml). It only has to exist.
+api_login_check:
+    path: /api/auth/login
+    methods: [POST]

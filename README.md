@@ -20,6 +20,7 @@ Most portfolio projects are CRUD apps. Estiba models a real business domain with
 - **Legacy integration**: an anti-corruption layer talks to a simulated legacy ERP over SOAP and CSV/SFTP, using the outbox pattern for reliable delivery.
 - **AI where it helps**: product classification, slotting suggestions and anomaly detection, with explainable results.
 - **Operator-first UX**: an installable PWA for barcode-driven picking that keeps working offline.
+- **Multi-tenant and secure by default**: JWT sign-in, three roles, and a database filter that keeps one tenant's rows away from another, even if a query forgets to ask.
 - **Bilingual**: Spanish by default and English. Every API error has a stable code and is translated for each request from `Accept-Language` (see [API errors](docs/api/errors.md)).
 
 ## Architecture
@@ -28,6 +29,7 @@ The backend is organized by bounded context, each with `Domain`, `Application` a
 
 | Context | Responsibility |
 |---|---|
+| **Identity** | Tenants, users, roles and signing in |
 | **Catalog** | Products, SKUs, GTINs, units of measure |
 | **Warehouse** | Warehouses, zones and locations |
 | **Inventory** | Stock ledger, movements, stock queries |
@@ -95,6 +97,16 @@ curl http://localhost:8080/health
 # {"status":"ok","checks":{"database":"up","redis":"up"}}
 ```
 
+Every endpoint under `/api` needs a token. Create a tenant with its first administrator, which asks for the password with the typing hidden, and sign in:
+
+```bash
+make tenant name="Acme Logistics" email=admin@acme.test
+curl -s -X POST http://localhost:8080/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"email": "admin@acme.test", "password": "<the password you chose>"}'
+```
+
+The token goes in `Authorization: Bearer <token>`. See [authentication](docs/api/authentication.md) for roles, more users and the keys. The JWT key pair is created on the first start in development; `make jwt-keys` creates it again.
+
 | Service | Address |
 |---|---|
 | API | http://localhost:8080 |
@@ -109,6 +121,7 @@ make down                    # Stop it
 make console c=about         # Symfony console
 make composer c="require x"  # Composer
 make sh                      # Shell in the PHP container
+make tenant name="X" email=a@b.co  # A tenant and its admin
 ```
 
 ## Quality checks

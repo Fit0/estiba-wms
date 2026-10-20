@@ -1,6 +1,6 @@
 # 0006. HTTP API with API Platform and DTO resources
 
-- Status: Accepted. The paragraph on errors the serializer finds is superseded by [ADR 0007](0007-one-translated-problem-shape-for-every-api-error.md).
+- Status: Accepted. The paragraph on errors the serializer finds is superseded by [ADR 0007](0007-one-translated-problem-shape-for-every-api-error.md). The tenant taken from a header (point 4) is superseded by [ADR 0008](0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md).
 - Date: 2026-10-18
 
 ## Context

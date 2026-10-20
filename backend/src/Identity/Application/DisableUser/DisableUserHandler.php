@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Identity\Application\DisableUser;
+
+use App\Identity\Domain\Email;
+use App\Identity\Domain\Exception\UserNotFound;
+use App\Identity\Domain\User;
+use App\Identity\Domain\UserRepository;
+use App\Shared\Application\Clock;
+
+/**
+ * The caller owns the transaction and flushes.
+ */
+final readonly class DisableUserHandler
+{
+    public function __construct(
+        private UserRepository $users,
+        private Clock $clock,
+    ) {
+    }
+
+    /**
+     * @throws UserNotFound
+     */
+    public function __invoke(DisableUser $command): User
+    {
+        $user = $this->users->findByEmail(Email::fromString($command->email)) ?? throw UserNotFound::forEmail($command->email);
+        $user->disable($this->clock->now());
+        $this->users->save($user);
+
+        return $user;
+    }
+}

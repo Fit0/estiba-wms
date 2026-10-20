@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Identity\Domain\User" table="users">
+        <unique-constraints>
+            <!-- IDN-01: an email address belongs to one user in the whole system. Backs the registry check against races. -->
+            <unique-constraint name="uniq_users_email" columns="email"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_users_tenant" columns="tenant_id"/>
+        </indexes>
+
+        <id name="id" type="user_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="email" type="email" length="254"/>
+        <field name="passwordHash" column="password_hash" type="password_hash" length="255"/>
+        <field name="roles" type="user_roles"/>
+        <field name="status" enum-type="App\Identity\Domain\UserStatus" length="20"/>
+    </entity>
+</doctrine-mapping>

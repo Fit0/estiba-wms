@@ -180,6 +180,10 @@ jobs:
       - name: Create the test database
         run: php bin/console doctrine:database:create --if-not-exists --no-interaction
 
+      # The tests sign real tokens, so they need a key pair. Keys are never committed (ADR 0008).
+      - name: Generate the JWT key pair
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction
+
       - name: PHPUnit
         run: php bin/phpunit
 

@@ -25,15 +25,31 @@ doctrine:
             product_name: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductNameType
             product_gtins: App\Catalog\Infrastructure\Persistence\Doctrine\Type\GtinsType
             product_packaging_levels: App\Catalog\Infrastructure\Persistence\Doctrine\Type\PackagingLevelsType
+            user_id: App\Identity\Infrastructure\Persistence\Doctrine\Type\UserIdType
+            email: App\Identity\Infrastructure\Persistence\Doctrine\Type\EmailType
+            tenant_name: App\Identity\Infrastructure\Persistence\Doctrine\Type\TenantNameType
+            password_hash: App\Identity\Infrastructure\Persistence\Doctrine\Type\PasswordHashType
+            user_roles: App\Identity\Infrastructure\Persistence\Doctrine\Type\UserRolesType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
         identity_generation_preferences:
             Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
         auto_mapping: true
+        # Adds the tenant to every query. It starts off and is turned on for each signed-in request.
+        filters:
+            tenant:
+                class: App\Shared\Infrastructure\Persistence\Doctrine\TenantFilter
+                enabled: false
         # Each bounded context registers its own XML mapping here,
         # so the domain model stays free of Doctrine attributes.
         mappings:
+            Identity:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Identity/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Identity\Domain'
+                alias: Identity
             Warehouse:
                 type: xml
                 is_bundle: false

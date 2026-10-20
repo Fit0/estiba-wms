@@ -6,7 +6,10 @@
 
 shared:
     identifier_invalid: '"{value}" is not a valid {type, select, ProductId {product} WarehouseId {warehouse} ZoneId {zone} LocationId {location} TenantId {tenant} other {resource}} identifier. It must be a UUID.'
-    tenant_missing: 'The request does not say which tenant it acts for. Send the X-Tenant-Id header.'
+    unauthenticated: 'You need to sign in to use this resource. Send the token in the Authorization: Bearer header.'
+    token_invalid: 'The token is not valid. Sign in again.'
+    token_expired: 'The token has expired. Sign in again.'
+    forbidden: 'Your role does not allow this.'
     request_malformed: 'The request body could not be read. Check that it is valid JSON, with the required fields and the expected types.'
     not_found: 'The requested resource does not exist.'
     method_not_allowed: 'That method is not allowed on this resource.'
@@ -31,6 +34,20 @@ catalog:
     sku_already_used: 'The tenant already has a product with SKU {sku}.'
     sku_invalid: '"{value}" is not a valid SKU. Use 1 to 40 letters, digits, dots, dashes, underscores or slashes, starting and ending with a letter or digit.'
 
+identity:
+    credentials_invalid: 'The email or the password is not correct.'
+    email_already_used: 'Another user already uses the email address {email}.'
+    email_invalid: '"{value}" is not a valid email address.'
+    language_invalid: '"{value}" is not a language. Use es or en.'
+    password_invalid: 'A password must have {minLength} to {maxLength} characters.'
+    role_invalid: '"{value}" is not a role. Use admin, supervisor or operator.'
+    roles_required: 'A user needs at least one role.'
+    tenant_name_invalid: 'A tenant name must have 1 to {maxLength} characters and no control characters.'
+    tenant_not_found: 'There is no tenant with id {id}.'
+    user_already_disabled: 'User {email} is already disabled.'
+    user_not_disabled: 'User {email} is not disabled.'
+    user_not_found: 'There is no user with email {email}.'
+
 warehouse:
     block_reason_invalid: 'A block reason must have 1 to {maxLength} characters and no control characters.'
     capacity_invalid: '{field, select, maxWeightKg {The maximum weight} maxVolumeLitres {The maximum volume} maxPalletPositions {The maximum number of pallet positions} other {The limit}} must be a positive whole number, got {value}.'
@@ -53,6 +70,7 @@ warehouse:
 status:
     '400': 'Bad request'
     '401': 'Unauthorized'
+    '403': 'Forbidden'
     '404': 'Not found'
     '405': 'Method not allowed'
     '406': 'Not acceptable'

@@ -8,6 +8,6 @@ final class TenantNotResolved extends \RuntimeException
 {
     public static function missing(): self
     {
-        return new self('The request does not say which tenant it acts for.');
+        return new self('There is no authenticated user to take the tenant from.');
     }
 }

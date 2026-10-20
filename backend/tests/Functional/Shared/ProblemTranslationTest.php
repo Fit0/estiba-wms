@@ -73,14 +73,15 @@ final class ProblemTranslationTest extends ApiTestCase
         self::assertSame(0, $this->parameter($problem, 'value'));
     }
 
-    public function testAnswersAMissingTenantInTheRequestedLanguage(): void
+    public function testAnswersAMissingTokenInTheRequestedLanguage(): void
     {
         $this->acceptLanguage = 'en';
 
         $problem = $this->request('GET', '/api/warehouses', null, '');
 
-        $this->assertProblem(401, 'shared.tenant_missing', $problem);
-        self::assertSame('The request does not say which tenant it acts for. Send the X-Tenant-Id header.', $this->text($problem, 'detail'));
+        $this->assertProblem(401, 'shared.unauthenticated', $problem);
+        self::assertSame('You need to sign in to use this resource. Send the token in the Authorization: Bearer header.', $this->text($problem, 'detail'));
+        self::assertSame('Bearer', $this->header('WWW-Authenticate'));
     }
 
     public function testGivesTheErrorsThatAreNotDomainRulesTheSameShape(): void
@@ -112,10 +113,10 @@ final class ProblemTranslationTest extends ApiTestCase
 
     public function testAnswersAFormatAndAContentTypeTheApiDoesNotOffer(): void
     {
-        $this->client->request('GET', '/api/warehouses', [], [], ['HTTP_ACCEPT' => 'application/xml', 'HTTP_X_TENANT_ID' => $this->tenant]);
+        $this->client->request('GET', '/api/warehouses', [], [], ['HTTP_ACCEPT' => 'application/xml', 'HTTP_AUTHORIZATION' => 'Bearer '.$this->tokenFor($this->tenant, $this->role)]);
         $this->assertProblem(406, 'shared.not_acceptable', $this->decodedResponse());
 
-        $this->client->request('POST', '/api/warehouses', [], [], ['CONTENT_TYPE' => 'text/plain', 'HTTP_ACCEPT' => 'application/json', 'HTTP_X_TENANT_ID' => $this->tenant], 'x');
+        $this->client->request('POST', '/api/warehouses', [], [], ['CONTENT_TYPE' => 'text/plain', 'HTTP_ACCEPT' => 'application/json', 'HTTP_AUTHORIZATION' => 'Bearer '.$this->tokenFor($this->tenant, $this->role)], 'x');
         $this->assertProblem(415, 'shared.unsupported_media_type', $this->decodedResponse());
     }
 
@@ -131,18 +132,7 @@ final class ProblemTranslationTest extends ApiTestCase
      */
     private function jsonHeaders(): array
     {
-        return ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json', 'HTTP_ACCEPT_LANGUAGE' => '', 'HTTP_X_TENANT_ID' => $this->tenant];
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    private function decodedResponse(): array
-    {
-        $decoded = json_decode((string) $this->client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
-        \assert(\is_array($decoded));
-
-        return $decoded;
+        return ['CONTENT_TYPE' => 'application/json', 'HTTP_ACCEPT' => 'application/json', 'HTTP_ACCEPT_LANGUAGE' => '', 'HTTP_AUTHORIZATION' => 'Bearer '.$this->tokenFor($this->tenant, $this->role)];
     }
 
     private function header(string $name): ?string

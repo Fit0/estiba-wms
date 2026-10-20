@@ -42,7 +42,7 @@ The response says which language it used in `Content-Language`, and carries `Var
 
 ```bash
 curl -s -X POST http://localhost:8080/api/warehouses \
-  -H 'Content-Type: application/json' -H 'X-Tenant-Id: 01929b3e-7c1a-7000-8000-000000000001' \
+  -H 'Content-Type: application/json' -H 'Authorization: Bearer <token>' \
   -H 'Accept-Language: es' \
   -d '{"code": "not valid!", "name": "Madrid"}'
 ```
@@ -52,7 +52,8 @@ curl -s -X POST http://localhost:8080/api/warehouses \
 | Status | When |
 |---|---|
 | 400 | The request cannot be read, or an identifier is not a UUID |
-| 401 | The `X-Tenant-Id` header is missing |
+| 401 | Not signed in: no token, a bad or expired token, or wrong credentials. See [authentication](authentication.md). |
+| 403 | Signed in, but the role does not allow it |
 | 404 | The resource or the route does not exist |
 | 405 | The resource does not offer that method |
 | 406 | The client asks for a format other than JSON |
@@ -68,7 +69,7 @@ The codes and their texts are the translation files, which are the single source
 - [`errors+intl-icu.es.yaml`](../../backend/translations/errors+intl-icu.es.yaml)
 - [`errors+intl-icu.en.yaml`](../../backend/translations/errors+intl-icu.en.yaml)
 
-Codes are grouped by area (`shared`, `catalog`, `warehouse`) and never change once published.
+Codes are grouped by area (`shared`, `identity`, `catalog`, `warehouse`) and never change once published.
 
 ## Adding a code
 

@@ -4,7 +4,7 @@ DC  := docker compose
 PHP := $(DC) exec -T php
 
 .DEFAULT_GOAL := help
-.PHONY: help up down build logs sh composer console validate test test-unit stan cs fix rector qa
+.PHONY: help up down build logs sh composer console jwt-keys tenant validate test test-unit stan cs fix rector qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -30,6 +30,12 @@ composer: ## Run Composer, e.g. make composer c="require foo/bar"
 
 console: ## Run the Symfony console, e.g. make console c=about
 	$(PHP) bin/console $(c)
+
+jwt-keys: ## Generate the JWT key pair (kept out of git). Done on first start in development.
+	$(PHP) bin/console lexik:jwt:generate-keypair --skip-if-exists
+
+tenant: ## Create a tenant and its admin, e.g. make tenant name="Acme" email=admin@acme.test (asks for the password)
+	$(DC) exec php bin/console app:tenant:create "$(name)" "$(email)"
 
 ## —— Quality ————————————————————————————————————————————————
 validate: ## Validate composer.json and the lock file, and audit dependencies

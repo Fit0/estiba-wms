@@ -1,6 +1,6 @@
 api_platform:
     title: Estiba WMS API
-    description: Warehouse management system. Errors are application/problem+json with a stable `code`; the detail is translated to the language of Accept-Language (Spanish by default).
+    description: 'Warehouse management system. Sign in at POST /api/auth/login and send the token as Authorization: Bearer. Errors are application/problem+json with a stable `code`; the detail is translated to the language of Accept-Language (Spanish by default).'
     version: 0.1.0
 
     # Resources are plain classes in each context's Infrastructure layer, backed by our own
@@ -9,6 +9,7 @@ api_platform:
         enabled: false
     mapping:
         paths:
+            - '%kernel.project_dir%/src/Identity/Infrastructure/Http/Resource'
             - '%kernel.project_dir%/src/Warehouse/Infrastructure/Http/Resource'
             - '%kernel.project_dir%/src/Catalog/Infrastructure/Http/Resource'
 

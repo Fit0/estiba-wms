@@ -96,18 +96,11 @@ final class WarehouseApiTest extends ApiTestCase
         $this->assertProblem(400, 'shared.identifier_invalid', $problem);
     }
 
-    public function testRequiresATenant(): void
+    public function testRequiresASignedInUser(): void
     {
         $problem = $this->request('GET', '/api/warehouses', null, '');
 
-        $this->assertProblem(401, 'shared.tenant_missing', $problem);
-    }
-
-    public function testRejectsATenantThatIsNotAnIdentifier(): void
-    {
-        $problem = $this->request('GET', '/api/warehouses', null, 'acme');
-
-        $this->assertProblem(401, 'shared.tenant_missing', $problem);
+        $this->assertProblem(401, 'shared.unauthenticated', $problem);
     }
 
     public function testDefinesAZoneAndFindsIt(): void

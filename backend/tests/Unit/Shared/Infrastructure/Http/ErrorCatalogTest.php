@@ -67,7 +67,7 @@ final class ErrorCatalogTest extends TestCase
             $messages = ErrorCatalog::messages($language);
 
             self::assertArrayHasKey('status.other', $messages);
-            foreach ([400, 401, 404, 405, 406, 409, 415, 422, 500] as $status) {
+            foreach ([400, 401, 403, 404, 405, 406, 409, 415, 422, 500] as $status) {
                 self::assertArrayHasKey('status.'.$status, $messages, \sprintf('%s has no title for HTTP %d.', $language, $status));
             }
         }
