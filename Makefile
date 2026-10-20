@@ -4,7 +4,7 @@ DC  := docker compose
 PHP := $(DC) exec -T php
 
 .DEFAULT_GOAL := help
-.PHONY: help up down build logs sh composer console jwt-keys tenant validate test test-unit stan cs fix rector qa
+.PHONY: help up down build logs sh composer console jwt-keys tenant demo validate test test-unit stan cs fix rector qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -36,6 +36,9 @@ jwt-keys: ## Generate the JWT key pair (kept out of git). Done on first start in
 
 tenant: ## Create a tenant and its admin, e.g. make tenant name="Acme" email=admin@acme.test (asks for the password)
 	$(DC) exec php bin/console app:tenant:create "$(name)" "$(email)"
+
+demo: ## Load the fashion demo (a company, a distribution centre and a collection). Asks for a password.
+	$(DC) exec php bin/console app:demo:load
 
 ## —— Quality ————————————————————————————————————————————————
 validate: ## Validate composer.json and the lock file, and audit dependencies

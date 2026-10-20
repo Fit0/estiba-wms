@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Warehouse\Persistence;
 
+use App\Tests\Functional\Support\TestDatabase;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Tools\SchemaTool;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * Starts every test with an empty schema built from the mapping, on the real database.
+ * Starts every test with an empty database, on the real one (see {@see TestDatabase}).
  * The migrations are checked apart, by running them and validating the schema.
  */
 abstract class PersistenceTestCase extends KernelTestCase
@@ -23,10 +23,7 @@ abstract class PersistenceTestCase extends KernelTestCase
 
         $this->entityManager = self::getContainer()->get(EntityManagerInterface::class);
 
-        $schemaTool = new SchemaTool($this->entityManager);
-        $metadata = $this->entityManager->getMetadataFactory()->getAllMetadata();
-        $schemaTool->dropSchema($metadata);
-        $schemaTool->createSchema($metadata);
+        TestDatabase::reset($this->entityManager);
     }
 
     /**

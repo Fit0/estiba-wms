@@ -8,6 +8,7 @@ use App\Shared\Application\CurrentTenant;
 use App\Shared\Application\TenantNotResolved;
 use App\Shared\Domain\TenantId;
 use App\Shared\Infrastructure\Persistence\Doctrine\EnableTenantFilter;
+use App\Shared\Infrastructure\Persistence\Doctrine\ResetTenantFilter;
 use App\Shared\Infrastructure\Persistence\Doctrine\TenantFilter;
 use App\Tests\Functional\Warehouse\Persistence\PersistenceTestCase;
 use App\Tests\Unit\Support\Ids;
@@ -39,15 +40,24 @@ final class EnableTenantFilterTest extends PersistenceTestCase
         self::assertFalse($this->entityManager->getFilters()->isEnabled(TenantFilter::NAME));
     }
 
-    // If one process ever served several requests, a request must not inherit the previous tenant.
-    public function testAnAnonymousRequestDoesNotInheritTheTenantOfThePreviousOne(): void
+    // If one process serves several requests, a request must not inherit the tenant of the previous one.
+    public function testTheFilterIsSwitchedOffAtTheStartOfEveryRequest(): void
     {
         $this->listenerFor(TenantId::fromString(Ids::next()))($this->event());
         self::assertTrue($this->entityManager->getFilters()->isEnabled(TenantFilter::NAME));
 
-        $this->listenerFor(null)($this->event());
+        new ResetTenantFilter($this->entityManager)($this->event());
 
         self::assertFalse($this->entityManager->getFilters()->isEnabled(TenantFilter::NAME));
+    }
+
+    public function testTheResetIgnoresSubRequests(): void
+    {
+        $this->listenerFor(TenantId::fromString(Ids::next()))($this->event());
+
+        new ResetTenantFilter($this->entityManager)($this->event(HttpKernelInterface::SUB_REQUEST));
+
+        self::assertTrue($this->entityManager->getFilters()->isEnabled(TenantFilter::NAME));
     }
 
     public function testFollowsTheTenantOfTheLatestRequest(): void
@@ -70,19 +80,24 @@ final class EnableTenantFilterTest extends PersistenceTestCase
         self::assertFalse($this->entityManager->getFilters()->isEnabled(TenantFilter::NAME));
     }
 
-    // The listener must really be registered, after the firewall has signed the user in (priority 8).
-    public function testIsRegisteredRightAfterTheFirewall(): void
+    // Both listeners must really be registered: the reset before the firewall (priority 8) loads the
+    // user, and the enabling right after it has signed the user in.
+    public function testTheListenersAreRegisteredAroundTheFirewall(): void
     {
         $dispatcher = self::getContainer()->get('event_dispatcher');
 
-        $priorities = [];
+        $priorities = ['reset' => [], 'enable' => []];
         foreach ($dispatcher->getListeners(KernelEvents::REQUEST) as $listener) {
+            $priority = \is_callable($listener) ? $dispatcher->getListenerPriority(KernelEvents::REQUEST, $listener) : null;
+            if (\is_array($listener) && $listener[0] instanceof ResetTenantFilter) {
+                $priorities['reset'][] = $priority;
+            }
             if (\is_array($listener) && $listener[0] instanceof EnableTenantFilter) {
-                $priorities[] = $dispatcher->getListenerPriority(KernelEvents::REQUEST, $listener);
+                $priorities['enable'][] = $priority;
             }
         }
 
-        self::assertSame([7], $priorities);
+        self::assertSame(['reset' => [9], 'enable' => [7]], $priorities);
     }
 
     private function listenerFor(?TenantId $tenant): EnableTenantFilter

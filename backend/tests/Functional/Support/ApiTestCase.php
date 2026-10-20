@@ -17,7 +17,6 @@ use App\Shared\Domain\Language;
 use App\Shared\Domain\TenantId;
 use App\Tests\Unit\Support\Ids;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Tools\SchemaTool;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -57,13 +56,13 @@ abstract class ApiTestCase extends WebTestCase
     protected function setUp(): void
     {
         $this->client = self::createClient();
+        // Booting the kernel for every request is what made the suite slow. Symfony resets the services
+        // that hold state (the entity manager, the security token, the translator) between requests.
+        $this->client->disableReboot();
         $this->tenant = Ids::next();
 
         $entityManager = self::getContainer()->get(EntityManagerInterface::class);
-        $schemaTool = new SchemaTool($entityManager);
-        $metadata = $entityManager->getMetadataFactory()->getAllMetadata();
-        $schemaTool->dropSchema($metadata);
-        $schemaTool->createSchema($metadata);
+        TestDatabase::reset($entityManager);
     }
 
     /**

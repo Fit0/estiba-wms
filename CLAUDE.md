@@ -94,6 +94,8 @@ The business model lives in `docs/domain/` and comes before the code: [ubiquitou
 - The domain never generates identifiers or reads the clock. Identifiers (UUID v7) and `\DateTimeImmutable` values are passed in, and unit tests use `Ids::next()` and fixed dates.
 - Rules that need to look at other aggregates (such as a unique code) go through a small registry interface that the factory receives, so a unit test can fake it. A unique database constraint backs it against races.
 - Build test objects with a "mother" class (for example `WarehouseMother`) so each test spells out only what it is about.
+- Functional tests get an empty database from `TestDatabase`: the schema is built once per run and every test only truncates the tables. `ApiTestCase` also disables kernel reboot between requests, so anything that keeps state across requests must be reset at the start of each one (see `ResetTenantFilter`). A new table needs nothing: `TestDatabase` reads the tables from the mapping.
+- Demo data (`make demo`, `src/Demo/`) is a fashion company, Marea Moda, built through the domain and available only in `dev` and `test`. No context may depend on `App\Demo`; the architecture test enforces it. Its tests double as a check that the domain accepts a realistic catalog and warehouse.
 
 ### Languages and translations
 
