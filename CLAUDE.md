@@ -179,7 +179,7 @@ Review every generated migration before keeping it. Committed migrations are nev
 
 - No secrets, tokens or real customer data in the repository, fixtures or tests.
 - AI features (E09) only call read-only queries and never send tenant data the user did not request.
-- Authentication and roles are decided in [ADR 0008](docs/adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md). Roles are `admin`, `supervisor` and `operator`, each including the ones below. Reading needs any signed-in user and changing needs a supervisor, and that rule lives in `access_control` in `config/packages/security.yaml`. Refine it there, per route, never inside a controller.
+- Authentication and roles are decided in [ADR 0008](docs/adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md). Roles are `admin`, `supervisor` and `operator`, each including the ones below. Reading needs any signed-in user and changing needs a supervisor, except the dock work that operators do (opening, counting and closing a receipt), and those rules live in `access_control` in `config/packages/security.yaml`. Refine it there, per route, never inside a controller.
 - A password never leaves `PlainPassword`: do not log it, print it, put it in an error, or take it as a console argument. Never trust the roles or the tenant in a token: the user is loaded from the database on every request.
 - Never return a 401 or a 403 by hand. They go through `ProblemFactory`, so they are translated and keep the common shape.
 - The API tests send real tokens: `ApiTestCase::request()` acts as an admin of `$this->tenant`, `$this->role` changes the role, and an empty tenant sends no token.

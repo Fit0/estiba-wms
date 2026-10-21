@@ -12,6 +12,7 @@ api_platform:
             - '%kernel.project_dir%/src/Identity/Infrastructure/Http/Resource'
             - '%kernel.project_dir%/src/Warehouse/Infrastructure/Http/Resource'
             - '%kernel.project_dir%/src/Catalog/Infrastructure/Http/Resource'
+            - '%kernel.project_dir%/src/Inbound/Infrastructure/Http/Resource'
 
     formats:
         json: ['application/json']

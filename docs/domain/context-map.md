@@ -57,14 +57,14 @@ None. The other contexts need no contract from it. The tenant of a request reach
 
 | Contract | Purpose |
 |---|---|
-| `ProductCatalog` | Find a product by id, SKU or GTIN and return a `ProductSnapshot` (id, SKU, base unit, packaging levels, tracking policy, storage class, status) |
+| `ProductCatalog` | Find a product by id or GTIN and return a `ProductSnapshot` (id, SKU, storage class, tracking policy, whether it is available for operations). In use since E03-03; SKU lookup, base unit and packaging levels come when a context needs them. |
 | `ProductRegistered`, `ProductBlocked` | Integration events |
 
 ### Warehouse
 
 | Contract | Purpose |
 |---|---|
-| `LocationDirectory` | Find a location by id or by code, or list candidates for a criteria (zone, type, status). Returns a `LocationSnapshot` (id, code, zone, type, capacity, pick sequence, status). |
+| `LocationDirectory` | Find a location by id or by code, or list candidates for a criteria (zone, type, status). Returns a `LocationSnapshot` (id, code, zone, type, capacity, pick sequence, status). Lookup by id is in use since E03-03 (the dock of a receipt); the rest comes with putaway (E03-04). |
 | `LocationBlocked`, `LocationUnblocked` | Integration events |
 
 ### Inventory

@@ -5,7 +5,7 @@
 # Every code and key must also exist in errors+intl-icu.es.yaml. A test enforces it.
 
 shared:
-    identifier_invalid: '"{value}" is not a valid {type, select, ProductId {product} WarehouseId {warehouse} ZoneId {zone} LocationId {location} TenantId {tenant} other {resource}} identifier. It must be a UUID.'
+    identifier_invalid: '"{value}" is not a valid {type, select, ProductId {product} WarehouseId {warehouse} ZoneId {zone} LocationId {location} TenantId {tenant} AsnId {ASN} ReceiptId {receipt} other {resource}} identifier. It must be a UUID.'
     unauthenticated: 'You need to sign in to use this resource. Send the token in the Authorization: Bearer header.'
     token_invalid: 'The token is not valid. Sign in again.'
     token_expired: 'The token has expired. Sign in again.'
@@ -47,6 +47,36 @@ identity:
     user_already_disabled: 'User {email} is already disabled.'
     user_not_disabled: 'User {email} is not disabled.'
     user_not_found: 'There is no user with email {email}.'
+
+inbound:
+    asn_lines_required: 'An ASN needs at least one line.'
+    asn_not_cancellable: 'ASN {reference} is {status, select, expected {expected} partially_received {partially received} received {received} closed {closed} cancelled {cancelled} other {{status}}}. Only an ASN that has received nothing yet can be cancelled.'
+    asn_not_closable: 'ASN {reference} is {status, select, expected {expected} partially_received {partially received} received {received} closed {closed} cancelled {cancelled} other {{status}}}. Only an ASN that has received goods can be closed.'
+    asn_not_found: 'There is no ASN with id {id}.'
+    asn_not_receivable: 'ASN {reference} is {status, select, expected {expected} partially_received {partially received} received {received} closed {closed} cancelled {cancelled} other {{status}}}, so nothing can be received against it.'
+    asn_product_repeated: 'Product {productId} appears on more than one line of the ASN. Use one line per product.'
+    asn_receipt_already_open: 'ASN {reference} already has an open receipt. Close it first.'
+    asn_reference_already_used: 'The tenant already has an ASN with reference {reference}.'
+    asn_reference_invalid: 'The reference of an ASN must have 1 to {maxLength} characters and no control characters.'
+    dock_location_invalid: 'Location {locationId} cannot take a receipt: {reason, select, unknown {it does not exist} not_dock {it is not a dock} blocked {it is blocked} other {it is not valid}}.'
+    expected_quantity_invalid: 'The line of product {productId} must expect at least one unit, and {units} was given.'
+    expiry_date_not_tracked: 'Product {productId} is not tracked by expiry date, so it cannot be received with one.'
+    expiry_date_passed: 'The goods expired on {expiryDate} and cannot be received.'
+    expiry_date_required: 'Product {productId} is tracked by expiry date. Give the expiry date.'
+    gtin_unknown: 'No product in the catalog has the GTIN {gtin}.'
+    lot_not_tracked: 'Product {productId} is not tracked by lot, so it cannot be received with one.'
+    lot_number_invalid: 'A lot number must have 1 to 40 characters and no control characters.'
+    lot_required: 'Product {productId} is tracked by lot. Give the lot number.'
+    over_receipt_already_approved: 'The over-receipt of this receipt is already approved.'
+    over_receipt_missing: 'The receipt holds no more than the ASN announced, so there is nothing to approve.'
+    over_receipt_not_approved: 'The receipt holds {units} units more than the ASN announced. A supervisor must approve them before it closes.'
+    product_not_available: 'Product {productId} is blocked or discontinued and cannot be received.'
+    product_unknown: 'The catalog has no product with id {productId}.'
+    receipt_already_closed: 'Receipt {id} is closed and cannot change.'
+    receipt_asn_mismatch: 'Receipt {receiptId} is not the open receipt of ASN {asnId}.'
+    receipt_not_found: 'There is no receipt with id {id}.'
+    received_quantity_invalid: 'A received item must have at least one unit, and {units} was given.'
+    supplier_name_invalid: 'The supplier must have 1 to {maxLength} characters and no control characters.'
 
 inventory:
     lot_number_invalid: 'A lot number must have 1 to 40 characters and no control characters.'

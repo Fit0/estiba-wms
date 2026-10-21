@@ -47,9 +47,10 @@ flowchart TB
 | Command | Started by | Handled by | Rejected when |
 |---|---|---|---|
 | `RegisterAsn` | ERP import | `Asn` | The ASN reference already exists, a product is unknown or blocked, or a quantity is not positive |
-| `OpenReceipt` | Operator | `Receipt` | The ASN is closed or cancelled |
-| `ReceiveItem` | Operator scans a GTIN | `Receipt` | A lot or expiry is missing for a tracked product, or the expiry date has passed. A product that is not on the ASN is recorded as a discrepancy, not refused. |
-| `CloseReceipt` | Operator | `Receipt` | There are unapproved over-receipts. A supervisor must approve them first. |
+| `OpenReceipt` | Operator | `Asn` | The ASN is closed or cancelled, or already has an open receipt. The location is not an active dock. |
+| `ReceiveItem` | Operator scans a GTIN | `Receipt` | No product carries the GTIN, the product is blocked, a lot or expiry is missing for a tracked product (or given for an untracked one), or the expiry date has passed. A product that is not on the ASN is recorded as a discrepancy, not refused. |
+| `ApproveOverReceipt` | Supervisor | `Receipt` | The receipt holds no more than the ASN announced, or the approval was already given |
+| `CloseReceipt` | Operator | `Asn` | There are unapproved over-receipts. A supervisor must approve them first. |
 
 Discrepancies found while receiving: shortage, excess, unexpected product, damaged goods. Damaged goods enter stock as *quarantine*, not *available*.
 
