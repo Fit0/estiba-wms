@@ -45,8 +45,8 @@ Each role includes the ones below it.
 
 | Role | Can |
 |---|---|
-| `operator` | Read everything of its tenant, and receive goods: open a receipt, count what arrives and close it |
-| `supervisor` | Everything an operator can, and create and change warehouses, locations, products and ASNs, and approve an over-receipt |
+| `operator` | Read everything of its tenant, and receive goods: open a receipt, count what arrives, close it and put the goods away |
+| `supervisor` | Everything an operator can, and create and change warehouses, zones, locations, products and ASNs, and approve an over-receipt |
 | `admin` | Everything a supervisor can |
 
 The API reads the roles from the database on every request, not from the token, so a change of role or a disabled account applies at once.

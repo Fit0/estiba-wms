@@ -57,21 +57,22 @@ None. The other contexts need no contract from it. The tenant of a request reach
 
 | Contract | Purpose |
 |---|---|
-| `ProductCatalog` | Find a product by id or GTIN and return a `ProductSnapshot` (id, SKU, storage class, tracking policy, whether it is available for operations). In use since E03-03; SKU lookup, base unit and packaging levels come when a context needs them. |
+| `ProductCatalog` | Find a product by id or GTIN and return a `ProductSnapshot` (id, SKU, storage class, tracking policy, whether it is available for operations, family, turnover class, dimensions). In use since E03-03; SKU lookup, base unit and packaging levels come when a context needs them. |
 | `ProductRegistered`, `ProductBlocked` | Integration events |
 
 ### Warehouse
 
 | Contract | Purpose |
 |---|---|
-| `LocationDirectory` | Find a location by id or by code, or list candidates for a criteria (zone, type, status). Returns a `LocationSnapshot` (id, code, zone, type, capacity, pick sequence, status). Lookup by id is in use since E03-03 (the dock of a receipt); the rest comes with putaway (E03-04). |
+| `LocationDirectory` | Find a location by id, or list the active locations of a warehouse of some types in the order of the picking route. Returns a `LocationSnapshot` (id, code, zone, type, status, the zone's storage class and families, pick sequences, weight and volume limits). In use since E03-03 (docks) and E03-04 (putaway). |
 | `LocationBlocked`, `LocationUnblocked` | Integration events |
 
 ### Inventory
 
 | Contract | Purpose |
 |---|---|
-| `StockMovements` | `receive`, `transfer`, `issue` and `adjust` stock. Called by Inbound, Outbound and the adjustment screens. |
+| `StockMovements` | `receive`, `transfer`, `issue` and `adjust` stock. Called by Inbound, Outbound and the adjustment screens. `receive` and `transfer` are in use since E03-04 (receipts and putaway). |
+| `StockLevels` | What each location holds, by product. Putaway uses it to tell empty locations and room (E03-04). |
 | `StockReservations` | `allocate` an order line (returns the reservation and any shortage), `release` and `consume` |
 | `StockAvailability` | Read on-hand, reserved and available for a product, optionally by warehouse or location |
 | `StockLevelChanged`, `StockBelowThreshold` | Integration events for read models, dashboards and notifications |

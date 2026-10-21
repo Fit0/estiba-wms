@@ -15,6 +15,7 @@ use App\Shared\Application\Bus\CommandHandler;
 use App\Shared\Application\Clock;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Application\IdGenerator;
+use App\Shared\Domain\ProductFamily;
 
 /**
  * The events the product raises stay on it until events are published (E03-05).
@@ -49,6 +50,14 @@ final readonly class RegisterProductHandler implements CommandHandler
             $this->products,
             $this->clock->now(),
         );
+
+        if (null !== $command->family || $command->turnoverClass !== $product->turnoverClass()) {
+            $product->classify(
+                null === $command->family ? null : ProductFamily::fromString($command->family),
+                $command->turnoverClass,
+                $this->clock->now(),
+            );
+        }
 
         $this->products->save($product);
 

@@ -39,6 +39,8 @@ final class Receipt extends AggregateRoot
 
     private ?\DateTimeImmutable $closedAt = null;
 
+    private ?OperatorId $closedBy = null;
+
     /**
      * @param list<ExpectedItem> $expected
      */
@@ -130,7 +132,7 @@ final class Receipt extends AggregateRoot
      * @throws ReceiptAlreadyClosed INB-09
      * @throws OverReceiptApproval  INB-08
      */
-    public function close(\DateTimeImmutable $at): void
+    public function close(OperatorId $closedBy, \DateTimeImmutable $at): void
     {
         $this->assertOpen();
 
@@ -141,7 +143,8 @@ final class Receipt extends AggregateRoot
 
         $this->status = ReceiptStatus::Closed;
         $this->closedAt = $at;
-        $this->record(new ReceiptClosed($this->id, $this->asnId, $at)); // INB-09: once, because a closed receipt cannot close again
+        $this->closedBy = $closedBy;
+        $this->record(new ReceiptClosed($this->id, $this->asnId, $closedBy, $at)); // INB-09: once, because a closed receipt cannot close again
     }
 
     /**
@@ -190,6 +193,25 @@ final class Receipt extends AggregateRoot
         }
 
         return $units;
+    }
+
+    /**
+     * What the receipt brought, one entry per product, lot, expiry date and condition, in the order
+     * they were first counted. Together they hold every counted unit, which is what is booked into
+     * stock and put away (INB-14).
+     *
+     * @return list<ReceivedGoods>
+     */
+    public function receivedGoods(): array
+    {
+        $goods = [];
+        foreach ($this->lines as $line) {
+            $key = implode('|', [$line->productId->value, $line->lot?->value, $line->expiryDate?->format('Y-m-d'), $line->condition->value]);
+            $units = ($goods[$key]->units ?? 0) + $line->units;
+            $goods[$key] = new ReceivedGoods($line->productId, $units, $line->lot, $line->expiryDate, ItemCondition::Damaged === $line->condition);
+        }
+
+        return array_values($goods);
     }
 
     /**
@@ -254,6 +276,11 @@ final class Receipt extends AggregateRoot
     public function closedAt(): ?\DateTimeImmutable
     {
         return $this->closedAt;
+    }
+
+    public function closedBy(): ?OperatorId
+    {
+        return $this->closedBy;
     }
 
     /**

@@ -15,16 +15,19 @@ use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductStatus;
 use App\Catalog\Domain\UnitOfMeasure;
 use App\Catalog\Infrastructure\Http\Input\AssignGtinInput;
+use App\Catalog\Infrastructure\Http\Input\ClassifyProductInput;
 use App\Catalog\Infrastructure\Http\Input\DefinePackagingLevelInput;
 use App\Catalog\Infrastructure\Http\Input\RegisterProductInput;
 use App\Catalog\Infrastructure\Http\Input\UpdateProductInput;
 use App\Catalog\Infrastructure\Http\State\AssignGtinProcessor;
+use App\Catalog\Infrastructure\Http\State\ClassifyProductProcessor;
 use App\Catalog\Infrastructure\Http\State\DefinePackagingLevelProcessor;
 use App\Catalog\Infrastructure\Http\State\ProductProvider;
 use App\Catalog\Infrastructure\Http\State\ProductStatusProcessor;
 use App\Catalog\Infrastructure\Http\State\RegisterProductProcessor;
 use App\Catalog\Infrastructure\Http\State\UpdateProductProcessor;
 use App\Shared\Domain\StorageClass;
+use App\Shared\Domain\TurnoverClass;
 
 #[ApiResource(
     shortName: 'Product',
@@ -34,6 +37,7 @@ use App\Shared\Domain\StorageClass;
         new Post(uriTemplate: '/products', input: RegisterProductInput::class, processor: RegisterProductProcessor::class),
         new Patch(uriTemplate: '/products/{id}', input: UpdateProductInput::class, read: false, processor: UpdateProductProcessor::class),
         new Post(uriTemplate: '/products/{id}/gtins', status: 200, input: AssignGtinInput::class, read: false, processor: AssignGtinProcessor::class),
+        new Post(uriTemplate: '/products/{id}/classification', status: 200, input: ClassifyProductInput::class, read: false, processor: ClassifyProductProcessor::class),
         new Post(uriTemplate: '/products/{id}/packaging-levels', status: 200, input: DefinePackagingLevelInput::class, read: false, processor: DefinePackagingLevelProcessor::class),
         new Post(
             uriTemplate: '/products/{id}/block',
@@ -86,6 +90,8 @@ final readonly class ProductResource
         public bool $trackedByExpiry,
         public ?int $minShelfLifeAtReceiptDays,
         public ?int $minShelfLifeAtShipmentDays,
+        public ?string $family,
+        public TurnoverClass $turnoverClass,
         public array $gtins,
         public array $packagingLevels,
     ) {
@@ -111,6 +117,8 @@ final readonly class ProductResource
             $tracking->trackedByExpiry,
             $tracking->minShelfLifeAtReceiptDays,
             $tracking->minShelfLifeAtShipmentDays,
+            $product->family()?->value,
+            $product->turnoverClass(),
             array_map(static fn (Gtin $gtin): string => $gtin->value, $product->gtins()),
             array_map(PackagingLevelResource::fromDomain(...), $product->packagingLevels()),
         );

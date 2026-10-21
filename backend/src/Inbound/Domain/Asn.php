@@ -105,13 +105,13 @@ final class Asn extends AggregateRoot
      *
      * @throws ReceiptAsnMismatch INB-05
      */
-    public function closeReceipt(Receipt $receipt, \DateTimeImmutable $at): void
+    public function closeReceipt(Receipt $receipt, OperatorId $closedBy, \DateTimeImmutable $at): void
     {
         if (!$receipt->asnId()->equals($this->id) || !$this->openReceiptId instanceof ReceiptId || !$this->openReceiptId->equals($receipt->id())) {
             throw ReceiptAsnMismatch::between($receipt->id(), $this->id);
         }
 
-        $receipt->close($at);
+        $receipt->close($closedBy, $at);
 
         $this->lines = array_map(
             static fn (AsnLine $line): AsnLine => $line->withReceived($receipt->receivedUnitsOf($line->productId)),

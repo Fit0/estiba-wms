@@ -16,4 +16,16 @@ interface LocationDirectory
      * @throws DomainError when the text is not a valid identifier
      */
     public function findById(TenantId $tenantId, string $locationId): ?LocationSnapshot;
+
+    /**
+     * The active locations of a warehouse of these types, in the order of the picking route: by the
+     * pick sequence of their zone, then their own, then their code.
+     *
+     * @param list<string> $types values of the location type, such as `reserve`
+     *
+     * @return list<LocationSnapshot>
+     *
+     * @throws DomainError when the warehouse identifier is not valid
+     */
+    public function activeLocationsOf(TenantId $tenantId, string $warehouseId, array $types): array;
 }

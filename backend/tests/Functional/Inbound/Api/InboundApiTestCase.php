@@ -32,6 +32,10 @@ abstract class InboundApiTestCase extends ApiTestCase
 
     protected string $reserveId;
 
+    protected string $warehouseId;
+
+    protected string $inboundZoneId;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -43,9 +47,11 @@ abstract class InboundApiTestCase extends ApiTestCase
         $this->strangerId = $this->product('CAL-001', self::STRANGER_GTIN);
 
         $warehouse = $this->request('POST', '/api/warehouses', ['code' => 'ZGZ1', 'name' => 'Zaragoza']);
-        $zone = $this->request('POST', '/api/warehouses/'.$this->id($warehouse).'/zones', ['code' => 'IN', 'name' => 'Entradas', 'storageClass' => 'ambient']);
-        $this->dockId = $this->location($this->id($warehouse), $this->id($zone), 'DK-01-01', 'dock');
-        $this->reserveId = $this->location($this->id($warehouse), $this->id($zone), 'A-01-01', 'reserve');
+        $this->warehouseId = $this->id($warehouse);
+        $zone = $this->request('POST', '/api/warehouses/'.$this->warehouseId.'/zones', ['code' => 'IN', 'name' => 'Entradas', 'storageClass' => 'ambient']);
+        $this->inboundZoneId = $this->id($zone);
+        $this->dockId = $this->location($this->warehouseId, $this->inboundZoneId, 'DK-01-01', 'dock');
+        $this->reserveId = $this->location($this->warehouseId, $this->inboundZoneId, 'A-01-01', 'reserve');
     }
 
     /**
@@ -140,8 +146,11 @@ abstract class InboundApiTestCase extends ApiTestCase
         return $this->id($product);
     }
 
-    private function location(string $warehouseId, string $zoneId, string $code, string $type): string
+    /**
+     * @param array<string, mixed> $extra such as capacity limits or a pick sequence
+     */
+    protected function location(string $warehouseId, string $zoneId, string $code, string $type, array $extra = []): string
     {
-        return $this->id($this->request('POST', '/api/warehouses/'.$warehouseId.'/locations', ['zoneId' => $zoneId, 'code' => $code, 'type' => $type]));
+        return $this->id($this->request('POST', '/api/warehouses/'.$warehouseId.'/locations', ['zoneId' => $zoneId, 'code' => $code, 'type' => $type] + $extra));
     }
 }

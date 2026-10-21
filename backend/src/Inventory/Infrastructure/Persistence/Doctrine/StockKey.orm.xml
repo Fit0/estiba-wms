@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="App\Inventory\Domain\StockKey">
+        <field name="productId" column="product_id" type="stock_product_id"/>
+        <field name="locationId" column="location_id" type="stock_location_id"/>
+        <!-- No lot and no expiry date are stored as '' and 9999-12-31, not NULL, so the unique key holds (ADR 0011). -->
+        <field name="lot" column="lot" type="stock_lot" length="40"/>
+        <field name="expiryDate" column="expiry_date" type="stock_expiry_date"/>
+        <field name="status" column="status" enum-type="App\Inventory\Domain\StockStatus" length="20"/>
+    </embeddable>
+</doctrine-mapping>

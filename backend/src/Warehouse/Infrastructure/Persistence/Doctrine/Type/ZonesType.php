@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Warehouse\Infrastructure\Persistence\Doctrine\Type;
 
+use App\Shared\Domain\ProductFamily;
 use App\Shared\Domain\StorageClass;
 use App\Warehouse\Domain\DisplayName;
 use App\Warehouse\Domain\PickSequence;
@@ -49,6 +50,7 @@ final class ZonesType extends Type
                 'name' => $zone->name->value,
                 'storage_class' => $zone->storageClass->value,
                 'pick_sequence' => $zone->pickSequence->value,
+                'families' => array_map(static fn (ProductFamily $family): string => $family->value, $zone->families),
             ];
         }
 
@@ -96,6 +98,30 @@ final class ZonesType extends Type
             DisplayName::fromString($row['name']),
             StorageClass::from($row['storage_class']),
             PickSequence::of($row['pick_sequence']),
+            $this->familiesFrom($row['families'] ?? [], $json),
         );
+    }
+
+    /**
+     * Zones saved before families existed have none.
+     *
+     * @return list<ProductFamily>
+     */
+    private function familiesFrom(mixed $families, string $json): array
+    {
+        if (!\is_array($families)) {
+            throw ValueNotConvertible::new($json, self::class);
+        }
+
+        $read = [];
+        foreach ($families as $family) {
+            if (!\is_string($family)) {
+                throw ValueNotConvertible::new($json, self::class);
+            }
+
+            $read[] = ProductFamily::fromString($family);
+        }
+
+        return $read;
     }
 }

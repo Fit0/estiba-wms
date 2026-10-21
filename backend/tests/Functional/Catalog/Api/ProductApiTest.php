@@ -268,11 +268,35 @@ final class ProductApiTest extends ApiTestCase
         $this->assertProblem(409, 'catalog.product_discontinued', $problem);
     }
 
+    public function testClassifiesAProductForPutaway(): void
+    {
+        $product = $this->register('CAM-001', ['family' => 'camiseria', 'turnoverClass' => 'A']);
+        $this->assertStatus(201);
+        self::assertSame('CAMISERIA', $product['family']);
+        self::assertSame('A', $product['turnoverClass']);
+
+        $plain = $this->register('CAM-002');
+        self::assertNull($plain['family']);
+        self::assertSame('B', $plain['turnoverClass'], 'Average pace until someone says otherwise.');
+
+        $reclassified = $this->request('POST', '/api/products/'.$this->id($product).'/classification', ['turnoverClass' => 'C']);
+        $this->assertStatus(200);
+        self::assertNull($reclassified['family'], 'A family that is not sent is removed.');
+        self::assertSame('C', $reclassified['turnoverClass']);
+        self::assertSame($reclassified, $this->request('GET', '/api/products/'.$this->id($product)));
+
+        $problem = $this->request('POST', '/api/products/'.$this->id($product).'/classification', ['family' => 'Camisería', 'turnoverClass' => 'A']);
+        $this->assertProblem(422, 'shared.product_family_invalid', $problem);
+
+        $this->request('POST', '/api/products/'.$this->id($product).'/classification', ['turnoverClass' => 'D']);
+        $this->assertStatus(400);
+    }
+
     public function testDescribesTheProductEndpointsInOpenApi(): void
     {
         $paths = $this->openApiPaths();
 
-        foreach (['/api/products', '/api/products/{id}', '/api/products/{id}/gtins', '/api/products/{id}/packaging-levels', '/api/products/{id}/block', '/api/products/{id}/unblock', '/api/products/{id}/discontinue'] as $path) {
+        foreach (['/api/products', '/api/products/{id}', '/api/products/{id}/gtins', '/api/products/{id}/classification', '/api/products/{id}/packaging-levels', '/api/products/{id}/block', '/api/products/{id}/unblock', '/api/products/{id}/discontinue'] as $path) {
             self::assertArrayHasKey($path, $paths);
         }
     }

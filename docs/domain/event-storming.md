@@ -86,10 +86,11 @@ flowchart TB
 
 | Command | Started by | Handled by | Rejected when |
 |---|---|---|---|
-| `ReceiveStock` | Policy | `StockItem` | The product is blocked |
-| `CreatePutawayTask` | Policy | `PutawayTask` | The received quantity is zero |
-| `ConfirmPutaway` | Operator scans the location | `PutawayTask` | The location is blocked, incompatible with the product's storage class, or has no capacity |
-| `TransferStock` | Policy | `StockItem` | The source would go below zero |
+| `ReceiveStock` | Policy on `ReceiptClosed` | `StockItem` | Never refused: the receipt already checked the goods. Damaged units go to quarantine. |
+| `CreatePutawayTask` | Policy on `ReceiptClosed` | `PutawayTask` | Never refused. Without a free location the task has no suggestion and the operator chooses. |
+| `SplitPutawayTask` | Operator | `PutawayTask` | The task is confirmed, or one side would be left with no units |
+| `ConfirmPutaway` | Operator scans the location | `PutawayTask` | The location is unknown, blocked, of a type that does not store the goods, incompatible with the product's storage class, has no room, or is the dock itself. Another location than the suggested one without a reason. |
+| `TransferStock` | Policy on `PutawayConfirmed` | `StockItem` | The source would go below zero |
 
 ## 2. Order to picking
 
@@ -192,7 +193,7 @@ flowchart TB
 | Command | Started by | Handled by | Rejected when |
 |---|---|---|---|
 | `ConfirmPickLine` | Operator scans location, product and lot | `PickList` | The scan does not match the line, or more is picked than asked |
-| `TransferStock` | Policy | `StockItem` | The source would go below zero |
+| `TransferStock` | Policy on `PutawayConfirmed` | `StockItem` | The source would go below zero |
 
 On a short pick the policy first tries to allocate the missing quantity from other stock. If there is none, the order line keeps the missing quantity as a backorder and the rest of the order continues.
 

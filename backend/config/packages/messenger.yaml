@@ -1,6 +1,8 @@
-# Two buses, kept apart on purpose (ADR 0009):
+# Three buses, kept apart on purpose (ADR 0009, ADR 0011):
 #   command.bus changes state. Every command runs in one database transaction, flushed at the end.
 #   query.bus only reads. It has no transaction and nothing it handles may change state.
+#   event.bus tells the policies what happened. It runs them in the transaction of the command that
+#   published the event, and an event nobody handles is fine.
 # Handlers are found by the interface they implement (see config/services.yaml), not by attributes,
 # so the Application layer does not import Symfony.
 framework:
@@ -12,6 +14,10 @@ framework:
                 middleware:
                     - doctrine_transaction
             query.bus: ~
+            event.bus:
+                default_middleware:
+                    enabled: true
+                    allow_no_handlers: true
 
         # No transport yet: everything is handled in the same request. Asynchronous processing
         # arrives with E03-05.

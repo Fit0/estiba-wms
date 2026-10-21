@@ -8,6 +8,7 @@ use App\Catalog\Domain\Dimensions;
 use App\Catalog\Domain\Event\GtinAssigned;
 use App\Catalog\Domain\Event\PackagingLevelDefined;
 use App\Catalog\Domain\Event\ProductBlocked;
+use App\Catalog\Domain\Event\ProductClassified;
 use App\Catalog\Domain\Event\ProductDiscontinued;
 use App\Catalog\Domain\Event\ProductRegistered;
 use App\Catalog\Domain\Event\ProductUnblocked;
@@ -20,7 +21,9 @@ use App\Catalog\Domain\ProductStatus;
 use App\Catalog\Domain\Sku;
 use App\Catalog\Domain\TrackingPolicy;
 use App\Catalog\Domain\UnitOfMeasure;
+use App\Shared\Domain\ProductFamily;
 use App\Shared\Domain\StorageClass;
+use App\Shared\Domain\TurnoverClass;
 use App\Tests\Unit\Support\AssertsDomainErrors;
 use PHPUnit\Framework\TestCase;
 
@@ -294,5 +297,35 @@ final class ProductTest extends TestCase
 
         self::assertSame(ProductStatus::Discontinued, $product->status());
         self::assertSame([], $product->pullEvents());
+    }
+
+    public function testIsClassifiedForPutaway(): void
+    {
+        $product = ProductMother::product();
+        $product->pullEvents();
+
+        self::assertNull($product->family());
+        self::assertSame(TurnoverClass::B, $product->turnoverClass(), 'A new product moves at an average pace until someone says otherwise.');
+
+        $product->classify(ProductFamily::fromString('camiseria'), TurnoverClass::A, ProductMother::at());
+
+        self::assertSame('CAMISERIA', $product->family()?->value);
+        self::assertSame(TurnoverClass::A, $product->turnoverClass());
+        $events = $product->pullEvents();
+        self::assertCount(1, $events);
+        self::assertInstanceOf(ProductClassified::class, $events[0]);
+        self::assertSame(TurnoverClass::A, $events[0]->turnoverClass);
+
+        $product->classify(null, TurnoverClass::C, ProductMother::at());
+        self::assertNull($product->family());
+    }
+
+    // CAT-08
+    public function testADiscontinuedProductIsNotClassified(): void
+    {
+        $product = ProductMother::product();
+        $product->discontinue(ProductMother::at());
+
+        self::assertDomainError('catalog.product_discontinued', ['sku' => 'AGUA-500'], static fn () => $product->classify(null, TurnoverClass::A, ProductMother::at()));
     }
 }

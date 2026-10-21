@@ -15,6 +15,8 @@
         <field name="baseUnit" column="base_unit" enum-type="App\Catalog\Domain\UnitOfMeasure" length="20"/>
         <field name="storageClass" column="storage_class" enum-type="App\Shared\Domain\StorageClass" length="20"/>
         <field name="status" enum-type="App\Catalog\Domain\ProductStatus" length="20"/>
+        <field name="family" type="product_family" length="20" nullable="true"/>
+        <field name="turnoverClass" column="turnover_class" enum-type="App\Shared\Domain\TurnoverClass" length="1"/>
         <field name="gtins" type="product_gtins"/>
         <field name="packagingLevels" column="packaging_levels" type="product_packaging_levels"/>
         <embedded name="dimensions" class="App\Catalog\Domain\Dimensions" column-prefix="dimensions_"/>

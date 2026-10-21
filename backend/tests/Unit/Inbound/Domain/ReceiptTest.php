@@ -15,6 +15,7 @@ use App\Inbound\Domain\LotNumber;
 use App\Inbound\Domain\Receipt;
 use App\Inbound\Domain\ReceiptStatus;
 use App\Inbound\Domain\ReceivableProduct;
+use App\Inbound\Domain\ReceivedGoods;
 use App\Shared\Domain\DomainEvent;
 use App\Tests\Unit\Support\AssertsDomainErrors;
 use PHPUnit\Framework\TestCase;
@@ -166,11 +167,11 @@ final class ReceiptTest extends TestCase
         [$asn, $receipt] = InboundMother::openReceipt(['p' => [$product, 10]]);
         $receipt->receiveItem($product, 12, null, null, ItemCondition::Good, InboundMother::at());
 
-        self::assertDomainError('inbound.over_receipt_not_approved', ['units' => 2], static fn () => $asn->closeReceipt($receipt, InboundMother::at()));
+        self::assertDomainError('inbound.over_receipt_not_approved', ['units' => 2], static fn () => $asn->closeReceipt($receipt, InboundMother::operator(), InboundMother::at()));
         self::assertSame(ReceiptStatus::Open, $receipt->status());
 
         $receipt->approveOverReceipt(InboundMother::at());
-        $asn->closeReceipt($receipt, InboundMother::at());
+        $asn->closeReceipt($receipt, InboundMother::operator(), InboundMother::at());
 
         self::assertSame(ReceiptStatus::Closed, $receipt->status());
         self::assertTrue($receipt->isOverReceiptApproved());
@@ -228,7 +229,7 @@ final class ReceiptTest extends TestCase
         $receipt->receiveItem($product, 10, null, null, ItemCondition::Good, InboundMother::at());
         $receipt->pullEvents();
 
-        $asn->closeReceipt($receipt, InboundMother::at());
+        $asn->closeReceipt($receipt, InboundMother::operator(), InboundMother::at());
 
         self::assertSame(ReceiptStatus::Closed, $receipt->status());
         self::assertEquals(InboundMother::at(), $receipt->closedAt());
@@ -240,7 +241,7 @@ final class ReceiptTest extends TestCase
         $parameters = ['id' => $receipt->id()->value];
         self::assertDomainError('inbound.receipt_already_closed', $parameters, static fn () => $receipt->receiveItem($product, 1, null, null, ItemCondition::Good, InboundMother::at()));
         self::assertDomainError('inbound.receipt_already_closed', $parameters, static fn () => $receipt->approveOverReceipt(InboundMother::at()));
-        self::assertDomainError('inbound.receipt_already_closed', $parameters, static fn () => $receipt->close(InboundMother::at()));
+        self::assertDomainError('inbound.receipt_already_closed', $parameters, static fn () => $receipt->close(InboundMother::operator(), InboundMother::at()));
         self::assertSame([], $receipt->pullEvents());
     }
 
@@ -271,6 +272,27 @@ final class ReceiptTest extends TestCase
         ], $unexpected);
     }
 
+    // INB-14: what the receipt brought, one entry per kind of goods.
+    public function testGroupsWhatArrivedByProductLotExpiryAndCondition(): void
+    {
+        $yoghurt = InboundMother::trackedProduct();
+        $shirt = InboundMother::product();
+        [, $receipt] = InboundMother::openReceipt(['y' => [$yoghurt, 30], 's' => [$shirt, 10]]);
+        $lot = LotNumber::fromString('L-0425');
+        $expiry = new \DateTimeImmutable('2027-03-31');
+        $receipt->receiveItem($yoghurt, 10, $lot, $expiry, ItemCondition::Good, InboundMother::at());
+        $receipt->receiveItem($shirt, 10, null, null, ItemCondition::Good, InboundMother::at());
+        $receipt->receiveItem($yoghurt, 12, $lot, $expiry, ItemCondition::Good, InboundMother::at());
+        $receipt->receiveItem($yoghurt, 8, LotNumber::fromString('L-0426'), $expiry, ItemCondition::Good, InboundMother::at());
+        $receipt->receiveItem($yoghurt, 1, $lot, $expiry, ItemCondition::Damaged, InboundMother::at());
+
+        $goods = $receipt->receivedGoods();
+
+        self::assertSame([22, 10, 8, 1], array_map(static fn (ReceivedGoods $item): int => $item->units, $goods));
+        self::assertSame([false, false, false, true], array_map(static fn (ReceivedGoods $item): bool => $item->quarantine, $goods));
+        self::assertSame(['L-0425', null, 'L-0426', 'L-0425'], array_map(static fn (ReceivedGoods $item): ?string => $item->lot?->value, $goods));
+    }
+
     /**
      * A second receipt of an ASN whose first receipt brought everything it announced.
      */
@@ -278,7 +300,7 @@ final class ReceiptTest extends TestCase
     {
         [$asn, $first] = InboundMother::openReceipt(['p' => [$product, 10]]);
         $first->receiveItem($product, 10, null, null, ItemCondition::Good, InboundMother::at());
-        $asn->closeReceipt($first, InboundMother::at());
+        $asn->closeReceipt($first, InboundMother::operator(), InboundMother::at());
 
         return $asn->openReceipt(InboundMother::receiptId(), InboundMother::dock(), InboundMother::at());
     }

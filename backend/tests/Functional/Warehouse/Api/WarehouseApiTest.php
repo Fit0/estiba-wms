@@ -121,6 +121,28 @@ final class WarehouseApiTest extends ApiTestCase
         self::assertSame($zone, $found);
     }
 
+    public function testAssignsTheFamiliesAZoneKeeps(): void
+    {
+        $warehouse = $this->request('POST', '/api/warehouses', ['code' => 'MAD1', 'name' => 'Madrid']);
+        $zone = $this->request('POST', '/api/warehouses/'.$this->id($warehouse).'/zones', ['code' => 'MODA', 'name' => 'Moda', 'storageClass' => 'ambient']);
+        self::assertSame([], $zone['families']);
+
+        $assigned = $this->request('POST', '/api/zones/'.$this->id($zone).'/families', ['families' => ['punto', 'CAMISERIA']]);
+
+        $this->assertStatus(200);
+        self::assertSame(['CAMISERIA', 'PUNTO'], $assigned['families']);
+        self::assertSame($assigned, $this->request('GET', '/api/zones/'.$this->id($zone)));
+
+        $problem = $this->request('POST', '/api/zones/'.$this->id($zone).'/families', ['families' => ['NOT VALID']]);
+        $this->assertProblem(422, 'shared.product_family_invalid', $problem);
+
+        $this->request('POST', '/api/zones/'.$this->id($zone).'/families', ['families' => [7]]);
+        $this->assertStatus(400);
+
+        $unknown = $this->request('POST', '/api/zones/'.Ids::next().'/families', ['families' => []]);
+        $this->assertProblem(404, 'warehouse.zone_not_found', $unknown);
+    }
+
     // WH-02: the zone code is unique within the warehouse.
     public function testRejectsADuplicateZoneCode(): void
     {
@@ -155,7 +177,7 @@ final class WarehouseApiTest extends ApiTestCase
     {
         $paths = $this->openApiPaths();
 
-        foreach (['/api/warehouses', '/api/warehouses/{id}', '/api/warehouses/{warehouseId}/zones', '/api/warehouses/{warehouseId}/locations', '/api/locations/{id}', '/api/locations/{id}/block', '/api/locations/{id}/unblock', '/api/zones/{id}'] as $path) {
+        foreach (['/api/warehouses', '/api/warehouses/{id}', '/api/warehouses/{warehouseId}/zones', '/api/warehouses/{warehouseId}/locations', '/api/locations/{id}', '/api/locations/{id}/block', '/api/locations/{id}/unblock', '/api/zones/{id}', '/api/zones/{id}/families'] as $path) {
             self::assertArrayHasKey($path, $paths);
         }
     }

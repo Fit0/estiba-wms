@@ -9,6 +9,7 @@ use App\Inbound\Domain\AsnId;
 use App\Inbound\Domain\AsnReference;
 use App\Inbound\Domain\ExpectedLine;
 use App\Inbound\Domain\LocationId;
+use App\Inbound\Domain\OperatorId;
 use App\Inbound\Domain\ProductId;
 use App\Inbound\Domain\Receipt;
 use App\Inbound\Domain\ReceiptId;
@@ -40,6 +41,11 @@ final class InboundMother
     public static function receiptId(): ReceiptId
     {
         return ReceiptId::fromString(Ids::next());
+    }
+
+    public static function operator(): OperatorId
+    {
+        return OperatorId::fromString('01929b3e-7c1a-7000-8000-999999999999');
     }
 
     public static function dock(): LocationId
