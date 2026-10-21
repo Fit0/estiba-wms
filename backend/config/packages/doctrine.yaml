@@ -30,6 +30,14 @@ doctrine:
             tenant_name: App\Identity\Infrastructure\Persistence\Doctrine\Type\TenantNameType
             password_hash: App\Identity\Infrastructure\Persistence\Doctrine\Type\PasswordHashType
             user_roles: App\Identity\Infrastructure\Persistence\Doctrine\Type\UserRolesType
+            asn_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnIdType
+            receipt_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ReceiptIdType
+            inbound_location_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\DockLocationIdType
+            asn_reference: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnReferenceType
+            supplier_name: App\Inbound\Infrastructure\Persistence\Doctrine\Type\SupplierNameType
+            inbound_asn_lines: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnLinesType
+            inbound_expected_items: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ExpectedItemsType
+            inbound_received_lines: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ReceivedLinesType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
@@ -62,6 +70,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Catalog/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Catalog\Domain'
                 alias: Catalog
+            Inbound:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Inbound/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Inbound\Domain'
+                alias: Inbound
             CatalogGtinIndex:
                 type: xml
                 is_bundle: false

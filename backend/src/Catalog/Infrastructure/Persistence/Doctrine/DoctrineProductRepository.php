@@ -35,6 +35,17 @@ final readonly class DoctrineProductRepository implements ProductRepository
     }
 
     #[\Override]
+    public function findByGtin(TenantId $tenantId, Gtin $gtin): ?Product
+    {
+        $record = $this->entityManager->find(ProductGtinRecord::class, [
+            'tenantId' => $tenantId->value,
+            'gtin' => $gtin->normalized,
+        ]);
+
+        return $record instanceof ProductGtinRecord ? $this->find(ProductId::fromString($record->productId)) : null;
+    }
+
+    #[\Override]
     public function search(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, PageRequest $page): Page
     {
         $total = $this->filtered($tenantId, $skuPrefix, $status)

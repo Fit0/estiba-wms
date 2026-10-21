@@ -5,7 +5,7 @@
 # Cada código y cada clave debe existir también en errors+intl-icu.en.yaml. Un test lo exige.
 
 shared:
-    identifier_invalid: '"{value}" no es un identificador válido de {type, select, ProductId {producto} WarehouseId {almacén} ZoneId {zona} LocationId {ubicación} TenantId {cliente} other {recurso}}. Debe ser un UUID.'
+    identifier_invalid: '"{value}" no es un identificador válido de {type, select, ProductId {producto} WarehouseId {almacén} ZoneId {zona} LocationId {ubicación} TenantId {cliente} AsnId {aviso de envío} ReceiptId {recepción} other {recurso}}. Debe ser un UUID.'
     unauthenticated: 'Necesitas iniciar sesión para usar este recurso. Envía el token en la cabecera Authorization: Bearer.'
     token_invalid: 'El token no es válido. Inicia sesión de nuevo.'
     token_expired: 'El token ha caducado. Inicia sesión de nuevo.'
@@ -47,6 +47,36 @@ identity:
     user_already_disabled: 'El usuario {email} ya está deshabilitado.'
     user_not_disabled: 'El usuario {email} no está deshabilitado.'
     user_not_found: 'No existe ningún usuario con el correo {email}.'
+
+inbound:
+    asn_lines_required: 'Un aviso de envío necesita al menos una línea.'
+    asn_not_cancellable: 'El aviso de envío {reference} está {status, select, expected {prevista} partially_received {recibida en parte} received {recibida} closed {cerrada} cancelled {cancelada} other {{status}}}. Solo se puede cancelar un aviso que aún no ha recibido nada.'
+    asn_not_closable: 'El aviso de envío {reference} está {status, select, expected {prevista} partially_received {recibida en parte} received {recibida} closed {cerrada} cancelled {cancelada} other {{status}}}. Solo se puede cerrar un aviso que ya ha recibido mercancía.'
+    asn_not_found: 'No existe ningún aviso de envío con el identificador {id}.'
+    asn_not_receivable: 'El aviso de envío {reference} está {status, select, expected {prevista} partially_received {recibida en parte} received {recibida} closed {cerrada} cancelled {cancelada} other {{status}}}, así que no se puede recibir nada contra él.'
+    asn_product_repeated: 'El producto {productId} aparece en más de una línea del aviso de envío. Usa una sola línea por producto.'
+    asn_receipt_already_open: 'El aviso de envío {reference} ya tiene una recepción abierta. Ciérrala antes de continuar.'
+    asn_reference_already_used: 'El cliente ya tiene un aviso de envío con la referencia {reference}.'
+    asn_reference_invalid: 'La referencia de un aviso de envío debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    dock_location_invalid: 'La ubicación {locationId} no puede acoger una recepción: {reason, select, unknown {no existe} not_dock {no es un muelle} blocked {está bloqueada} other {no es válida}}.'
+    expected_quantity_invalid: 'La línea del producto {productId} debe esperar al menos una unidad, y se ha recibido {units}.'
+    expiry_date_not_tracked: 'El producto {productId} no se controla por fecha de caducidad, así que no se puede recibir con una.'
+    expiry_date_passed: 'La mercancía caducó el {expiryDate} y no se puede recibir.'
+    expiry_date_required: 'El producto {productId} se controla por fecha de caducidad. Indica la fecha de caducidad.'
+    gtin_unknown: 'Ningún producto del catálogo tiene el GTIN {gtin}.'
+    lot_not_tracked: 'El producto {productId} no se controla por lote, así que no se puede recibir con uno.'
+    lot_number_invalid: 'Un número de lote debe tener entre 1 y 40 caracteres y no puede contener caracteres de control.'
+    lot_required: 'El producto {productId} se controla por lote. Indica el número de lote.'
+    over_receipt_already_approved: 'El exceso de esta recepción ya está aprobado.'
+    over_receipt_missing: 'La recepción no tiene más de lo que anunciaba el aviso de envío, así que no hay nada que aprobar.'
+    over_receipt_not_approved: 'La recepción tiene {units} unidades más de las que anunciaba el aviso de envío. Un supervisor debe aprobar el exceso antes de cerrarla.'
+    product_not_available: 'El producto {productId} está bloqueado o descatalogado y no se puede recibir.'
+    product_unknown: 'El catálogo no tiene ningún producto con el identificador {productId}.'
+    receipt_already_closed: 'La recepción {id} está cerrada y ya no admite cambios.'
+    receipt_asn_mismatch: 'La recepción {receiptId} no es la recepción abierta del aviso de envío {asnId}.'
+    receipt_not_found: 'No existe ninguna recepción con el identificador {id}.'
+    received_quantity_invalid: 'Una entrada debe tener al menos una unidad, y se ha recibido {units}.'
+    supplier_name_invalid: 'El proveedor debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
 
 inventory:
     lot_number_invalid: 'Un número de lote debe tener entre 1 y 40 caracteres y no puede contener caracteres de control.'

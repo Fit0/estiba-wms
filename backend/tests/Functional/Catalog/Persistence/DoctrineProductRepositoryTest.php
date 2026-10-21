@@ -130,6 +130,24 @@ final class DoctrineProductRepositoryTest extends PersistenceTestCase
         self::assertFalse($this->repository->isGtinTaken($product->tenantId(), Gtin::fromString(ProductMother::EAN_13)));
     }
 
+    public function testFindsAProductByAnyLengthOfItsGtin(): void
+    {
+        $product = ProductMother::product();
+        $product->assignGtin(Gtin::fromString(ProductMother::UPC_12), new InMemoryProductRegistry(), ProductMother::at());
+        $this->repository->save($product);
+        $this->flushAndForget();
+
+        $byUpc = $this->repository->findByGtin($product->tenantId(), Gtin::fromString(ProductMother::UPC_12));
+        $byEan = $this->repository->findByGtin($product->tenantId(), Gtin::fromString('0'.ProductMother::UPC_12));
+
+        self::assertNotNull($byUpc);
+        self::assertTrue($byUpc->id()->equals($product->id()));
+        self::assertNotNull($byEan);
+        self::assertTrue($byEan->id()->equals($product->id()));
+        self::assertNull($this->repository->findByGtin(ProductMother::tenantId(), Gtin::fromString(ProductMother::UPC_12)), 'A GTIN of another tenant is not found.');
+        self::assertNull($this->repository->findByGtin($product->tenantId(), Gtin::fromString(ProductMother::EAN_13)));
+    }
+
     // CAT-02: the database backs the registry check against two requests racing.
     public function testRejectsTheSameGtinOnTwoProductsOfATenant(): void
     {

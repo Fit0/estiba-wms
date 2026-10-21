@@ -117,7 +117,7 @@ stateDiagram-v2
 
 ### Asn
 
-Identity: `AsnId`. Holds the supplier, the expected date, the external reference and the lines (product, expected quantity, optional lot and expiry).
+Identity: `AsnId`. Holds the supplier, the expected date, the external reference, the lines (product, expected quantity, received quantity, optional lot and expiry) and the receipt in progress, if any. Receipts are opened and closed through the ASN, so it adds what each receipt counted to its lines and moves through its statuses by itself.
 
 ```mermaid
 stateDiagram-v2
@@ -138,17 +138,19 @@ stateDiagram-v2
 | INB-02 | Expected quantities are positive whole numbers of the base unit. |
 | INB-03 | The external reference is unique per tenant, so importing the same ASN twice changes nothing. |
 | INB-04 | A closed or cancelled ASN cannot be received against. |
+| INB-15 | An ASN has at least one line, and a product appears on one line only. |
+| INB-16 | An ASN has at most one open receipt. It cannot be cancelled or closed while a receipt is open. |
 
 ### Receipt
 
-Identity: `ReceiptId`. Holds the ASN, the dock location, the received lines (product, quantity, lot, expiry, condition) and the status (open, closed, cancelled). Discrepancies are derived by comparing received and expected quantities.
+Identity: `ReceiptId`. Holds the ASN, the dock location, what it expects of each product (the units of each ASN line still to come when it opened), the received lines (product, quantity, lot, expiry, condition) and the status (open, closed). Discrepancies are derived by comparing received and expected quantities: shortage, excess, unexpected product and damaged units. They are never stored, so they cannot disagree with the counts.
 
 | ID | Invariant |
 |---|---|
 | INB-05 | A receipt belongs to exactly one ASN. |
 | INB-06 | A scanned GTIN that is not on the ASN is recorded as an unexpected-product discrepancy. It is not refused. |
 | INB-07 | Lot and expiry date are required when the product tracks them, and the expiry date is not in the past. |
-| INB-08 | Receiving more than the ASN quantity is a discrepancy. Closing the receipt then needs supervisor approval. The default tolerance is zero. |
+| INB-08 | Receiving more than the ASN quantity is a discrepancy. Closing the receipt then needs supervisor approval. The default tolerance is zero. An unexpected product counts as more than the ASN quantity, and receiving more of a product that is already over withdraws the approval. |
 | INB-09 | A closed receipt cannot change, and closing it publishes `ReceiptClosed` once. |
 | INB-10 | Damaged goods enter stock in quarantine status, never available. |
 

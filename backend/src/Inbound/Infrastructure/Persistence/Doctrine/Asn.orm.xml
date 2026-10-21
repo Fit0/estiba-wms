@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Inbound\Domain\Asn" table="asns">
+        <unique-constraints>
+            <!-- INB-03: the reference is unique per tenant. Backs the registry check against races. -->
+            <unique-constraint name="uniq_asns_tenant_reference" columns="tenant_id,reference"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_asns_tenant_status" columns="tenant_id,status"/>
+        </indexes>
+
+        <id name="id" type="asn_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="reference" type="asn_reference" length="40"/>
+        <field name="supplier" type="supplier_name" length="100"/>
+        <field name="expectedDate" column="expected_date" type="date_immutable"/>
+        <field name="status" enum-type="App\Inbound\Domain\AsnStatus" length="20"/>
+        <!-- INB-16: the one receipt in progress, if any. -->
+        <field name="openReceiptId" column="open_receipt_id" type="receipt_id" nullable="true"/>
+        <field name="lines" type="inbound_asn_lines"/>
+    </entity>
+</doctrine-mapping>
