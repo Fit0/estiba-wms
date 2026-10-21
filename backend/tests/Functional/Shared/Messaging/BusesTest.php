@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Shared\Messaging;
 
+use App\Inbound\Domain\Event\PutawayConfirmed;
+use App\Inbound\Domain\Event\ReceiptClosed;
 use App\Shared\Application\Bus\CommandBus;
 use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Bus\QueryBus;
@@ -15,12 +17,14 @@ use App\Tests\Functional\Shared\Messaging\Fixtures\SaveTenant;
 use App\Tests\Functional\Warehouse\Persistence\PersistenceTestCase;
 use App\Tests\Unit\Support\Ids;
 use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
+use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Exception\NoHandlerForMessageException;
 
 /**
- * What the buses promise (ADR 0009, ADR 0011): a command runs in one transaction that commits or
- * rolls back as a whole, the policies of the events it publishes run in that same transaction, a
- * query runs in none, and a domain error reaches the caller unwrapped.
+ * What the buses promise (ADR 0009, ADR 0012): a command runs in one transaction that commits or
+ * rolls back as a whole, the events it publishes reach their policies only after it commits, each
+ * policy runs in a transaction of its own, a query runs in none, and a domain error reaches the
+ * caller unwrapped.
  */
 final class BusesTest extends PersistenceTestCase
 {
@@ -99,28 +103,67 @@ final class BusesTest extends PersistenceTestCase
         $commandBus->dispatch(new IsInATransaction());
     }
 
-    public function testAPolicyRunsInTheTransactionOfTheCommandThatPublishedTheEvent(): void
+    public function testAPolicyRunsAfterTheCommandCommitsInATransactionOfItsOwn(): void
     {
-        $tenantId = Ids::next();
+        $commandTenant = Ids::next();
+        $policyTenant = Ids::next();
 
-        $this->commandBus->dispatch(new PublishSomethingHappened($tenantId));
+        $this->commandBus->dispatch(new PublishSomethingHappened($commandTenant, $policyTenant));
 
-        self::assertSame(1, $this->tenantsWithId($tenantId), 'The command bus flushed what the policy wrote.');
+        self::assertSame(1, $this->tenantsWithId($commandTenant));
+        self::assertSame(1, $this->tenantsWithId($policyTenant), 'The event bus flushed what the policy wrote.');
     }
 
-    public function testAFailingPolicyUndoesTheCommandAndReachesTheCallerAsItWasThrown(): void
+    // A policy that fails cannot undo a command that already committed: it is retried instead.
+    public function testAFailingPolicyLeavesTheCommandCommittedAndReachesTheCallerAsItWasThrown(): void
     {
-        $tenantId = Ids::next();
+        $commandTenant = Ids::next();
+        $policyTenant = Ids::next();
 
         try {
-            $this->commandBus->dispatch(new PublishSomethingHappened($tenantId, policyFails: true));
+            $this->commandBus->dispatch(new PublishSomethingHappened($commandTenant, $policyTenant, policyFails: true));
             self::fail('The domain error of the policy should reach the caller.');
         } catch (DomainError $error) {
             self::assertSame('shared.test_rule_broken', $error->errorCode());
         }
 
-        self::assertSame(0, $this->tenantsWithId($tenantId));
+        self::assertSame(1, $this->tenantsWithId($commandTenant), 'The command committed before the policy ran.');
+        self::assertSame(0, $this->tenantsWithId($policyTenant), 'The policy rolled back what it wrote.');
         self::assertFalse($this->entityManager->getConnection()->isTransactionActive());
+    }
+
+    // A command that fails publishes nothing.
+    public function testTheEventsOfACommandThatFailsAreDropped(): void
+    {
+        $commandTenant = Ids::next();
+        $policyTenant = Ids::next();
+
+        try {
+            $this->commandBus->dispatch(new PublishSomethingHappened($commandTenant, $policyTenant, commandFailsAfterPublishing: true));
+            self::fail('The domain error of the command should reach the caller.');
+        } catch (DomainError $error) {
+            self::assertSame('shared.test_rule_broken', $error->errorCode());
+        }
+
+        self::assertSame(0, $this->tenantsWithId($commandTenant));
+        self::assertSame(0, $this->tenantsWithId($policyTenant), 'The policy never ran.');
+    }
+
+    /**
+     * The policies that may run a moment later go to the async transport, which a worker consumes
+     * with retries (ADR 0012). The tests swap that transport for a synchronous one.
+     */
+    public function testRoutesThePoliciesThatMayWaitToTheAsyncTransport(): void
+    {
+        $senders = self::getContainer()->get('messenger.senders_locator');
+
+        foreach ([ReceiptClosed::class, PutawayConfirmed::class] as $event) {
+            $envelope = new Envelope(new \ReflectionClass($event)->newInstanceWithoutConstructor());
+
+            self::assertSame(['async'], array_keys(iterator_to_array($senders->getSenders($envelope))), $event);
+        }
+
+        self::assertSame([], iterator_to_array($senders->getSenders(new Envelope(new NobodyListens()))), 'Other events are handled at once.');
     }
 
     #[DoesNotPerformAssertions]

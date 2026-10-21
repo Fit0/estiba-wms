@@ -20,6 +20,9 @@ use App\Inbound\Infrastructure\Http\State\ReceiptProvider;
 use App\Inbound\Infrastructure\Http\State\ReceiveItemProcessor;
 
 /**
+ * `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
+ * their putaway, a moment after it closes (ADR 0012).
+ *
  * Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
  * see `access_control` in `config/packages/security.yaml`.
  */
@@ -75,6 +78,7 @@ final readonly class ReceiptResource
         public bool $overReceiptApproved,
         public string $openedAt,
         public ?string $closedAt,
+        public bool $stockBooked,
         public array $expected,
         public array $lines,
         public array $discrepancies,
@@ -92,6 +96,7 @@ final readonly class ReceiptResource
             $receipt->isOverReceiptApproved(),
             $receipt->openedAt()->format(\DATE_ATOM),
             $receipt->closedAt()?->format(\DATE_ATOM),
+            $receipt->isStockBooked(),
             array_map(ExpectedItemResource::fromDomain(...), $receipt->expected()),
             array_map(ReceivedLineResource::fromDomain(...), $receipt->lines()),
             array_map(DiscrepancyResource::fromDomain(...), $receipt->discrepancies()),

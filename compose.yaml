@@ -1,26 +1,56 @@
 name: estiba
 
+# The API and the worker run the same image, with the same environment and code.
+x-php-environment: &php-environment
+  DATABASE_URL: "postgresql://${POSTGRES_USER:-estiba}:${POSTGRES_PASSWORD:-estiba}@database:5432/${POSTGRES_DB:-estiba}?serverVersion=17&charset=utf8"
+  REDIS_URL: "redis://redis:6379"
+  MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
+  MESSENGER_FAILED_TRANSPORT_DSN: "doctrine://default?queue_name=failed&auto_setup=0"
+  XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+
+x-php-volumes: &php-volumes
+  - ./backend:/app
+  # vendor/ and var/ live in Docker volumes: reading thousands of files
+  # through a Windows or macOS bind mount makes every request ~15x slower.
+  - php_vendor:/app/vendor
+  - php_var:/app/var
+
 services:
   php:
     build:
       context: ./backend
       target: frankenphp_dev
     environment:
+      <<: *php-environment
       SERVER_NAME: ":80"
-      DATABASE_URL: "postgresql://${POSTGRES_USER:-estiba}:${POSTGRES_PASSWORD:-estiba}@database:5432/${POSTGRES_DB:-estiba}?serverVersion=17&charset=utf8"
-      REDIS_URL: "redis://redis:6379"
-      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
-    volumes:
-      - ./backend:/app
-      # vendor/ and var/ live in Docker volumes: reading thousands of files
-      # through a Windows or macOS bind mount makes every request ~15x slower.
-      - php_vendor:/app/vendor
-      - php_var:/app/var
+    volumes: *php-volumes
     ports:
       - "${HTTP_PORT:-8080}:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # Handles the events routed to the async transport (ADR 0012). It stops by itself every hour or
+  # after 256 MB and Docker starts it again, so a long-running PHP process never grows stale.
+  # After changing code, restart it: make worker-restart.
+  worker:
+    build:
+      context: ./backend
+      target: frankenphp_dev
+    command: ["php", "bin/console", "messenger:consume", "async", "--time-limit=3600", "--memory-limit=256M", "-vv"]
+    environment: *php-environment
+    volumes: *php-volumes
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    depends_on:
+      # The API container installs the dependencies on a fresh clone; the worker waits for it.
+      php:
+        condition: service_started
       database:
         condition: service_healthy
       redis:

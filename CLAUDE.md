@@ -17,7 +17,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Static analysis and style | PHPStan 2 (max level), PHP-CS-Fixer, Rector 2 | In use |
 | Architecture tests | PHPat 0.12 (runs inside PHPStan, rules in `backend/tests/Architecture/`) | In use |
 | API | API Platform 5, plain JSON, DTO resources and our own state providers and processors (ADR 0006) | In use |
-| Messaging | Symfony Messenger: command and query buses ([ADR 0009](docs/adr/0009-command-and-query-buses-with-symfony-messenger.md)) and a synchronous event bus for policies ([ADR 0011](docs/adr/0011-putaway-and-stock-booked-by-event-policies.md)). Redis transport and async handling | Buses in use, transport planned (E03-05) |
+| Messaging | Symfony Messenger: command and query buses ([ADR 0009](docs/adr/0009-command-and-query-buses-with-symfony-messenger.md)) and an event bus for policies. Events wait for the command to commit; the routed ones go to a Redis stream (`symfony/redis-messenger`) handled by the `worker` service with retries, and the ones that keep failing to a PostgreSQL table (`symfony/doctrine-messenger`) ([ADR 0012](docs/adr/0012-asynchronous-policies-with-a-redis-transport.md)) | In use |
 | Auth | Symfony Security and LexikJWTAuthenticationBundle (RS256 tokens, one hour) | In use |
 | Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Backend in use, frontend planned (E05) |
 | Frontend | React 19, TypeScript (strict), Vite, TanStack Query, React Router, React Hook Form + Zod, shadcn/ui + Tailwind | Planned (E05) |
@@ -48,7 +48,8 @@ Both this rule and the context boundaries below are enforced by `backend/tests/A
 - Doctrine mapping lives in XML under each context's `Infrastructure/Persistence/Doctrine/` and is registered in `config/packages/doctrine.yaml`. There is no `src/Entity`.
 - Controllers are invokable, `final readonly`, one action each, and only translate HTTP to a command or query.
 - Every use case is a `Command` or a `Query` class plus a `...Handler` that implements `CommandHandler` or `QueryHandler`, in `Application/<UseCase>/`. Entry points (API Platform processors and providers, console commands) send them through `CommandBus::dispatch()` and `QueryBus::ask()` and never call a handler. The command bus runs each command in a transaction and flushes, so **handlers and repositories never flush**. A command returns what it created or changed, and a query never changes state. The architecture test enforces this.
-- A policy ("whenever X happens, do Y") is an `EventHandler` in `Application/`, invoked with one domain event. A command handler that wants its events handled publishes them with `EventBus::publish(...$aggregate->pullEvents())`; the policies run in the command's transaction (ADR 0011).
+- A policy ("whenever X happens, do Y") is an `EventHandler` in `Application/`, invoked with one domain event. A command handler that wants its events handled publishes them with `EventBus::publish(...$aggregate->pullEvents())`. The events leave after the command commits, and each policy runs in its own transaction (ADR 0012).
+- An event routed to `async` in `config/packages/messenger.yaml` is handled by the worker, maybe more than once: its policy must be idempotent (record in its own transaction that it ran, and do nothing the second time), have one handler per event, and take everything it needs from the event, since there is no signed-in user and no tenant filter. After changing a policy, `make worker-restart`.
 - API resources are DTOs in `Infrastructure/Http/Resource`, never domain entities. Each operation is a state provider (query bus) or processor (command bus) in `Http/State` (ADR 0006, ADR 0009). The tenant comes from `CurrentTenant`, never from the request body.
 - A context may depend on another one only through that context's `Application/Contract` namespace (interfaces, DTOs and integration events). Never on its `Domain`, `Infrastructure` or the rest of its `Application`. Reference other contexts' data by id value, with no foreign keys or joins across contexts (ADR 0003).
 - `Shared` may be used by every context and must not depend on any of them.
@@ -128,6 +129,8 @@ Everything runs inside Docker. Use `make` from the repository root (`make` alone
 | `make cs` / `make rector` | Style and refactoring checks (dry run) |
 | `make fix` | Apply Rector and PHP-CS-Fixer |
 | `make qa` | All checks. **Must pass before proposing a commit.** |
+| `make worker-logs` / `make worker-restart` | Follow / restart the worker that handles the asynchronous events |
+| `make failed` / `make retry-failed` | List / handle again the events that failed every retry |
 
 If `make` is not available in the shell, run the equivalent `docker compose exec -T php ...` command from the `Makefile`.
 

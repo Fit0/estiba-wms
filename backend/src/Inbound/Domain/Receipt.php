@@ -41,6 +41,8 @@ final class Receipt extends AggregateRoot
 
     private ?OperatorId $closedBy = null;
 
+    private ?\DateTimeImmutable $stockBookedAt = null;
+
     /**
      * @param list<ExpectedItem> $expected
      */
@@ -281,6 +283,26 @@ final class Receipt extends AggregateRoot
     public function closedBy(): ?OperatorId
     {
         return $this->closedBy;
+    }
+
+    /**
+     * The policy that books the goods of a closed receipt into stock and plans their putaway says
+     * so here, in the same transaction. It runs again when its message is redelivered, so it asks
+     * {@see isStockBooked()} first and a second run changes nothing (ADR 0012).
+     */
+    public function recordStockBooked(\DateTimeImmutable $at): void
+    {
+        $this->stockBookedAt ??= $at;
+    }
+
+    public function isStockBooked(): bool
+    {
+        return $this->stockBookedAt instanceof \DateTimeImmutable;
+    }
+
+    public function stockBookedAt(): ?\DateTimeImmutable
+    {
+        return $this->stockBookedAt;
     }
 
     /**

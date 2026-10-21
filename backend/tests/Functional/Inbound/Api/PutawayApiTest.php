@@ -5,6 +5,18 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Inbound\Api;
 
 use App\Identity\Domain\Role;
+use App\Inbound\Domain\AsnId;
+use App\Inbound\Domain\AsnReference;
+use App\Inbound\Domain\Event\PutawayConfirmed;
+use App\Inbound\Domain\Event\ReceiptClosed;
+use App\Inbound\Domain\LocationId;
+use App\Inbound\Domain\OperatorId;
+use App\Inbound\Domain\ProductId;
+use App\Inbound\Domain\PutawayTaskId;
+use App\Inbound\Domain\ReceiptId;
+use App\Inbound\Domain\ReceivedGoods;
+use App\Shared\Application\Bus\EventBus;
+use App\Shared\Domain\TenantId;
 use App\Tests\Unit\Support\Ids;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
@@ -70,6 +82,7 @@ final class PutawayApiTest extends InboundApiTestCase
         self::assertSame($this->fashionShelfId, $confirmed['confirmedLocationId']);
         self::assertNull($confirmed['overrideReason']);
         self::assertIsString($confirmed['confirmedAt']);
+        self::assertTrue($confirmed['stockMoved'], 'The tests run the policies at once; a worker does it a moment later.');
         self::assertSame($confirmed, $this->request('GET', '/api/putaway-tasks/'.$this->id($task)));
         self::assertSame(0, $this->unitsAt($this->dockId, $this->shirtId));
         self::assertSame(40, $this->unitsAt($this->fashionShelfId, $this->shirtId));
@@ -172,6 +185,44 @@ final class PutawayApiTest extends InboundApiTestCase
         $this->assertProblem(404, 'inbound.putaway_task_not_found', $problem);
     }
 
+    // ADR 0012: a worker may get the same message twice. The second time changes nothing.
+    public function testARedeliveredClosedReceiptBooksNothingTwice(): void
+    {
+        $receipt = $this->closedReceipt();
+        self::assertTrue($receipt['stockBooked']);
+        $asnId = $receipt['asnId'] ?? null;
+        self::assertIsString($asnId);
+
+        $this->events()->publish(new ReceiptClosed(ReceiptId::fromString($this->id($receipt)), AsnId::fromString($asnId), OperatorId::fromString(Ids::next()), new \DateTimeImmutable()));
+
+        self::assertSame(40, $this->unitsAt($this->dockId, $this->shirtId));
+        self::assertCount(3, $this->tasks($receipt));
+    }
+
+    // ADR 0012
+    public function testARedeliveredPutawayMovesNothingTwice(): void
+    {
+        $task = $this->tasks($this->closedReceipt())[0];
+        $this->request('POST', '/api/putaway-tasks/'.$this->id($task).'/confirm', ['locationId' => $this->fashionShelfId]);
+        $receiptId = $task['receiptId'] ?? null;
+        self::assertIsString($receiptId);
+        $tenantId = TenantId::fromString($this->tenant);
+
+        $this->events()->publish(new PutawayConfirmed(
+            PutawayTaskId::fromString($this->id($task)),
+            $tenantId,
+            new ReceivedGoods(ProductId::fromString($this->shirtId), 40, null, null, false),
+            LocationId::fromString($this->dockId),
+            LocationId::fromString($this->fashionShelfId),
+            AsnReference::fromString('ALB-2027-0153'),
+            OperatorId::fromString(Ids::next()),
+            new \DateTimeImmutable(),
+        ));
+
+        self::assertSame(0, $this->unitsAt($this->dockId, $this->shirtId), 'A second move would have found nothing to take.');
+        self::assertSame(40, $this->unitsAt($this->fashionShelfId, $this->shirtId));
+    }
+
     public function testDescribesTheApiInOpenApi(): void
     {
         $paths = $this->openApiPaths();
@@ -241,6 +292,11 @@ final class PutawayApiTest extends InboundApiTestCase
         \assert(is_numeric($units));
 
         return (int) $units;
+    }
+
+    private function events(): EventBus
+    {
+        return self::getContainer()->get(EventBus::class);
     }
 
     private function connection(): Connection
