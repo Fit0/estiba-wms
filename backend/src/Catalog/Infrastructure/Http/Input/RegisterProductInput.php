@@ -6,6 +6,7 @@ namespace App\Catalog\Infrastructure\Http\Input;
 
 use App\Catalog\Domain\UnitOfMeasure;
 use App\Shared\Domain\StorageClass;
+use App\Shared\Domain\TurnoverClass;
 
 final readonly class RegisterProductInput
 {
@@ -22,6 +23,8 @@ final readonly class RegisterProductInput
         public bool $trackedByExpiry = false,
         public ?int $minShelfLifeAtReceiptDays = null,
         public ?int $minShelfLifeAtShipmentDays = null,
+        public ?string $family = null,
+        public TurnoverClass $turnoverClass = TurnoverClass::DEFAULT,
     ) {
     }
 }

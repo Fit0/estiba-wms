@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- STK-04: the ledger. Rows are only ever inserted; the repository has no way to change or delete one. -->
+    <entity name="App\Inventory\Domain\StockMovement" table="stock_movements" read-only="true">
+        <indexes>
+            <index name="idx_stock_movements_item" columns="stock_item_id,occurred_at"/>
+        </indexes>
+
+        <id name="id" type="stock_movement_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="stockItemId" column="stock_item_id" type="stock_item_id"/>
+        <field name="type" enum-type="App\Inventory\Domain\MovementType" length="20"/>
+        <field name="change" column="change" type="integer"/>
+        <field name="balanceAfter" column="balance_after" type="stock_quantity"/>
+        <field name="reference" type="movement_reference" length="80" nullable="true"/>
+        <field name="reason" type="adjustment_reason" length="200" nullable="true"/>
+        <field name="author" column="author_id" type="stock_author_id"/>
+        <field name="occurredAt" column="occurred_at" type="datetime_immutable"/>
+    </entity>
+</doctrine-mapping>

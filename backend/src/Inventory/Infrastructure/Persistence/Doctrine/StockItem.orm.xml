@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Inventory\Domain\StockItem" table="stock_items">
+        <unique-constraints>
+            <!-- DD-1: one stock item per tenant, product, location, lot, expiry date and status. -->
+            <unique-constraint name="uniq_stock_items_key" columns="tenant_id,product_id,location_id,lot,expiry_date,status"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_stock_items_location" columns="location_id"/>
+        </indexes>
+
+        <id name="id" type="stock_item_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <embedded name="key" class="App\Inventory\Domain\StockKey" use-column-prefix="false"/>
+        <field name="onHand" column="on_hand" type="stock_quantity"/>
+    </entity>
+</doctrine-mapping>

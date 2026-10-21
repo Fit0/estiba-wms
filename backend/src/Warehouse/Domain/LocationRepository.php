@@ -22,5 +22,15 @@ interface LocationRepository extends LocationCodeRegistry
      */
     public function search(WarehouseId $warehouseId, ?ZoneId $zoneId, ?LocationStatus $status, PageRequest $page): Page;
 
+    /**
+     * The active locations of a warehouse of these types, in no particular order. Putaway chooses
+     * among them.
+     *
+     * @param list<LocationType> $types
+     *
+     * @return list<Location>
+     */
+    public function findActiveOfTypes(WarehouseId $warehouseId, array $types): array;
+
     public function save(Location $location): void;
 }

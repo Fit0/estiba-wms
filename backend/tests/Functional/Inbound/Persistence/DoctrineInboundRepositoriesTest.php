@@ -11,12 +11,19 @@ use App\Inbound\Domain\DiscrepancyType;
 use App\Inbound\Domain\ExpectedLine;
 use App\Inbound\Domain\ItemCondition;
 use App\Inbound\Domain\LotNumber;
+use App\Inbound\Domain\Putaway\PutawayDestination;
+use App\Inbound\Domain\PutawayTask;
+use App\Inbound\Domain\PutawayTaskId;
+use App\Inbound\Domain\PutawayTaskStatus;
 use App\Inbound\Domain\ReceiptStatus;
+use App\Inbound\Domain\ReceivedGoods;
 use App\Inbound\Infrastructure\Persistence\Doctrine\DoctrineAsnRepository;
+use App\Inbound\Infrastructure\Persistence\Doctrine\DoctrinePutawayTaskRepository;
 use App\Inbound\Infrastructure\Persistence\Doctrine\DoctrineReceiptRepository;
 use App\Shared\Domain\PageRequest;
 use App\Tests\Functional\Warehouse\Persistence\PersistenceTestCase;
 use App\Tests\Unit\Inbound\Domain\InboundMother;
+use App\Tests\Unit\Support\Ids;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 
 final class DoctrineInboundRepositoriesTest extends PersistenceTestCase
@@ -85,7 +92,7 @@ final class DoctrineInboundRepositoriesTest extends PersistenceTestCase
 
         // A change inside the lists is written too: the aggregate replaces them, it never edits them.
         $found->approveOverReceipt(InboundMother::at());
-        $reloadedAsn->closeReceipt($found, InboundMother::at());
+        $reloadedAsn->closeReceipt($found, InboundMother::operator(), InboundMother::at());
         $this->flushAndForget();
 
         $closed = $this->receipts->find($receipt->id());
@@ -149,5 +156,42 @@ final class DoctrineInboundRepositoriesTest extends PersistenceTestCase
         self::assertSame(2, $expected->total);
         self::assertCount(1, $expected->items);
         self::assertSame('ALB-1', $expected->items[0]->reference()->value, 'Same expected date: ordered by reference.');
+    }
+
+    public function testKeepsAPutawayTaskAndWhereItsGoodsWent(): void
+    {
+        $tasks = new DoctrinePutawayTaskRepository($this->entityManager);
+        $dock = InboundMother::dock();
+        $shelf = InboundMother::dock();
+        $task = PutawayTask::plan(
+            PutawayTaskId::fromString(Ids::next()),
+            InboundMother::tenantId(),
+            InboundMother::receiptId(),
+            AsnReference::fromString('ALB-2027-0153'),
+            new ReceivedGoods(InboundMother::trackedProduct()->id, 12, LotNumber::fromString('L-0425'), new \DateTimeImmutable('2027-03-31'), true),
+            $dock,
+            null,
+            InboundMother::at(),
+        );
+        $split = $task->split(PutawayTaskId::fromString(Ids::next()), 2, InboundMother::at());
+        $tasks->save($task);
+        $tasks->save($split);
+        $this->flushAndForget();
+
+        $found = $tasks->find($task->id());
+        self::assertNotNull($found);
+        self::assertEquals($task->goods(), $found->goods());
+        self::assertNull($found->suggestedLocationId());
+        self::assertSame(2, $tasks->search($task->tenantId(), $task->receiptId(), PutawayTaskStatus::Pending, PageRequest::of())->total);
+
+        $found->confirm(new PutawayDestination($shelf, true, true, true, true), null, InboundMother::operator(), InboundMother::at());
+        $this->flushAndForget();
+
+        $confirmed = $tasks->find($task->id());
+        self::assertNotNull($confirmed);
+        self::assertSame(PutawayTaskStatus::Confirmed, $confirmed->status());
+        self::assertTrue($shelf->equals($confirmed->confirmedLocationId() ?? $dock));
+        self::assertSame(10, $confirmed->goods()->units);
+        self::assertSame(1, $tasks->search($task->tenantId(), null, PutawayTaskStatus::Pending, PageRequest::of())->total);
     }
 }

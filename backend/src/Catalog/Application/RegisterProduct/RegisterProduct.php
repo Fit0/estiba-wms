@@ -8,6 +8,7 @@ use App\Catalog\Domain\Product;
 use App\Catalog\Domain\UnitOfMeasure;
 use App\Shared\Application\Bus\Command;
 use App\Shared\Domain\StorageClass;
+use App\Shared\Domain\TurnoverClass;
 
 /**
  * @implements Command<Product>
@@ -27,6 +28,8 @@ final readonly class RegisterProduct implements Command
         public bool $trackedByExpiry = false,
         public ?int $minShelfLifeAtReceiptDays = null,
         public ?int $minShelfLifeAtShipmentDays = null,
+        public ?string $family = null,
+        public TurnoverClass $turnoverClass = TurnoverClass::DEFAULT,
     ) {
     }
 }

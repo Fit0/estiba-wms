@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Warehouse\Domain;
 
 use App\Shared\Domain\AggregateRoot;
+use App\Shared\Domain\ProductFamily;
 use App\Shared\Domain\StorageClass;
 use App\Shared\Domain\TenantId;
 use App\Warehouse\Domain\Event\WarehouseCreated;
 use App\Warehouse\Domain\Event\ZoneDefined;
+use App\Warehouse\Domain\Event\ZoneFamiliesAssigned;
 use App\Warehouse\Domain\Exception\LocationCodeAlreadyUsed;
 use App\Warehouse\Domain\Exception\UnknownZone;
 use App\Warehouse\Domain\Exception\WarehouseCodeAlreadyUsed;
@@ -75,6 +77,23 @@ final class Warehouse extends AggregateRoot
     }
 
     /**
+     * Sets the families the zone keeps, replacing the ones it had. An empty list keeps none.
+     *
+     * @param list<ProductFamily> $families
+     *
+     * @throws UnknownZone
+     */
+    public function assignFamiliesToZone(ZoneId $zoneId, array $families, \DateTimeImmutable $at): Zone
+    {
+        $zone = $this->zone($zoneId)->withFamilies($families);
+
+        $this->zones = array_map(static fn (Zone $own): Zone => $own->id->equals($zoneId) ? $zone : $own, $this->zones);
+        $this->record(new ZoneFamiliesAssigned($this->id, $zoneId, $zone->families, $at));
+
+        return $zone;
+    }
+
+    /**
      * @throws UnknownZone             WH-05
      * @throws LocationCodeAlreadyUsed WH-03
      */
@@ -123,6 +142,19 @@ final class Warehouse extends AggregateRoot
     public function zones(): array
     {
         return $this->zones;
+    }
+
+    /**
+     * @throws UnknownZone
+     */
+    public function zoneWithId(ZoneId $id): Zone
+    {
+        return $this->zone($id);
+    }
+
+    public function hasZone(ZoneId $id): bool
+    {
+        return array_any($this->zones, static fn (Zone $zone): bool => $zone->id->equals($id));
     }
 
     private function zone(ZoneId $id): Zone

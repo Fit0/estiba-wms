@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Warehouse\Domain;
 
+use App\Shared\Domain\ProductFamily;
 use App\Shared\Domain\StorageClass;
 use App\Tests\Unit\Support\AssertsDomainErrors;
 use App\Warehouse\Domain\DisplayName;
 use App\Warehouse\Domain\Event\LocationCreated;
 use App\Warehouse\Domain\Event\WarehouseCreated;
 use App\Warehouse\Domain\Event\ZoneDefined;
+use App\Warehouse\Domain\Event\ZoneFamiliesAssigned;
 use App\Warehouse\Domain\Location;
 use App\Warehouse\Domain\LocationCapacity;
 use App\Warehouse\Domain\LocationCode;
@@ -18,6 +20,7 @@ use App\Warehouse\Domain\LocationType;
 use App\Warehouse\Domain\PickSequence;
 use App\Warehouse\Domain\Warehouse;
 use App\Warehouse\Domain\WarehouseCode;
+use App\Warehouse\Domain\Zone;
 use App\Warehouse\Domain\ZoneCode;
 use PHPUnit\Framework\TestCase;
 
@@ -239,5 +242,32 @@ final class WarehouseTest extends TestCase
         $location = WarehouseMother::defineLocation($second, $zoneId, 'A-03-02', $registry);
 
         self::assertSame('A-03-02', $location->code()->value);
+    }
+
+    public function testAssignsTheFamiliesAZoneKeeps(): void
+    {
+        $warehouse = WarehouseMother::warehouse();
+        $zoneId = WarehouseMother::zoneId();
+        WarehouseMother::addZone($warehouse, $zoneId);
+        $warehouse->pullEvents();
+
+        $zone = $warehouse->assignFamiliesToZone($zoneId, [ProductFamily::fromString('punto'), ProductFamily::fromString('CAMISERIA'), ProductFamily::fromString('Punto')], WarehouseMother::at());
+
+        self::assertSame(['CAMISERIA', 'PUNTO'], array_map(static fn (ProductFamily $family): string => $family->value, $zone->families), 'Sorted and without repeats.');
+        self::assertSame($zone, $warehouse->zoneWithId($zoneId));
+        self::assertTrue($zone->keeps(ProductFamily::fromString('punto')));
+        self::assertFalse($zone->keeps(ProductFamily::fromString('CALZADO')));
+        self::assertInstanceOf(ZoneFamiliesAssigned::class, $warehouse->pullEvents()[0] ?? null);
+
+        $cleared = $warehouse->assignFamiliesToZone($zoneId, [], WarehouseMother::at());
+        self::assertSame([], $cleared->families);
+    }
+
+    public function testRejectsFamiliesForAZoneItDoesNotHave(): void
+    {
+        $warehouse = WarehouseMother::warehouse();
+        $zoneId = WarehouseMother::zoneId();
+
+        self::assertDomainError('warehouse.zone_unknown', ['zoneId' => $zoneId->value], static fn (): Zone => $warehouse->assignFamiliesToZone($zoneId, [], WarehouseMother::at()));
     }
 }

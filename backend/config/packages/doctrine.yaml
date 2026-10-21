@@ -25,14 +25,30 @@ doctrine:
             product_name: App\Catalog\Infrastructure\Persistence\Doctrine\Type\ProductNameType
             product_gtins: App\Catalog\Infrastructure\Persistence\Doctrine\Type\GtinsType
             product_packaging_levels: App\Catalog\Infrastructure\Persistence\Doctrine\Type\PackagingLevelsType
+            product_family: App\Shared\Infrastructure\Persistence\Doctrine\Type\ProductFamilyType
             user_id: App\Identity\Infrastructure\Persistence\Doctrine\Type\UserIdType
             email: App\Identity\Infrastructure\Persistence\Doctrine\Type\EmailType
             tenant_name: App\Identity\Infrastructure\Persistence\Doctrine\Type\TenantNameType
             password_hash: App\Identity\Infrastructure\Persistence\Doctrine\Type\PasswordHashType
             user_roles: App\Identity\Infrastructure\Persistence\Doctrine\Type\UserRolesType
+            stock_item_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\StockItemIdType
+            stock_movement_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\StockMovementIdType
+            stock_product_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\StockProductIdType
+            stock_location_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\StockLocationIdType
+            stock_author_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\AuthorIdType
+            stock_lot: App\Inventory\Infrastructure\Persistence\Doctrine\Type\StockLotType
+            stock_expiry_date: App\Inventory\Infrastructure\Persistence\Doctrine\Type\StockExpiryDateType
+            stock_quantity: App\Inventory\Infrastructure\Persistence\Doctrine\Type\QuantityType
+            movement_reference: App\Inventory\Infrastructure\Persistence\Doctrine\Type\MovementReferenceType
+            adjustment_reason: App\Inventory\Infrastructure\Persistence\Doctrine\Type\AdjustmentReasonType
             asn_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnIdType
             receipt_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ReceiptIdType
             inbound_location_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\DockLocationIdType
+            inbound_product_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\InboundProductIdType
+            inbound_lot_number: App\Inbound\Infrastructure\Persistence\Doctrine\Type\InboundLotNumberType
+            operator_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\OperatorIdType
+            putaway_task_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\PutawayTaskIdType
+            override_reason: App\Inbound\Infrastructure\Persistence\Doctrine\Type\OverrideReasonType
             asn_reference: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnReferenceType
             supplier_name: App\Inbound\Infrastructure\Persistence\Doctrine\Type\SupplierNameType
             inbound_asn_lines: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnLinesType
@@ -70,6 +86,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Catalog/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Catalog\Domain'
                 alias: Catalog
+            Inventory:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Inventory/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Inventory\Domain'
+                alias: Inventory
             Inbound:
                 type: xml
                 is_bundle: false

@@ -40,6 +40,7 @@ final readonly class CatalogProducts implements ProductCatalog
         }
 
         $tracking = $product->trackingPolicy();
+        $dimensions = $product->dimensions();
 
         return new ProductSnapshot(
             $product->id()->value,
@@ -49,6 +50,12 @@ final readonly class CatalogProducts implements ProductCatalog
             $tracking->trackedByExpiry,
             $tracking->minShelfLifeAtReceiptDays,
             $product->isAvailableForOperations(),
+            $product->family(),
+            $product->turnoverClass(),
+            $dimensions->lengthMm,
+            $dimensions->widthMm,
+            $dimensions->heightMm,
+            $dimensions->weightGrams,
         );
     }
 }

@@ -17,7 +17,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Static analysis and style | PHPStan 2 (max level), PHP-CS-Fixer, Rector 2 | In use |
 | Architecture tests | PHPat 0.12 (runs inside PHPStan, rules in `backend/tests/Architecture/`) | In use |
 | API | API Platform 5, plain JSON, DTO resources and our own state providers and processors (ADR 0006) | In use |
-| Messaging | Symfony Messenger: command and query buses ([ADR 0009](docs/adr/0009-command-and-query-buses-with-symfony-messenger.md)). Redis transport and async handling | Buses in use, transport planned (E03-05) |
+| Messaging | Symfony Messenger: command and query buses ([ADR 0009](docs/adr/0009-command-and-query-buses-with-symfony-messenger.md)) and a synchronous event bus for policies ([ADR 0011](docs/adr/0011-putaway-and-stock-booked-by-event-policies.md)). Redis transport and async handling | Buses in use, transport planned (E03-05) |
 | Auth | Symfony Security and LexikJWTAuthenticationBundle (RS256 tokens, one hour) | In use |
 | Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Backend in use, frontend planned (E05) |
 | Frontend | React 19, TypeScript (strict), Vite, TanStack Query, React Router, React Hook Form + Zod, shadcn/ui + Tailwind | Planned (E05) |
@@ -48,6 +48,7 @@ Both this rule and the context boundaries below are enforced by `backend/tests/A
 - Doctrine mapping lives in XML under each context's `Infrastructure/Persistence/Doctrine/` and is registered in `config/packages/doctrine.yaml`. There is no `src/Entity`.
 - Controllers are invokable, `final readonly`, one action each, and only translate HTTP to a command or query.
 - Every use case is a `Command` or a `Query` class plus a `...Handler` that implements `CommandHandler` or `QueryHandler`, in `Application/<UseCase>/`. Entry points (API Platform processors and providers, console commands) send them through `CommandBus::dispatch()` and `QueryBus::ask()` and never call a handler. The command bus runs each command in a transaction and flushes, so **handlers and repositories never flush**. A command returns what it created or changed, and a query never changes state. The architecture test enforces this.
+- A policy ("whenever X happens, do Y") is an `EventHandler` in `Application/`, invoked with one domain event. A command handler that wants its events handled publishes them with `EventBus::publish(...$aggregate->pullEvents())`; the policies run in the command's transaction (ADR 0011).
 - API resources are DTOs in `Infrastructure/Http/Resource`, never domain entities. Each operation is a state provider (query bus) or processor (command bus) in `Http/State` (ADR 0006, ADR 0009). The tenant comes from `CurrentTenant`, never from the request body.
 - A context may depend on another one only through that context's `Application/Contract` namespace (interfaces, DTOs and integration events). Never on its `Domain`, `Infrastructure` or the rest of its `Application`. Reference other contexts' data by id value, with no foreign keys or joins across contexts (ADR 0003).
 - `Shared` may be used by every context and must not depend on any of them.
@@ -179,7 +180,7 @@ Review every generated migration before keeping it. Committed migrations are nev
 
 - No secrets, tokens or real customer data in the repository, fixtures or tests.
 - AI features (E09) only call read-only queries and never send tenant data the user did not request.
-- Authentication and roles are decided in [ADR 0008](docs/adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md). Roles are `admin`, `supervisor` and `operator`, each including the ones below. Reading needs any signed-in user and changing needs a supervisor, except the dock work that operators do (opening, counting and closing a receipt), and those rules live in `access_control` in `config/packages/security.yaml`. Refine it there, per route, never inside a controller.
+- Authentication and roles are decided in [ADR 0008](docs/adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md). Roles are `admin`, `supervisor` and `operator`, each including the ones below. Reading needs any signed-in user and changing needs a supervisor, except the dock work that operators do (opening, counting and closing a receipt, confirming and splitting putaway tasks), and those rules live in `access_control` in `config/packages/security.yaml`. Refine it there, per route, never inside a controller.
 - A password never leaves `PlainPassword`: do not log it, print it, put it in an error, or take it as a console argument. Never trust the roles or the tenant in a token: the user is loaded from the database on every request.
 - Never return a 401 or a 403 by hand. They go through `ProblemFactory`, so they are translated and keep the common shape.
 - The API tests send real tokens: `ApiTestCase::request()` acts as an admin of `$this->tenant`, `$this->role` changes the role, and an empty tenant sends no token.

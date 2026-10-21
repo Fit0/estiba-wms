@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Inbound\Domain\PutawayTask" table="putaway_tasks">
+        <indexes>
+            <index name="idx_putaway_tasks_receipt" columns="receipt_id"/>
+            <index name="idx_putaway_tasks_tenant_status" columns="tenant_id,status"/>
+        </indexes>
+
+        <id name="id" type="putaway_task_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="receiptId" column="receipt_id" type="receipt_id"/>
+        <field name="reference" type="asn_reference" length="40"/>
+        <embedded name="goods" class="App\Inbound\Domain\ReceivedGoods" use-column-prefix="false"/>
+        <field name="sourceLocationId" column="source_location_id" type="inbound_location_id"/>
+        <field name="suggestedLocationId" column="suggested_location_id" type="inbound_location_id" nullable="true"/>
+        <field name="status" enum-type="App\Inbound\Domain\PutawayTaskStatus" length="20"/>
+        <field name="confirmedLocationId" column="confirmed_location_id" type="inbound_location_id" nullable="true"/>
+        <field name="overrideReason" column="override_reason" type="override_reason" length="200" nullable="true"/>
+        <field name="confirmedBy" column="confirmed_by" type="operator_id" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="confirmedAt" column="confirmed_at" type="datetime_immutable" nullable="true"/>
+    </entity>
+</doctrine-mapping>

@@ -18,11 +18,13 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 |---|---|---|---|
 | Tenant | Cliente, inquilino | The company whose goods and data the system holds. Every aggregate belongs to one tenant, and no query crosses tenants. | Shared |
 | Warehouse | Almacén | A physical site with its own layout of locations. | Warehouse |
-| Zone | Zona | A named area of a warehouse with one storage class and one picking sequence, for example "chilled" or "fast movers". | Warehouse |
+| Zone | Zona | A named area of a warehouse with one storage class and one picking sequence, for example "chilled" or "fast movers". It can keep some product families. | Warehouse |
 | Location | Ubicación | The smallest place where stock can be put, identified by a location code. | Warehouse |
 | Location code | Código de ubicación | `aisle-module-level`, for example `A-03-02`. Unique within a warehouse. | Warehouse |
 | Location type | Tipo de ubicación | Reserve (bulk storage), pick face (picking position), dock (receiving or shipping), staging (waiting area), packing, quarantine. | Warehouse |
 | Storage class | Clase de almacenamiento | Ambient, chilled, frozen or hazmat. A product can only go to locations of a compatible zone. | Catalog, Warehouse |
+| Product family | Familia logística | A group of products stored together, such as shirts or shoes. A product has one at most; a zone keeps any number. | Catalog, Warehouse |
+| Turnover class | Clase de rotación (ABC) | How fast a product leaves: A for the fast movers, C for the slow ones. Set by hand until there are shipments to compute it from. | Catalog |
 | Product | Artículo | Something the warehouse stores. | Catalog |
 | SKU | Referencia | The tenant's own product code. Unique per tenant. | Catalog |
 | GTIN | EAN, código de barras | GS1 barcode number with a check digit. A product can have several. | Catalog |
@@ -57,7 +59,9 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | Receipt | Recepción | One receiving session at a dock, recording what physically arrived. |
 | Discrepancy | Discrepancia, incidencia | A difference between the ASN and what arrived: shortage, excess, unexpected product, damage. |
 | Putaway | Ubicación de entrada, almacenaje | Moving received goods from the dock to a storage location. |
-| Putaway strategy | Estrategia de ubicación | The rule that proposes the destination: first free, by product family, by turnover. |
+| Putaway strategy | Estrategia de ubicación | The rule that proposes the destination: first free (the first empty location along the picking route where the units fit), by product family (a zone that keeps the product's family), by turnover (fast movers near the start of the route). |
+| Putaway task | Tarea de ubicación | Goods at the dock waiting to go to a location, with the suggested one. Confirmed when the operator scans the destination; split to send part of the units elsewhere. |
+| Override reason | Motivo del cambio | Why the goods went somewhere other than the suggested location. |
 
 ## Outbound
 

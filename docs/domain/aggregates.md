@@ -156,14 +156,14 @@ Identity: `ReceiptId`. Holds the ASN, the dock location, what it expects of each
 
 ### PutawayTask
 
-Identity: `PutawayTaskId`. Holds the receipt, the product, the quantity, lot and expiry, the source dock, the suggested location, the actual location, an override reason and the status (pending, confirmed, cancelled).
+Identity: `PutawayTaskId`. Holds the receipt, the ASN reference, the goods (product, quantity, lot, expiry and whether they are in quarantine), the source dock, the suggested location, the actual location, an override reason, who confirmed it and the status (pending, confirmed). Tasks are planned when a receipt closes, one for each product, lot, expiry date and condition it brought, at the location the configured putaway strategy suggests (ADR 0011). Damaged goods go to quarantine locations, the rest to reserve or pick faces.
 
 | ID | Invariant |
 |---|---|
-| INB-11 | The destination is an active location whose zone suits the product's storage class and which has room for the quantity. |
+| INB-11 | The destination is an active location of a type that stores the goods (quarantine for damaged goods, reserve or pick face for the rest), whose zone suits the product's storage class and which has room for the quantity by weight and volume. It is not the dock the goods are on. |
 | INB-12 | Confirming moves exactly the task quantity. A smaller move is made by splitting the task first. |
-| INB-13 | Choosing a location other than the suggested one needs a reason. |
-| INB-14 | The putaway tasks of a received line add up to exactly the quantity received. |
+| INB-13 | Choosing a location other than the suggested one needs a reason. A task without a suggestion needs none. |
+| INB-14 | The putaway tasks of a receipt's goods add up to exactly the quantity received: splitting a task moves units to a new task and never loses any. |
 
 ## Outbound
 

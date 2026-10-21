@@ -167,7 +167,7 @@ final class AsnTest extends TestCase
         $first = $asn->openReceipt(InboundMother::receiptId(), InboundMother::dock(), InboundMother::at());
         $first->receiveItem($shirts, 25, null, null, ItemCondition::Good, InboundMother::at());
         $first->receiveItem($trousers, 10, null, null, ItemCondition::Good, InboundMother::at());
-        $asn->closeReceipt($first, InboundMother::at());
+        $asn->closeReceipt($first, InboundMother::operator(), InboundMother::at());
 
         self::assertSame(AsnStatus::PartiallyReceived, $asn->status());
         self::assertNull($asn->openReceiptId());
@@ -177,7 +177,7 @@ final class AsnTest extends TestCase
         self::assertSame([15, 0], array_map(static fn (ExpectedItem $item): int => $item->units, $second->expected()));
 
         $second->receiveItem($shirts, 15, null, null, ItemCondition::Good, InboundMother::at());
-        $asn->closeReceipt($second, InboundMother::at());
+        $asn->closeReceipt($second, InboundMother::operator(), InboundMother::at());
 
         self::assertSame(AsnStatus::Received, $asn->status());
         self::assertSame([40, 10], array_map(static fn (AsnLine $line): int => $line->receivedUnits, $asn->lines()));
@@ -191,7 +191,7 @@ final class AsnTest extends TestCase
         $receipt->receiveItem($product, 8, null, null, ItemCondition::Good, InboundMother::at());
         $receipt->receiveItem($product, 2, null, null, ItemCondition::Damaged, InboundMother::at());
 
-        $asn->closeReceipt($receipt, InboundMother::at());
+        $asn->closeReceipt($receipt, InboundMother::operator(), InboundMother::at());
 
         self::assertSame(AsnStatus::Received, $asn->status());
         self::assertSame(10, $asn->lines()[0]->receivedUnits);
@@ -206,7 +206,7 @@ final class AsnTest extends TestCase
         self::assertDomainError(
             'inbound.receipt_asn_mismatch',
             ['receiptId' => $foreign->id()->value, 'asnId' => $asn->id()->value],
-            static fn () => $asn->closeReceipt($foreign, InboundMother::at()),
+            static fn () => $asn->closeReceipt($foreign, InboundMother::operator(), InboundMother::at()),
         );
         self::assertSame(ReceiptStatus::Open, $foreign->status());
     }
@@ -228,7 +228,7 @@ final class AsnTest extends TestCase
         $product = InboundMother::product();
         [$asn, $receipt] = InboundMother::openReceipt(['p' => [$product, 10]]);
         $receipt->receiveItem($product, 6, null, null, ItemCondition::Good, InboundMother::at());
-        $asn->closeReceipt($receipt, InboundMother::at());
+        $asn->closeReceipt($receipt, InboundMother::operator(), InboundMother::at());
 
         $asn->close(InboundMother::at());
 
@@ -247,7 +247,7 @@ final class AsnTest extends TestCase
         self::assertDomainError('inbound.asn_receipt_already_open', ['reference' => 'ALB-2027-0153'], static fn () => $asn->cancel(InboundMother::at()));
 
         $receipt->receiveItem($product, 4, null, null, ItemCondition::Good, InboundMother::at());
-        $asn->closeReceipt($receipt, InboundMother::at());
+        $asn->closeReceipt($receipt, InboundMother::operator(), InboundMother::at());
 
         self::assertDomainError('inbound.asn_not_cancellable', ['reference' => 'ALB-2027-0153', 'status' => 'partially_received'], static fn () => $asn->cancel(InboundMother::at()));
     }

@@ -42,13 +42,14 @@ security:
 
     # Note: Only the *first* matching rule is applied.
     # Reading needs any signed-in user. Changing anything needs a supervisor or an admin, except the
-    # work of the dock: opening a receipt, counting what arrives and closing it. Approving an
-    # over-receipt stays with supervisors (INB-08).
+    # work of the dock: opening a receipt, counting what arrives, closing it, and putting the goods
+    # away. Approving an over-receipt stays with supervisors (INB-08).
     access_control:
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }
         - { path: '^/api/asns/[^/]+/receipts$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/receipts/[^/]+/(items|close)$', methods: [POST], roles: ROLE_OPERATOR }
+        - { path: '^/api/putaway-tasks/[^/]+/(confirm|split)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
         - { path: ^/api, roles: ROLE_SUPERVISOR }
 

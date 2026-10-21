@@ -36,6 +36,8 @@ final readonly class RegisterProductProcessor implements ProcessorInterface
             $data->trackedByExpiry,
             $data->minShelfLifeAtReceiptDays,
             $data->minShelfLifeAtShipmentDays,
+            $data->family,
+            $data->turnoverClass,
         )));
     }
 }

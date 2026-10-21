@@ -7,6 +7,7 @@ namespace App\Catalog\Domain;
 use App\Catalog\Domain\Event\GtinAssigned;
 use App\Catalog\Domain\Event\PackagingLevelDefined;
 use App\Catalog\Domain\Event\ProductBlocked;
+use App\Catalog\Domain\Event\ProductClassified;
 use App\Catalog\Domain\Event\ProductDiscontinued as ProductDiscontinuedEvent;
 use App\Catalog\Domain\Event\ProductRegistered;
 use App\Catalog\Domain\Event\ProductUnblocked;
@@ -17,13 +18,15 @@ use App\Catalog\Domain\Exception\ProductDiscontinued;
 use App\Catalog\Domain\Exception\ProductNotBlocked;
 use App\Catalog\Domain\Exception\SkuAlreadyUsed;
 use App\Shared\Domain\AggregateRoot;
+use App\Shared\Domain\ProductFamily;
 use App\Shared\Domain\StorageClass;
 use App\Shared\Domain\TenantId;
+use App\Shared\Domain\TurnoverClass;
 
 /**
  * Something the warehouse stores, and everything the other contexts need to know about it:
  * how to find it (SKU, GTINs), how it is counted (base unit, packaging), how it must be
- * tracked and stored, and whether it may be used.
+ * tracked and stored, where it is put away (family and turnover class), and whether it may be used.
  *
  * The tracking policy is fixed at registration (CAT-05): there is no method to change it.
  * A product that needs another policy is registered again under a new SKU.
@@ -31,6 +34,10 @@ use App\Shared\Domain\TenantId;
 final class Product extends AggregateRoot
 {
     private ProductStatus $status = ProductStatus::Active;
+
+    private ?ProductFamily $family = null;
+
+    private TurnoverClass $turnoverClass = TurnoverClass::DEFAULT;
 
     /** @var list<Gtin> */
     private array $gtins = [];
@@ -108,6 +115,21 @@ final class Product extends AggregateRoot
 
         $this->packagingLevels[] = $level;
         $this->record(new PackagingLevelDefined($this->id, $level, $at));
+    }
+
+    /**
+     * Says which family the product belongs to, if any, and how fast it moves. Putaway uses both
+     * to choose where the product goes.
+     *
+     * @throws ProductDiscontinued CAT-08
+     */
+    public function classify(?ProductFamily $family, TurnoverClass $turnoverClass, \DateTimeImmutable $at): void
+    {
+        $this->assertNotDiscontinued();
+
+        $this->family = $family;
+        $this->turnoverClass = $turnoverClass;
+        $this->record(new ProductClassified($this->id, $family, $turnoverClass, $at));
     }
 
     public function rename(ProductName $name): void
@@ -218,6 +240,16 @@ final class Product extends AggregateRoot
     public function status(): ProductStatus
     {
         return $this->status;
+    }
+
+    public function family(): ?ProductFamily
+    {
+        return $this->family;
+    }
+
+    public function turnoverClass(): TurnoverClass
+    {
+        return $this->turnoverClass;
     }
 
     /**

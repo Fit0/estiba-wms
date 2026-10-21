@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Architecture;
 
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventHandler;
 use App\Shared\Application\Bus\QueryHandler;
 use App\Shared\Domain\DomainError;
 use PHPat\Selector\Selector;
@@ -125,7 +126,7 @@ final class ArchitectureTest
             yield "{$context} entry points do not call a handler directly" => PHPat::rule()
                 ->classes($this->layer($context, 'Infrastructure'))
                 ->shouldNotDependOn()
-                ->classes(Selector::implements(CommandHandler::class), Selector::implements(QueryHandler::class))
+                ->classes(Selector::implements(CommandHandler::class), Selector::implements(QueryHandler::class), Selector::implements(EventHandler::class))
                 ->because('Controllers, state classes and console commands send a command or ask a query. The bus gives the transaction. See ADR 0009.');
         }
     }
@@ -135,8 +136,8 @@ final class ArchitectureTest
      */
     public function testHandlersAreSmallFinalServices(): iterable
     {
-        $handlers = Selector::AnyOf(Selector::implements(CommandHandler::class), Selector::implements(QueryHandler::class));
-        $reason = 'A handler is one use case: final, read-only and called through __invoke().';
+        $handlers = Selector::AnyOf(Selector::implements(CommandHandler::class), Selector::implements(QueryHandler::class), Selector::implements(EventHandler::class));
+        $reason = 'A handler is one use case or one policy: final, read-only and called through __invoke().';
 
         yield 'handlers are final' => PHPat::rule()->classes($handlers)->shouldBeFinal()->because($reason);
         yield 'handlers are readonly' => PHPat::rule()->classes($handlers)->shouldBeReadonly()->because($reason);

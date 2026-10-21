@@ -5,17 +5,22 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Shared\Messaging;
 
 use App\Shared\Application\Bus\CommandBus;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Bus\QueryBus;
 use App\Shared\Domain\DomainError;
 use App\Tests\Functional\Shared\Messaging\Fixtures\IsInATransaction;
+use App\Tests\Functional\Shared\Messaging\Fixtures\NobodyListens;
+use App\Tests\Functional\Shared\Messaging\Fixtures\PublishSomethingHappened;
 use App\Tests\Functional\Shared\Messaging\Fixtures\SaveTenant;
 use App\Tests\Functional\Warehouse\Persistence\PersistenceTestCase;
 use App\Tests\Unit\Support\Ids;
+use PHPUnit\Framework\Attributes\DoesNotPerformAssertions;
 use Symfony\Component\Messenger\Exception\NoHandlerForMessageException;
 
 /**
- * What the two buses promise (ADR 0009): a command runs in one transaction that commits or rolls
- * back as a whole, a query runs in none, and a domain error reaches the caller unwrapped.
+ * What the buses promise (ADR 0009, ADR 0011): a command runs in one transaction that commits or
+ * rolls back as a whole, the policies of the events it publishes run in that same transaction, a
+ * query runs in none, and a domain error reaches the caller unwrapped.
  */
 final class BusesTest extends PersistenceTestCase
 {
@@ -92,6 +97,36 @@ final class BusesTest extends PersistenceTestCase
 
         $this->expectException(NoHandlerForMessageException::class);
         $commandBus->dispatch(new IsInATransaction());
+    }
+
+    public function testAPolicyRunsInTheTransactionOfTheCommandThatPublishedTheEvent(): void
+    {
+        $tenantId = Ids::next();
+
+        $this->commandBus->dispatch(new PublishSomethingHappened($tenantId));
+
+        self::assertSame(1, $this->tenantsWithId($tenantId), 'The command bus flushed what the policy wrote.');
+    }
+
+    public function testAFailingPolicyUndoesTheCommandAndReachesTheCallerAsItWasThrown(): void
+    {
+        $tenantId = Ids::next();
+
+        try {
+            $this->commandBus->dispatch(new PublishSomethingHappened($tenantId, policyFails: true));
+            self::fail('The domain error of the policy should reach the caller.');
+        } catch (DomainError $error) {
+            self::assertSame('shared.test_rule_broken', $error->errorCode());
+        }
+
+        self::assertSame(0, $this->tenantsWithId($tenantId));
+        self::assertFalse($this->entityManager->getConnection()->isTransactionActive());
+    }
+
+    #[DoesNotPerformAssertions]
+    public function testAnEventNobodyHandlesIsFine(): void
+    {
+        self::getContainer()->get(EventBus::class)->publish(new NobodyListens());
     }
 
     private function tenantsWithId(string $tenantId): int

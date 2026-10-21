@@ -11,6 +11,7 @@ use App\Warehouse\Domain\LocationCode;
 use App\Warehouse\Domain\LocationId;
 use App\Warehouse\Domain\LocationRepository;
 use App\Warehouse\Domain\LocationStatus;
+use App\Warehouse\Domain\LocationType;
 use App\Warehouse\Domain\WarehouseId;
 use App\Warehouse\Domain\ZoneId;
 use Doctrine\ORM\EntityManagerInterface;
@@ -50,6 +51,29 @@ final readonly class DoctrineLocationRepository implements LocationRepository
             ->getResult();
 
         return new Page($items, (int) $total, $page);
+    }
+
+    #[\Override]
+    public function findActiveOfTypes(WarehouseId $warehouseId, array $types): array
+    {
+        if ([] === $types) {
+            return [];
+        }
+
+        /** @var list<Location> $locations */
+        $locations = $this->entityManager->createQueryBuilder()
+            ->select('l')
+            ->from(Location::class, 'l')
+            ->where('l.warehouseId = :warehouse')
+            ->andWhere('l.status = :active')
+            ->andWhere('l.type IN (:types)')
+            ->setParameter('warehouse', $warehouseId, 'warehouse_id')
+            ->setParameter('active', LocationStatus::Active)
+            ->setParameter('types', array_map(static fn (LocationType $type): string => $type->value, $types))
+            ->getQuery()
+            ->getResult();
+
+        return $locations;
     }
 
     #[\Override]
