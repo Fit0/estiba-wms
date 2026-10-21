@@ -21,5 +21,6 @@
         <field name="confirmedBy" column="confirmed_by" type="operator_id" nullable="true"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
         <field name="confirmedAt" column="confirmed_at" type="datetime_immutable" nullable="true"/>
+        <field name="stockMovedAt" column="stock_moved_at" type="datetime_immutable" nullable="true"/>
     </entity>
 </doctrine-mapping>

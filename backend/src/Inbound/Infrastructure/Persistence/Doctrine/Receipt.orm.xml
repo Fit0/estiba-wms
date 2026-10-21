@@ -19,5 +19,6 @@
         <field name="openedAt" column="opened_at" type="datetime_immutable"/>
         <field name="closedAt" column="closed_at" type="datetime_immutable" nullable="true"/>
         <field name="closedBy" column="closed_by" type="operator_id" nullable="true"/>
+        <field name="stockBookedAt" column="stock_booked_at" type="datetime_immutable" nullable="true"/>
     </entity>
 </doctrine-mapping>

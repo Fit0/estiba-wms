@@ -1,6 +1,6 @@
 # 0011. Putaway, and stock booked by event policies
 
-- Status: Accepted
+- Status: Accepted. Its first decision, policies in the command's transaction, is superseded by [0012](0012-asynchronous-policies-with-a-redis-transport.md)
 - Date: 2026-10-21
 
 ## Context

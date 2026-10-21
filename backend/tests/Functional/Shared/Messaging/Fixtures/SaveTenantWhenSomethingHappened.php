@@ -28,6 +28,8 @@ final readonly class SaveTenantWhenSomethingHappened
         ));
 
         if ($event->policyFails) {
+            $this->entityManager->flush();
+
             throw TestRuleBroken::now();
         }
     }

@@ -33,6 +33,8 @@ final class PutawayTask extends AggregateRoot
 
     private ?\DateTimeImmutable $confirmedAt = null;
 
+    private ?\DateTimeImmutable $stockMovedAt = null;
+
     private function __construct(
         private readonly PutawayTaskId $id,
         private readonly TenantId $tenantId,
@@ -175,6 +177,26 @@ final class PutawayTask extends AggregateRoot
     public function confirmedAt(): ?\DateTimeImmutable
     {
         return $this->confirmedAt;
+    }
+
+    /**
+     * The policy that moves the stock of a confirmed task says so here, in the same transaction. It
+     * runs again when its message is redelivered, so it asks {@see isStockMoved()} first and a
+     * second run moves nothing (ADR 0012).
+     */
+    public function recordStockMoved(\DateTimeImmutable $at): void
+    {
+        $this->stockMovedAt ??= $at;
+    }
+
+    public function isStockMoved(): bool
+    {
+        return $this->stockMovedAt instanceof \DateTimeImmutable;
+    }
+
+    public function stockMovedAt(): ?\DateTimeImmutable
+    {
+        return $this->stockMovedAt;
     }
 
     private function assertPending(): void

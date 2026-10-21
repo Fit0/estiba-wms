@@ -100,6 +100,8 @@ curl http://localhost:8080/health
 # {"status":"ok","checks":{"database":"up","redis":"up"}}
 ```
 
+Besides the API, the stack runs a `worker` that handles asynchronous events, such as booking the stock of a closed receipt, with retries ([ADR 0012](docs/adr/0012-asynchronous-policies-with-a-redis-transport.md)). `make worker-logs` follows it, `make worker-restart` reloads it after a code change, and `make failed` lists what failed every retry.
+
 Every endpoint under `/api` needs a token. Create a tenant with its first administrator, which asks for the password with the typing hidden, and sign in:
 
 ```bash

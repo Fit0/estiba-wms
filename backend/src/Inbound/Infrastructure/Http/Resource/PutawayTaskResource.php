@@ -18,6 +18,9 @@ use App\Inbound\Infrastructure\Http\State\PutawayTaskProvider;
 use App\Inbound\Infrastructure\Http\State\SplitPutawayTaskProcessor;
 
 /**
+ * `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
+ * the confirmation (ADR 0012).
+ *
  * The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
  * in `config/packages/security.yaml`.
  */
@@ -60,6 +63,7 @@ final readonly class PutawayTaskResource
         public ?string $overrideReason,
         public string $createdAt,
         public ?string $confirmedAt,
+        public bool $stockMoved,
     ) {
     }
 
@@ -83,6 +87,7 @@ final readonly class PutawayTaskResource
             $task->overrideReason()?->value,
             $task->createdAt()->format(\DATE_ATOM),
             $task->confirmedAt()?->format(\DATE_ATOM),
+            $task->isStockMoved(),
         );
     }
 }
