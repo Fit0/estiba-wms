@@ -31,6 +31,7 @@ final readonly class LocationSnapshot
     public function __construct(
         public string $id,
         public string $warehouseId,
+        public string $warehouseCode,
         public string $zoneId,
         public string $code,
         public string $type,

@@ -49,6 +49,7 @@ Both this rule and the context boundaries below are enforced by `backend/tests/A
 - Controllers are invokable, `final readonly`, one action each, and only translate HTTP to a command or query.
 - Every use case is a `Command` or a `Query` class plus a `...Handler` that implements `CommandHandler` or `QueryHandler`, in `Application/<UseCase>/`. Entry points (API Platform processors and providers, console commands) send them through `CommandBus::dispatch()` and `QueryBus::ask()` and never call a handler. The command bus runs each command in a transaction and flushes, so **handlers and repositories never flush**. A command returns what it created or changed, and a query never changes state. The architecture test enforces this.
 - A policy ("whenever X happens, do Y") is an `EventHandler` in `Application/`, invoked with one domain event. A command handler that wants its events handled publishes them with `EventBus::publish(...$aggregate->pullEvents())`. The events leave after the command commits, and each policy runs in its own transaction (ADR 0012).
+- A query that shows data of several contexts reads a projection, never a join across their tables: a table owned by the context that answers, filled by a policy from the other contexts' contracts, written and read with plain SQL in `Infrastructure/Persistence/ReadModel`, and rebuildable from the source (see the stock read model, ADR 0013).
 - An event routed to `async` in `config/packages/messenger.yaml` is handled by the worker, maybe more than once: its policy must be idempotent (record in its own transaction that it ran, and do nothing the second time), have one handler per event, and take everything it needs from the event, since there is no signed-in user and no tenant filter. After changing a policy, `make worker-restart`.
 - API resources are DTOs in `Infrastructure/Http/Resource`, never domain entities. Each operation is a state provider (query bus) or processor (command bus) in `Http/State` (ADR 0006, ADR 0009). The tenant comes from `CurrentTenant`, never from the request body.
 - A context may depend on another one only through that context's `Application/Contract` namespace (interfaces, DTOs and integration events). Never on its `Domain`, `Infrastructure` or the rest of its `Application`. Reference other contexts' data by id value, with no foreign keys or joins across contexts (ADR 0003).
@@ -131,6 +132,7 @@ Everything runs inside Docker. Use `make` from the repository root (`make` alone
 | `make qa` | All checks. **Must pass before proposing a commit.** |
 | `make worker-logs` / `make worker-restart` | Follow / restart the worker that handles the asynchronous events |
 | `make failed` / `make retry-failed` | List / handle again the events that failed every retry |
+| `make stock-rebuild` | Build the stock read model again from the ledger (after a migration that creates it, or if it drifts) |
 
 If `make` is not available in the shell, run the equivalent `docker compose exec -T php ...` command from the `Makefile`.
 

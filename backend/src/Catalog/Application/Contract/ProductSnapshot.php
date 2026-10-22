@@ -12,6 +12,8 @@ use App\Shared\Domain\TurnoverClass;
  * What another context may know about a product, at the moment it asked. It is a copy: changing
  * the product later does not change it.
  *
+ * The name is as it was typed, never translated.
+ *
  * `availableForOperations` says whether the product may be received or allocated: it is neither
  * blocked nor discontinued (CAT-06). The dimensions are of one base unit, in millimetres and
  * grams, so a location's room can be worked out.
@@ -21,6 +23,7 @@ final readonly class ProductSnapshot
     public function __construct(
         public string $id,
         public string $sku,
+        public string $name,
         public StorageClass $storageClass,
         public bool $trackedByLot,
         public bool $trackedByExpiry,

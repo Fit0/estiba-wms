@@ -39,10 +39,12 @@ framework:
             failed: '%env(MESSENGER_FAILED_TRANSPORT_DSN)%'
 
         # The policies that may run a moment later. Their handlers are idempotent: a message
-        # handled twice changes nothing the second time (ADR 0012).
+        # handled twice changes nothing the second time (ADR 0012). The stock read model follows
+        # the ledger this way too (ADR 0013).
         routing:
             App\Inbound\Domain\Event\ReceiptClosed: async
             App\Inbound\Domain\Event\PutawayConfirmed: async
+            App\Inventory\Domain\Event\StockMovementRecorded: async
 
 when@test:
     framework:

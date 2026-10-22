@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\Unit\Inbound\Domain;
+namespace App\Tests\Unit\Shared\Infrastructure\Messaging;
 
 use App\Inbound\Domain\AsnReference;
 use App\Inbound\Domain\Event\PutawayConfirmed;
@@ -11,7 +11,12 @@ use App\Inbound\Domain\LotNumber;
 use App\Inbound\Domain\ProductId;
 use App\Inbound\Domain\PutawayTaskId;
 use App\Inbound\Domain\ReceivedGoods;
+use App\Inventory\Domain\Event\StockMovementRecorded;
+use App\Inventory\Domain\MovementType;
+use App\Inventory\Domain\StockItemId;
+use App\Inventory\Domain\StockMovementId;
 use App\Shared\Domain\DomainEvent;
+use App\Tests\Unit\Inbound\Domain\InboundMother;
 use App\Tests\Unit\Support\Ids;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -19,8 +24,8 @@ use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Transport\Serialization\PhpSerializer;
 
 /**
- * The events routed to the async transport travel through Redis (ADR 0012): they must come back
- * from it exactly as they left, value objects included.
+ * The events routed to the async transport travel through Redis (ADR 0012, ADR 0013): they must
+ * come back from it exactly as they left, value objects included.
  */
 final class RoutedEventsTest extends TestCase
 {
@@ -38,6 +43,14 @@ final class RoutedEventsTest extends TestCase
             InboundMother::dock(),
             AsnReference::fromString('ALB-2027-0153'),
             InboundMother::operator(),
+            InboundMother::at(),
+        )];
+        yield 'stock movement recorded' => [new StockMovementRecorded(
+            StockMovementId::fromString(Ids::next()),
+            InboundMother::tenantId(),
+            StockItemId::fromString(Ids::next()),
+            MovementType::TransferOut,
+            -12,
             InboundMother::at(),
         )];
     }

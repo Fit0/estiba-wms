@@ -70,8 +70,8 @@ estiba-wms/
 ## Roadmap
 
 - [x] **Foundations**: Docker environment, quality tooling, CI, architecture, domain model
-- [ ] **Warehouse and catalog**: locations, products, API, auth, multi-tenancy
-- [ ] **Inventory and receiving**: stock ledger, CQRS, ASN receiving, putaway
+- [x] **Warehouse and catalog**: locations, products, API, auth, multi-tenancy
+- [x] **Inventory and receiving**: stock ledger, CQRS, ASN receiving, putaway, stock read model
 - [ ] **Shipping**: allocation, waves, picking, packing, SSCC labels (`v0.1`)
 - [ ] **Frontend**: React app for back-office operations
 - [ ] **Picking PWA and dashboard**: barcode scanning, offline mode, KPIs
@@ -101,6 +101,8 @@ curl http://localhost:8080/health
 ```
 
 Besides the API, the stack runs a `worker` that handles asynchronous events, such as booking the stock of a closed receipt, with retries ([ADR 0012](docs/adr/0012-asynchronous-policies-with-a-redis-transport.md)). `make worker-logs` follows it, `make worker-restart` reloads it after a code change, and `make failed` lists what failed every retry.
+
+The worker also keeps the stock read model in step with the ledger, so the stock screens can list stock by product and location in one query ([ADR 0013](docs/adr/0013-a-stock-read-model-fed-by-the-ledger.md)). `make stock-rebuild` builds it again from the ledger whenever it is needed.
 
 Every endpoint under `/api` needs a token. Create a tenant with its first administrator, which asks for the password with the typing hidden, and sign in:
 

@@ -65,6 +65,7 @@ final readonly class WarehouseLocations implements LocationDirectory
         return new LocationSnapshot(
             $location->id()->value,
             $location->warehouseId()->value,
+            $warehouse->code()->value,
             $location->zoneId()->value,
             $location->code()->value,
             $location->type()->value,

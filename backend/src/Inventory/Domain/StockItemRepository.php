@@ -25,6 +25,14 @@ interface StockItemRepository
     public function findAt(TenantId $tenantId, array $locationIds): array;
 
     /**
+     * Every stock item of every tenant, for work that goes over the whole ledger, such as building
+     * a read model again.
+     *
+     * @return iterable<StockItem>
+     */
+    public function all(): iterable;
+
+    /**
      * Saves the stock item and, with it, the movements it recorded since it was loaded, so the
      * change and its movement are never apart (STK-03). The command bus owns the transaction.
      */

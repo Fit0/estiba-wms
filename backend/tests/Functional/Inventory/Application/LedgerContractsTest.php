@@ -13,7 +13,9 @@ use App\Inventory\Application\LedgerStockLevels;
 use App\Inventory\Application\LedgerStockMovements;
 use App\Inventory\Domain\StockItem;
 use App\Inventory\Infrastructure\Persistence\Doctrine\DoctrineStockItemRepository;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Domain\DomainError;
+use App\Shared\Domain\DomainEvent;
 use App\Shared\Domain\TenantId;
 use App\Shared\Infrastructure\Id\UuidV7IdGenerator;
 use App\Tests\Functional\Warehouse\Persistence\PersistenceTestCase;
@@ -42,7 +44,13 @@ final class LedgerContractsTest extends PersistenceTestCase
         parent::setUp();
 
         $stockItems = new DoctrineStockItemRepository($this->entityManager);
-        $this->movements = new LedgerStockMovements($stockItems, new UuidV7IdGenerator());
+        $this->movements = new LedgerStockMovements($stockItems, new UuidV7IdGenerator(), new class implements EventBus {
+            // The read model is tested apart; here only the ledger matters.
+            #[\Override]
+            public function publish(DomainEvent ...$events): void
+            {
+            }
+        });
         $this->levels = new LedgerStockLevels($stockItems);
         $this->tenantId = TenantId::fromString(Ids::next());
         $this->productId = Ids::next();

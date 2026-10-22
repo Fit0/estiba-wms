@@ -86,6 +86,20 @@ final readonly class DoctrineStockItemRepository implements StockItemRepository
     }
 
     #[\Override]
+    public function all(): iterable
+    {
+        /** @var iterable<StockItem> $items */
+        $items = $this->entityManager->createQueryBuilder()
+            ->select('s')
+            ->from(StockItem::class, 's')
+            ->orderBy('s.id')
+            ->getQuery()
+            ->toIterable();
+
+        return $items;
+    }
+
+    #[\Override]
     public function save(StockItem $stockItem): void
     {
         $this->entityManager->persist($stockItem);
