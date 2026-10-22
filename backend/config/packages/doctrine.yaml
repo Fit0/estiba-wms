@@ -92,6 +92,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Inventory/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Inventory\Domain'
                 alias: Inventory
+            InventoryReadModel:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Inventory/Infrastructure/Persistence/ReadModel'
+                prefix: 'App\Inventory\Infrastructure\Persistence\ReadModel'
+                alias: InventoryReadModel
             Inbound:
                 type: xml
                 is_bundle: false

@@ -65,6 +65,7 @@ final class StockItemTest extends TestCase
         self::assertSame(MovementType::Receipt, $events[0]->type);
         self::assertSame(5, $events[0]->change);
         self::assertTrue($movementId->equals($events[0]->movementId));
+        self::assertTrue($stockItem->tenantId()->equals($events[0]->tenantId), 'Its policies run where no user is signed in.');
         self::assertEquals(StockMother::at(), $events[0]->occurredAt());
     }
 

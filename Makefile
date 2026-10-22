@@ -4,7 +4,7 @@ DC  := docker compose
 PHP := $(DC) exec -T php
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build logs sh composer console jwt-keys tenant demo worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa
+.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -42,6 +42,9 @@ tenant: ## Create a tenant and its admin, e.g. make tenant name="Acme" email=adm
 
 demo: ## Load the fashion demo (a company, a distribution centre and a collection). Asks for a password.
 	$(DC) exec php bin/console app:demo:load
+
+stock-rebuild: ## Build the stock read model again from the ledger (ADR 0013)
+	$(PHP) bin/console app:stock-overview:rebuild
 
 ## —— Worker ————————————————————————————————————————————————
 worker-logs: ## Follow the worker that handles the asynchronous events

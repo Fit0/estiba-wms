@@ -20,18 +20,23 @@ use App\Inventory\Domain\StockItemRepository;
 use App\Inventory\Domain\StockKey;
 use App\Inventory\Domain\StockMovementId;
 use App\Inventory\Domain\StockStatus;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\TenantId;
 
 /**
  * Answers the {@see StockMovements} contract on the ledger. A stock item that does not exist yet is
  * opened when units arrive in it.
+ *
+ * Every change publishes its movements, so the stock read model follows the ledger (ADR 0013). They
+ * leave once the caller's transaction commits.
  */
 final readonly class LedgerStockMovements implements StockMovements
 {
     public function __construct(
         private StockItemRepository $stockItems,
         private IdGenerator $ids,
+        private EventBus $events,
     ) {
     }
 
@@ -49,7 +54,7 @@ final readonly class LedgerStockMovements implements StockMovements
             $arrival->at,
         );
 
-        $this->stockItems->save($stockItem);
+        $this->save($stockItem);
     }
 
     #[\Override]
@@ -72,8 +77,14 @@ final readonly class LedgerStockMovements implements StockMovements
             $transfer->at,
         );
 
-        $this->stockItems->save($source);
-        $this->stockItems->save($destination);
+        $this->save($source);
+        $this->save($destination);
+    }
+
+    private function save(StockItem $stockItem): void
+    {
+        $this->stockItems->save($stockItem);
+        $this->events->publish(...$stockItem->pullEvents());
     }
 
     private function stockItemFor(TenantId $tenantId, StockKey $key): StockItem

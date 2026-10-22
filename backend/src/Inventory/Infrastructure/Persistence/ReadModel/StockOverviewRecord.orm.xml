@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <!-- The stock read model (ADR 0013). One row per stock item, with what Catalog and Warehouse said
+         about its product and location when it was projected. No lot and no expiry date are NULL here:
+         there is no unique key to protect. -->
+    <entity name="App\Inventory\Infrastructure\Persistence\ReadModel\StockOverviewRecord" table="stock_overview">
+        <indexes>
+            <index name="idx_stock_overview_product" columns="tenant_id,product_id"/>
+            <index name="idx_stock_overview_location" columns="tenant_id,location_id"/>
+            <index name="idx_stock_overview_warehouse" columns="tenant_id,warehouse_id"/>
+        </indexes>
+
+        <id name="stockItemId" column="stock_item_id" type="guid"/>
+        <field name="tenantId" column="tenant_id" type="guid"/>
+        <field name="productId" column="product_id" type="guid"/>
+        <field name="sku" type="string" length="40"/>
+        <field name="productName" column="product_name" type="string" length="150"/>
+        <field name="warehouseId" column="warehouse_id" type="guid"/>
+        <field name="warehouseCode" column="warehouse_code" type="string" length="12"/>
+        <field name="locationId" column="location_id" type="guid"/>
+        <field name="locationCode" column="location_code" type="string" length="12"/>
+        <field name="lot" type="string" length="40" nullable="true"/>
+        <field name="expiryDate" column="expiry_date" type="date_immutable" nullable="true"/>
+        <field name="status" type="string" length="20"/>
+        <field name="onHand" column="on_hand" type="integer"/>
+    </entity>
+</doctrine-mapping>

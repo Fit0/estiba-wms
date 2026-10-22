@@ -170,6 +170,6 @@ final class StockItem extends AggregateRoot
     {
         $this->onHand = $after;
         $this->recorded[] = new StockMovement($movementId, $this->tenantId, $this->id, $type, $change, $after, $reference, $reason, $author, $at);
-        $this->record(new StockMovementRecorded($movementId, $this->id, $type, $change, $at));
+        $this->record(new StockMovementRecorded($movementId, $this->tenantId, $this->id, $type, $change, $at));
     }
 }

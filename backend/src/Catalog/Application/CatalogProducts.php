@@ -45,6 +45,7 @@ final readonly class CatalogProducts implements ProductCatalog
         return new ProductSnapshot(
             $product->id()->value,
             $product->sku()->value,
+            $product->name()->value,
             $product->storageClass(),
             $tracking->trackedByLot,
             $tracking->trackedByExpiry,

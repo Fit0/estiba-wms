@@ -45,6 +45,7 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | On hand | Existencias físicas | Units physically in a stock item. |
 | Reserved | Reservado | Units promised to an order and not yet picked. |
 | Available | Disponible | On hand minus reserved, of stock that is in available status. |
+| Stock overview | Vista de stock | What the tenant holds, by product and location, as the read model shows it a moment after each movement. |
 | Adjustment | Regularización | A movement that corrects stock after a count or a loss. It always has a reason and an author. |
 | Reservation | Reserva de stock | The stock set aside for one order line, possibly spread over several stock items. |
 | Allocation | Asignación | Choosing which stock items cover an order line. Uses FEFO or FIFO. |
