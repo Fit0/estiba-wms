@@ -1,4 +1,8 @@
 
+# The real environment files hold secrets and are never committed. .env.example is the template.
+/.env
+/.env.dev
+
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
