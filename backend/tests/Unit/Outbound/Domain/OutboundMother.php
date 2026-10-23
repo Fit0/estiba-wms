@@ -11,6 +11,7 @@ use App\Outbound\Domain\OrderedItem;
 use App\Outbound\Domain\OrderId;
 use App\Outbound\Domain\OrderPriority;
 use App\Outbound\Domain\OrderReference;
+use App\Outbound\Domain\PickRequest;
 use App\Outbound\Domain\ProductId;
 use App\Outbound\Domain\ReservationId;
 use App\Outbound\Domain\ShippingAddress;
@@ -54,17 +55,36 @@ final class OutboundMother
     }
 
     /**
+     * Units to pick from a location, for the first line of a new order unless told otherwise.
+     */
+    public static function pickRequest(string $locationCode, int $zonePickSequence = 1, int $pickSequence = 10, int $orderLine = 1, ?OrderId $orderId = null, int $units = 1, ?string $lot = null, ?\DateTimeImmutable $expiryDate = null): PickRequest
+    {
+        return new PickRequest(
+            $orderId ?? OrderId::fromString(Ids::next()),
+            $orderLine,
+            self::productId(),
+            Ids::next(),
+            $locationCode,
+            $zonePickSequence,
+            $pickSequence,
+            $lot,
+            $expiryDate,
+            $units,
+        );
+    }
+
+    /**
      * A registered order with the given items, or two lines of 10 and 4 units, with its registration event pending.
      *
      * @param list<OrderedItem>|null $items
      */
-    public static function order(?array $items = null, ?TenantId $tenantId = null, string $reference = 'PED-2027-0001', ?InMemoryOrderReferences $registry = null): Order
+    public static function order(?array $items = null, ?TenantId $tenantId = null, string $reference = 'PED-2027-0001', ?InMemoryOrderReferences $registry = null, ?WarehouseId $warehouseId = null): Order
     {
         return Order::register(
             OrderId::fromString(Ids::next()),
             $tenantId ?? self::tenantId(),
             OrderReference::fromString($reference),
-            WarehouseId::fromString(Ids::next()),
+            $warehouseId ?? WarehouseId::fromString(Ids::next()),
             CustomerName::fromString('Marea Moda Zaragoza'),
             self::address(),
             OrderPriority::Normal,

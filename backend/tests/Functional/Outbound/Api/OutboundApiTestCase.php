@@ -45,6 +45,9 @@ abstract class OutboundApiTestCase extends ApiTestCase
 
     protected string $otherWarehouseLocationId;
 
+    /** The zone of the main warehouse, for tests that need more locations. */
+    protected string $zoneId;
+
     #[\Override]
     protected function setUp(): void
     {
@@ -55,6 +58,7 @@ abstract class OutboundApiTestCase extends ApiTestCase
 
         $this->warehouseId = $this->id($this->request('POST', '/api/warehouses', ['code' => 'ZGZ1', 'name' => 'Zaragoza']));
         $zone = $this->id($this->request('POST', '/api/warehouses/'.$this->warehouseId.'/zones', ['code' => 'ALM', 'name' => 'Almacén', 'storageClass' => 'ambient']));
+        $this->zoneId = $zone;
         $this->reserveId = $this->location($this->warehouseId, $zone, 'A-01-01', 'reserve');
         $this->secondReserveId = $this->location($this->warehouseId, $zone, 'A-01-02', 'reserve');
         $this->pickFaceId = $this->location($this->warehouseId, $zone, 'B-01-01', 'pick_face');
@@ -180,8 +184,11 @@ abstract class OutboundApiTestCase extends ApiTestCase
         ]));
     }
 
-    private function location(string $warehouseId, string $zoneId, string $code, string $type): string
+    /**
+     * @param array<string, mixed> $extra such as a pick sequence
+     */
+    protected function location(string $warehouseId, string $zoneId, string $code, string $type, array $extra = []): string
     {
-        return $this->id($this->request('POST', '/api/warehouses/'.$warehouseId.'/locations', ['zoneId' => $zoneId, 'code' => $code, 'type' => $type]));
+        return $this->id($this->request('POST', '/api/warehouses/'.$warehouseId.'/locations', ['zoneId' => $zoneId, 'code' => $code, 'type' => $type] + $extra));
     }
 }

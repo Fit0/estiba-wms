@@ -72,12 +72,12 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | Order | Pedido | A customer's request for products, imported from the ERP. |
 | Order line | Línea de pedido | One product and quantity within an order. |
 | Cut-off | Hora de corte | The time by which an order must be shipped to meet its delivery promise. |
-| Backorder | Pendiente de servir | The part of an order that could not be served for lack of stock. |
+| Backorder | Pendiente de servir | The part of an order that could not be served for lack of stock. The customer can accept it, and then the covered part of the order can go to the floor. |
 | Wave | Ola | A group of orders released to the floor together. |
 | Pick list | Hoja de picking | The list of lines one operator picks, ordered by route. |
 | Pick line | Línea de picking | One location, product and quantity to take. |
 | Short pick | Rotura de picking | The operator finds less stock than the system said. |
-| Serpentine route | Ruta en serpentina | Walking aisles alternately up and down, so the operator never backtracks. |
+| Serpentine route | Ruta en serpentina | Walking aisles alternately up and down, so the operator never backtracks: the first aisle with something to pick is walked one way, the next the other way, and so on. |
 | Packing | Embalaje | Putting picked goods into parcels. |
 | Parcel | Bulto | One physical package, identified by an SSCC. |
 | SSCC | Código de serie de unidad de envío | 18-digit GS1 code that identifies one parcel or pallet. Printed as a label. |

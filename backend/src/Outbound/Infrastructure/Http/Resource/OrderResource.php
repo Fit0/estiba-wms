@@ -13,6 +13,7 @@ use App\Outbound\Domain\Order;
 use App\Outbound\Domain\OrderPriority;
 use App\Outbound\Domain\OrderStatus;
 use App\Outbound\Infrastructure\Http\Input\RegisterOrderInput;
+use App\Outbound\Infrastructure\Http\State\AcceptBackorderProcessor;
 use App\Outbound\Infrastructure\Http\State\AllocateOrderProcessor;
 use App\Outbound\Infrastructure\Http\State\CancelOrderProcessor;
 use App\Outbound\Infrastructure\Http\State\OrderProvider;
@@ -31,6 +32,14 @@ use App\Outbound\Infrastructure\Http\State\RegisterOrderProcessor;
             read: false,
             deserialize: false,
             processor: AllocateOrderProcessor::class,
+        ),
+        new Post(
+            uriTemplate: '/orders/{id}/accept-backorder',
+            status: 200,
+            input: false,
+            read: false,
+            deserialize: false,
+            processor: AcceptBackorderProcessor::class,
         ),
         new Post(
             uriTemplate: '/orders/{id}/cancel',
@@ -59,6 +68,8 @@ final readonly class OrderResource
         public string $registeredAt,
         public OrderStatus $status,
         public int $shortageUnits,
+        public bool $backorderAccepted,
+        public ?string $waveId,
         public array $lines,
     ) {
     }
@@ -76,6 +87,8 @@ final readonly class OrderResource
             $order->registeredAt()->format(\DATE_ATOM),
             $order->status(),
             $order->shortageUnits(),
+            $order->backorderAccepted(),
+            $order->waveId()?->value,
             array_map(OrderLineResource::fromDomain(...), $order->lines()),
         );
     }

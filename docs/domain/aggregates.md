@@ -169,7 +169,7 @@ Identity: `PutawayTaskId`. Holds the receipt, the ASN reference, the goods (prod
 
 ### Order
 
-Identity: `OrderId`. Holds the external reference, the warehouse it is served from, the customer, the ship-to address, the priority (low, normal, high, urgent), the cut-off time and the lines (a line number from 1, the product, and the ordered and allocated quantities, plus the reservation that holds the stock; picked and shipped quantities arrive with picking and shipping). Allocating an order asks Inventory for one reservation per line that is not fully covered, and doing it again tops them up.
+Identity: `OrderId`. Holds the external reference, the warehouse it is served from, the wave it belongs to (if any), whether the customer accepted the backorder, the customer, the ship-to address, the priority (low, normal, high, urgent), the cut-off time and the lines (a line number from 1, the product, and the ordered and allocated quantities, plus the reservation that holds the stock; picked and shipped quantities arrive with picking and shipping). Allocating an order asks Inventory for one reservation per line that is not fully covered, and doing it again tops them up.
 
 ```mermaid
 stateDiagram-v2
@@ -200,17 +200,20 @@ stateDiagram-v2
 
 ### Wave
 
-Identity: `WaveId`. Holds the orders and the status (planned, released, completed, cancelled).
+Identity: `WaveId`. Holds the warehouse, the orders (by identifier), the pick lists it was released into and the status (planned, released, cancelled; completed arrives with picking). Creating a wave asks each order to join, and the order decides (OUT-06). Releasing it builds its pick lists in the same transaction.
 
 | ID | Invariant |
 |---|---|
-| OUT-06 | Only orders that are allocated, or partially allocated with the backorder accepted, can join a wave. |
-| OUT-07 | Once released, the orders of a wave cannot change. |
-| OUT-08 | A wave completes when all its pick lists are completed or cancelled. |
+| OUT-06 | Only orders that are allocated, or partially allocated with the backorder accepted, can join a wave. The customer's acceptance is recorded with `POST /orders/{id}/accept-backorder`, and only a partially allocated order has a backorder to accept. |
+| OUT-07 | Once released, the orders of a wave cannot change: none leaves, and an order of the wave cannot be cancelled or allocated again. While the wave is planned, a cancelled order simply leaves it. |
+| OUT-08 | A wave completes when all its pick lists are completed or cancelled. (With picking.) |
+| OUT-14 | All the orders of a wave are served from the same warehouse, because a pick list walks one. A wave holds 1 to 200 orders, none twice. |
+| OUT-15 | The pick lists of a wave ask for exactly the units reserved for its orders, no more and no fewer. |
+| OUT-16 | A wave is released into 1 to 50 pick lists, and never into more than it has picks. Cancelling a wave cancels its lists and frees its orders, which stay allocated: their reservations are not released. |
 
 ### PickList
 
-Identity: `PickListId`. Holds the wave, the assigned operator and the lines (order line, product, location, lot, expiry, quantity to pick, quantity picked).
+Identity: `PickListId`. Holds the wave, the status (generated or cancelled; started and completed arrive with picking) and the lines: each has its position on the walk, the order line, the product, the location, the lot, the expiry date, the quantity to pick and the quantity picked. The assigned operator arrives with picking.
 
 ```mermaid
 stateDiagram-v2
@@ -225,7 +228,7 @@ stateDiagram-v2
 
 | ID | Invariant |
 |---|---|
-| OUT-09 | Lines follow the serpentine route: pick sequence ascending in odd aisles, descending in even aisles. |
+| OUT-09 | Lines follow the serpentine route: zone by zone in the order of their pick sequence, aisle by aisle inside each zone (alphabetically), the first aisle visited in ascending pick sequence, the second descending, and so on. Aisles with nothing to pick are not visited, so they do not turn the next one around. Several pick lists are consecutive stretches of the same route. |
 | OUT-10 | The picked quantity never exceeds the quantity to pick. Picking less is a short pick and needs a reason. |
 | OUT-11 | Each pick is confirmed by scanning the location, then the product, and the lot when the product is tracked. All must match the line. |
 | OUT-12 | A pick list has one assigned operator at a time. |

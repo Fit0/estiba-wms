@@ -160,6 +160,8 @@ flowchart TB
 | `ReleaseWave` | Supervisor | `Wave` | The wave has no orders |
 | `GeneratePickLists` | Policy | `PickList` | Never rejected |
 
+In the code the pick lists are made by `ReleaseWave` itself, in the same transaction, and not by a policy after the commit ([ADR 0015](../adr/0015-waves-and-pick-lists-in-serpentine-order.md)): a wave is never on the floor without its lists, and the supervisor gets them in the answer.
+
 ### 2.3 Picking
 
 ```mermaid

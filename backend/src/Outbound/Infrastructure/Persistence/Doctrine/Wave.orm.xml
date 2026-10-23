@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Outbound\Domain\Wave" table="waves">
+        <indexes>
+            <index name="idx_waves_tenant_status" columns="tenant_id,status"/>
+        </indexes>
+
+        <id name="id" type="wave_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="warehouseId" column="warehouse_id" type="outbound_warehouse_id"/>
+        <field name="status" enum-type="App\Outbound\Domain\WaveStatus" length="10"/>
+        <field name="orderIds" column="order_ids" type="outbound_wave_orders"/>
+        <field name="pickListIds" column="pick_list_ids" type="outbound_wave_pick_lists"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="releasedAt" column="released_at" type="datetime_immutable" nullable="true"/>
+    </entity>
+</doctrine-mapping>

@@ -38,6 +38,7 @@ final readonly class AllocateOrderHandler implements CommandHandler
     {
         $order = $this->lookup->get($command->orderId);
         $order->assertNotCancelled();
+        $order->assertNotInWave();
 
         $now = $this->clock->now();
         $allocations = [];
