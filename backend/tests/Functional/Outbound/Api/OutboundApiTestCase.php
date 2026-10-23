@@ -69,7 +69,7 @@ abstract class OutboundApiTestCase extends ApiTestCase
      * Registers an order served from the main warehouse, unless told otherwise.
      *
      * @param array<array-key, mixed>|null $lines each one an object with `productId` and `units`, or anything else to see it refused
-     * @param array<string, mixed>            $extra
+     * @param array<string, mixed>         $extra
      *
      * @return array<array-key, mixed>
      */
