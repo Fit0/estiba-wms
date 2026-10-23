@@ -28,6 +28,7 @@ final readonly class ProductSnapshot
         public bool $trackedByLot,
         public bool $trackedByExpiry,
         public ?int $minShelfLifeAtReceiptDays,
+        public ?int $minShelfLifeAtShipmentDays,
         public bool $availableForOperations,
         public ?ProductFamily $family,
         public TurnoverClass $turnoverClass,

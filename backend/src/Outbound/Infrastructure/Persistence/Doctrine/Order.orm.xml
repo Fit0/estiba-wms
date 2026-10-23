@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Outbound\Domain\Order" table="orders">
+        <unique-constraints>
+            <!-- OUT-01: the reference is unique per tenant. Backs the registry check against races. -->
+            <unique-constraint name="uniq_orders_tenant_reference" columns="tenant_id,reference"/>
+        </unique-constraints>
+        <indexes>
+            <index name="idx_orders_tenant_status" columns="tenant_id,status"/>
+        </indexes>
+
+        <id name="id" type="order_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="reference" type="order_reference" length="40"/>
+        <field name="warehouseId" column="warehouse_id" type="outbound_warehouse_id"/>
+        <field name="customer" type="customer_name" length="100"/>
+        <embedded name="shipTo" class="App\Outbound\Domain\ShippingAddress" use-column-prefix="false"/>
+        <field name="priority" enum-type="App\Outbound\Domain\OrderPriority" length="10"/>
+        <field name="cutOffAt" column="cut_off_at" type="datetime_immutable"/>
+        <field name="registeredAt" column="registered_at" type="datetime_immutable"/>
+        <field name="status" enum-type="App\Outbound\Domain\OrderStatus" length="20"/>
+        <field name="lines" type="outbound_order_lines"/>
+    </entity>
+</doctrine-mapping>

@@ -15,5 +15,11 @@
         <field name="tenantId" column="tenant_id" type="tenant_id"/>
         <embedded name="key" class="App\Inventory\Domain\StockKey" use-column-prefix="false"/>
         <field name="onHand" column="on_hand" type="stock_quantity"/>
+        <!-- STK-02: the units promised to orders. A reservation moves no units, so it is not in the ledger. -->
+        <field name="reserved" type="stock_quantity"/>
+        <!-- Orders stock for FIFO (STK-12). -->
+        <field name="firstReceivedAt" column="first_received_at" type="datetime_immutable" nullable="true"/>
+        <!-- Optimistic lock: two requests that change the same stock item cannot both win (STK-02). -->
+        <field name="version" type="integer" version="true"/>
     </entity>
 </doctrine-mapping>

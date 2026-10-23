@@ -16,6 +16,7 @@ shared:
     method_not_allowed: 'Ese método no está permitido en este recurso.'
     not_acceptable: 'El formato de respuesta solicitado no está disponible. Esta API responde en JSON.'
     unsupported_media_type: 'El tipo de contenido de la petición no está soportado. Envía JSON con la cabecera Content-Type: application/json.'
+    concurrent_update: 'Otra petición ha cambiado los mismos datos hace un momento, por ejemplo el stock del mismo producto. Inténtalo de nuevo.'
     request_invalid: 'La petición no es válida.'
     internal_error: 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.'
 
@@ -86,16 +87,40 @@ inbound:
     supplier_name_invalid: 'El proveedor debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
 
 inventory:
+    allocation_exceeds_requested: 'Se han asignado {allocated} unidades a una reserva de {requested}.'
     lot_number_invalid: 'Un número de lote debe tener entre 1 y 40 caracteres y no puede contener caracteres de control.'
     movement_quantity_not_positive: 'Un movimiento de tipo {type, select, receipt {recepción} issue {salida} transfer_out {salida por traspaso} transfer_in {entrada por traspaso} adjustment {regularización} other {{type}}} debe cambiar el stock al menos en una unidad.'
     movement_text_invalid: '{field, select, reason {El motivo} reference {La referencia} other {El texto}} de un movimiento debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    not_enough_available_stock: 'Se piden {requested} unidades y solo hay {available} sin reservar.'
+    product_not_allocatable: '{reason, select, unknown {El producto {productId} no existe, así que no se puede reservar stock suyo.} unavailable {El producto {productId} está bloqueado o descatalogado, así que no se puede reservar stock suyo.} other {No se puede reservar stock del producto {productId}.}}'
     product_not_found: 'No existe ningún producto con el identificador {id}.'
     quantity_invalid: 'Una cantidad no puede ser negativa, y se ha recibido {units}.'
+    release_exceeds_reserved: 'No se pueden liberar {requested} unidades de una existencia que solo tiene {reserved} reservadas.'
+    reservation_not_active: 'La reserva {id} ya no está activa, así que no admite más unidades.'
+    reservation_not_found: 'No existe la reserva {id}.'
+    reservation_quantity_not_positive: 'Una reserva debe pedir al menos una unidad.'
+    reservation_reference_invalid: 'La referencia de una reserva debe tener entre 1 y 80 caracteres y no puede contener caracteres de control.'
+    reservation_request_changed: 'La reserva {reference} se hizo para {requested} unidades y ahora se piden {asked}. Una reserva no cambia lo que cubre.'
     stock_item_not_found: 'No existe ninguna existencia con el identificador {id}.'
     stock_negative: 'No se pueden sacar {requested} unidades de una existencia que solo tiene {onHand}. El stock no puede quedar en negativo.'
+    stock_not_reservable: 'La existencia {stockItemId} está en estado {status, select, quarantine {cuarentena} damaged {dañado} on_hold {retenido} available {disponible} other {{status}}}, y solo se puede reservar stock disponible.'
     transfer_across_tenants: 'Solo se puede traspasar stock entre existencias del mismo cliente.'
     transfer_product_mismatch: 'Solo se puede traspasar stock entre existencias del mismo producto.'
     transfer_same_stock_item: 'Una existencia no se puede traspasar a sí misma.'
+
+outbound:
+    allocation_exceeds_ordered: 'La línea {line} tiene {allocated} unidades asignadas y solo se pidieron {ordered}.'
+    customer_name_invalid: 'El nombre de un cliente debe tener entre 1 y 100 caracteres y no puede contener caracteres de control.'
+    order_already_cancelled: 'El pedido {reference} ya está cancelado.'
+    order_line_not_found: 'El pedido no tiene la línea {line}.'
+    order_lines_invalid: '{reason, select, empty {Un pedido necesita al menos una línea.} too_many {Un pedido admite como máximo {maxLines} líneas.} other {Las líneas del pedido no son válidas.}}'
+    order_not_found: 'No existe el pedido {id}.'
+    order_reference_already_used: 'Ya existe un pedido con la referencia {reference}.'
+    order_reference_invalid: 'La referencia de un pedido debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'
+    ordered_quantity_invalid: 'La línea {line} pide {units} unidades y una línea de pedido necesita al menos una.'
+    product_not_orderable: '{reason, select, unknown {El producto {productId} no existe, así que no se puede pedir.} unavailable {El producto {productId} está bloqueado o descatalogado, así que no se puede pedir.} other {El producto {productId} no se puede pedir.}}'
+    shipping_address_invalid: '{field, select, street {La calle} postalCode {El código postal} city {La ciudad} countryCode {El país} other {La dirección}} de envío no es válida. {field, select, countryCode {Debe ser un código de país de dos letras, como ES.} other {Debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.}}'
+    warehouse_unknown: 'El almacén {id} no existe, así que no se puede servir un pedido desde él.'
 
 warehouse:
     block_reason_invalid: 'El motivo del bloqueo debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'

@@ -57,7 +57,7 @@ None. The other contexts need no contract from it. The tenant of a request reach
 
 | Contract | Purpose |
 |---|---|
-| `ProductCatalog` | Find a product by id or GTIN and return a `ProductSnapshot` (id, SKU, name, storage class, tracking policy, whether it is available for operations, family, turnover class, dimensions). In use since E03-03; SKU lookup, base unit and packaging levels come when a context needs them. |
+| `ProductCatalog` | Find a product by id or GTIN and return a `ProductSnapshot` (id, SKU, name, storage class, tracking policy and shelf lives, whether it is available for operations, family, turnover class, dimensions). In use since E03-03; SKU lookup, base unit and packaging levels come when a context needs them. |
 | `ProductRegistered`, `ProductBlocked` | Integration events |
 
 ### Warehouse
@@ -65,6 +65,7 @@ None. The other contexts need no contract from it. The tenant of a request reach
 | Contract | Purpose |
 |---|---|
 | `LocationDirectory` | Find a location by id, or list the active locations of a warehouse of some types in the order of the picking route. Returns a `LocationSnapshot` (id, code, warehouse and its code, zone, type, status, the zone's storage class and families, pick sequences, weight and volume limits). In use since E03-03 (docks) and E03-04 (putaway). |
+| `WarehouseDirectory` | Find a warehouse by id and return a `WarehouseSnapshot` (id, code, name). In use since E04-01, to check where an order is served from. |
 | `LocationBlocked`, `LocationUnblocked` | Integration events |
 
 ### Inventory
@@ -73,7 +74,7 @@ None. The other contexts need no contract from it. The tenant of a request reach
 |---|---|
 | `StockMovements` | `receive`, `transfer`, `issue` and `adjust` stock. Called by Inbound, Outbound and the adjustment screens. `receive` and `transfer` are in use since E03-04 (receipts and putaway). |
 | `StockLevels` | What each location holds, by product. Putaway uses it to tell empty locations and room (E03-04). |
-| `StockReservations` | `allocate` an order line (returns the reservation and any shortage), `release` and `consume` |
+| `StockReservations` | `allocate` units for a reference such as an order line (returns the reservation, the units it holds and the shortage) and `release` a reservation. Both in use since E04-01 ([ADR 0014](../adr/0014-reservations-without-movements-and-allocation-by-plan.md)). `consume` arrives with picking. |
 | `StockAvailability` | Read on-hand, reserved and available for a product, optionally by warehouse or location |
 | `StockLevelChanged`, `StockBelowThreshold` | Integration events for read models, dashboards and notifications. Inside Inventory, the stock read model already follows `StockMovementRecorded` (ADR 0013). |
 

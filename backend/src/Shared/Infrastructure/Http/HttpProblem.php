@@ -23,6 +23,7 @@ enum HttpProblem: string
     case NotAcceptable = 'shared.not_acceptable';
     case UnsupportedMediaType = 'shared.unsupported_media_type';
     case RequestInvalid = 'shared.request_invalid';
+    case ConcurrentUpdate = 'shared.concurrent_update';
     case InternalError = 'shared.internal_error';
 
     /**
@@ -37,6 +38,7 @@ enum HttpProblem: string
             Response::HTTP_NOT_FOUND === $status => self::NotFound,
             Response::HTTP_METHOD_NOT_ALLOWED === $status => self::MethodNotAllowed,
             Response::HTTP_NOT_ACCEPTABLE === $status => self::NotAcceptable,
+            Response::HTTP_CONFLICT === $status => self::ConcurrentUpdate,
             Response::HTTP_UNSUPPORTED_MEDIA_TYPE === $status => self::UnsupportedMediaType,
             $status >= Response::HTTP_INTERNAL_SERVER_ERROR => self::InternalError,
             default => self::RequestInvalid,

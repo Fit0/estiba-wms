@@ -7,6 +7,10 @@ namespace App\Inventory\Domain;
 use App\Inventory\Domain\Event\StockMovementRecorded;
 use App\Inventory\Domain\Exception\MovementQuantityNotPositive;
 use App\Inventory\Domain\Exception\NegativeStockNotAllowed;
+use App\Inventory\Domain\Exception\NotEnoughAvailableStock;
+use App\Inventory\Domain\Exception\ReleaseExceedsReserved;
+use App\Inventory\Domain\Exception\ReservationQuantityNotPositive;
+use App\Inventory\Domain\Exception\StockNotReservable;
 use App\Inventory\Domain\Exception\TransferAcrossTenants;
 use App\Inventory\Domain\Exception\TransferBetweenDifferentProducts;
 use App\Inventory\Domain\Exception\TransferToSameStockItem;
@@ -27,6 +31,19 @@ final class StockItem extends AggregateRoot
 {
     private Quantity $onHand;
 
+    /** Units promised to orders that are still in the stock item (STK-02). Reserving moves no units, so it records no movement. */
+    private Quantity $reserved;
+
+    /** When units first arrived. It orders stock for FIFO allocation (STK-12). */
+    private ?\DateTimeImmutable $firstReceivedAt = null;
+
+    /**
+     * Counts the saves of the stock item. The persistence layer owns it: when two requests change the
+     * same stock item at once, the second one to save is refused instead of overwriting the first.
+     * That is what keeps two orders from reserving the same units (STK-02).
+     */
+    private int $version = 1;
+
     /** @var list<StockMovement> */
     private array $recorded = [];
 
@@ -36,6 +53,7 @@ final class StockItem extends AggregateRoot
         private readonly StockKey $key,
     ) {
         $this->onHand = Quantity::zero();
+        $this->reserved = Quantity::zero();
     }
 
     /**
@@ -122,6 +140,71 @@ final class StockItem extends AggregateRoot
     }
 
     /**
+     * Promises units to an order. Only available stock can be reserved (STK-06), and never more
+     * than is free (STK-02). The units stay in the stock item, so no movement is recorded.
+     *
+     * @throws StockNotReservable             STK-06
+     * @throws ReservationQuantityNotPositive STK-11
+     * @throws NotEnoughAvailableStock        STK-02
+     */
+    public function reserve(Quantity $quantity): void
+    {
+        if (StockStatus::Available !== $this->key->status) {
+            throw StockNotReservable::inStatus($this->id, $this->key->status);
+        }
+        if ($quantity->isZero()) {
+            throw ReservationQuantityNotPositive::ofZero();
+        }
+
+        $available = $this->available();
+        if ($quantity->units > $available->units) {
+            throw NotEnoughAvailableStock::reserving($quantity->units, $available->units);
+        }
+
+        $this->reserved = $this->reserved->plus($quantity);
+    }
+
+    /**
+     * Takes back a promise: the units are free again.
+     *
+     * @throws ReleaseExceedsReserved STK-02
+     */
+    public function unreserve(Quantity $quantity): void
+    {
+        if ($quantity->units > $this->reserved->units) {
+            throw ReleaseExceedsReserved::releasing($quantity->units, $this->reserved->units);
+        }
+
+        $this->reserved = $this->reserved->minus($quantity);
+    }
+
+    /**
+     * The units nobody has promised yet.
+     */
+    public function available(): Quantity
+    {
+        return $this->onHand->minus($this->reserved);
+    }
+
+    public function reserved(): Quantity
+    {
+        return $this->reserved;
+    }
+
+    /**
+     * How many times the stock item has been saved, for the persistence layer's lock.
+     */
+    public function version(): int
+    {
+        return $this->version;
+    }
+
+    public function firstReceivedAt(): ?\DateTimeImmutable
+    {
+        return $this->firstReceivedAt;
+    }
+
+    /**
      * The movements recorded since the stock item was created or last pulled, oldest first.
      * The repository takes them when it saves, so each is stored once.
      *
@@ -168,7 +251,15 @@ final class StockItem extends AggregateRoot
      */
     private function applyChange(MovementType $type, StockMovementId $movementId, Quantity $after, int $change, ?MovementReference $reference, ?AdjustmentReason $reason, AuthorId $author, \DateTimeImmutable $at): void
     {
+        // STK-02, STK-10: units promised to an order cannot leave.
+        if ($after->units < $this->reserved->units) {
+            throw NotEnoughAvailableStock::taking(-$change, $this->available()->units);
+        }
+
         $this->onHand = $after;
+        if ($change > 0 && !$this->firstReceivedAt instanceof \DateTimeImmutable) {
+            $this->firstReceivedAt = $at;
+        }
         $this->recorded[] = new StockMovement($movementId, $this->tenantId, $this->id, $type, $change, $after, $reference, $reason, $author, $at);
         $this->record(new StockMovementRecorded($movementId, $this->tenantId, $this->id, $type, $change, $at));
     }

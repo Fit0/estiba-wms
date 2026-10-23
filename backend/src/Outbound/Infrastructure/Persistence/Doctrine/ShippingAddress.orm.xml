@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <embeddable name="App\Outbound\Domain\ShippingAddress">
+        <field name="street" column="ship_to_street" length="120"/>
+        <field name="postalCode" column="ship_to_postal_code" length="12"/>
+        <field name="city" column="ship_to_city" length="60"/>
+        <field name="countryCode" column="ship_to_country_code" length="2"/>
+    </embeddable>
+</doctrine-mapping>

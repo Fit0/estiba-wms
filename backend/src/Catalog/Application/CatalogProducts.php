@@ -50,6 +50,7 @@ final readonly class CatalogProducts implements ProductCatalog
             $tracking->trackedByLot,
             $tracking->trackedByExpiry,
             $tracking->minShelfLifeAtReceiptDays,
+            $tracking->minShelfLifeAtShipmentDays,
             $product->isAvailableForOperations(),
             $product->family(),
             $product->turnoverClass(),

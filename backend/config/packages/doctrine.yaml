@@ -8,6 +8,10 @@ doctrine:
 
         profiling_collect_backtrace: '%kernel.debug%'
 
+        # messenger_messages is the table of the failed messages (ADR 0012). A migration makes it and
+        # Messenger owns it, so the schema tools must not try to drop it.
+        schema_filter: '~^(?!messenger_messages$)~'
+
         # Value objects are stored through custom types, so the domain stays free of Doctrine.
         types:
             tenant_id: App\Shared\Infrastructure\Persistence\Doctrine\Type\TenantIdType
@@ -41,6 +45,9 @@ doctrine:
             stock_quantity: App\Inventory\Infrastructure\Persistence\Doctrine\Type\QuantityType
             movement_reference: App\Inventory\Infrastructure\Persistence\Doctrine\Type\MovementReferenceType
             adjustment_reason: App\Inventory\Infrastructure\Persistence\Doctrine\Type\AdjustmentReasonType
+            reservation_id: App\Inventory\Infrastructure\Persistence\Doctrine\Type\ReservationIdType
+            reservation_reference: App\Inventory\Infrastructure\Persistence\Doctrine\Type\ReservationReferenceType
+            inventory_allocations: App\Inventory\Infrastructure\Persistence\Doctrine\Type\AllocationsType
             asn_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnIdType
             receipt_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ReceiptIdType
             inbound_location_id: App\Inbound\Infrastructure\Persistence\Doctrine\Type\DockLocationIdType
@@ -54,6 +61,11 @@ doctrine:
             inbound_asn_lines: App\Inbound\Infrastructure\Persistence\Doctrine\Type\AsnLinesType
             inbound_expected_items: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ExpectedItemsType
             inbound_received_lines: App\Inbound\Infrastructure\Persistence\Doctrine\Type\ReceivedLinesType
+            order_id: App\Outbound\Infrastructure\Persistence\Doctrine\Type\OrderIdType
+            outbound_warehouse_id: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ShipFromWarehouseIdType
+            order_reference: App\Outbound\Infrastructure\Persistence\Doctrine\Type\OrderReferenceType
+            customer_name: App\Outbound\Infrastructure\Persistence\Doctrine\Type\CustomerNameType
+            outbound_order_lines: App\Outbound\Infrastructure\Persistence\Doctrine\Type\OrderLinesType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
@@ -104,6 +116,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Inbound/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Inbound\Domain'
                 alias: Inbound
+            Outbound:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Outbound/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Outbound\Domain'
+                alias: Outbound
             CatalogGtinIndex:
                 type: xml
                 is_bundle: false

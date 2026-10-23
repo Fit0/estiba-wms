@@ -78,16 +78,16 @@ WH-01 and WH-03 need to know about other aggregates (the other warehouses of a t
 
 ### StockItem
 
-Identity: `StockItemId`, with a unique constraint on tenant, product, location, lot, expiry date and status (DD-1). Holds `onHand`, `reserved` and a version for optimistic locking. Each change appends a `StockMovement` row (type, quantity change, reference, reason, author, time).
+Identity: `StockItemId`, with a unique constraint on tenant, product, location, lot, expiry date and status (DD-1). Holds `onHand`, `reserved`, the moment units first arrived (`firstReceivedAt`, which orders stock for FIFO) and a version for optimistic locking. Reserving units moves none of them, so it records no movement; every change of `onHand` appends a `StockMovement` row (type, quantity change, reference, reason, author, time). Two requests that change the same stock item cannot both succeed: the second one is refused when it saves (answered as `shared.concurrent_update`, 409), which is what keeps two orders from promising the same units.
 
 | ID | Invariant |
 |---|---|
 | STK-01 | `onHand` is never negative. |
-| STK-02 | `reserved` never exceeds `onHand`. |
+| STK-02 | `reserved` never exceeds `onHand`. Units that are promised cannot be issued, adjusted away or transferred, and a version stops two concurrent reservations from both winning. A database `CHECK` backs it. |
 | STK-03 | Every change of `onHand` is recorded by exactly one movement, in the same transaction. |
 | STK-04 | A movement is never updated or deleted. A mistake is fixed with a compensating movement. |
 | STK-05 | The sum of a stock item's movements equals its `onHand`. A reconciliation test checks it. |
-| STK-06 | Only stock in available status, in an active location, can be reserved. |
+| STK-06 | Only stock in available status, in an active reserve or pick face location, can be reserved. Stock at a dock, in staging or in quarantine is not offered. |
 | STK-07 | Lot and expiry date are present exactly when the product's tracking policy asks for them. |
 | STK-08 | A transfer takes from one stock item and adds to another, both or neither. |
 | STK-09 | An adjustment needs a reason and an author. |
@@ -95,12 +95,12 @@ Identity: `StockItemId`, with a unique constraint on tenant, product, location, 
 
 ### StockReservation
 
-Identity: `ReservationId`. Holds the order line it serves, the product, the requested quantity, the strategy (FEFO or FIFO), the allocations (stock item and quantity) and the status.
+Identity: `ReservationId`. Holds the reference of what it serves (an opaque text, for an order line `order:<orderId>:<lineNumber>`), the product, the requested quantity, the strategy (FEFO or FIFO), the allocations (stock item and quantity) and the status. A reference has one reservation: asking again tops it up and never reserves twice. The quantity asked at first cannot change.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Active
-    Active --> Consumed: stock issued at dispatch
+    Active --> Consumed: stock issued at dispatch (with picking)
     Active --> Released: order cancelled or line shorted
     Consumed --> [*]
     Released --> [*]
@@ -109,9 +109,9 @@ stateDiagram-v2
 | ID | Invariant |
 |---|---|
 | STK-11 | The allocated quantity is the sum of the allocations and never exceeds the requested quantity. Allocating less is allowed, and the shortage is reported. |
-| STK-12 | Stock is chosen by earliest expiry date first for expiry-tracked products (FEFO), then by earliest receipt date (FIFO). Stock that would expire before the product's minimum shelf life at shipment is skipped. |
+| STK-12 | Stock is chosen by earliest expiry date first for expiry-tracked products (FEFO), then by earliest receipt date (FIFO). Stock that would expire before the product's minimum shelf life at shipment, counted from the day of the allocation, is skipped. Stock that never expires goes after stock that does. Equal stock is chosen by identifier, so the plan is repeatable. |
 | STK-13 | A reservation is consumed once. Units that were not picked go back to available. |
-| STK-14 | Releasing a reservation is safe to repeat. |
+| STK-14 | Releasing a reservation is safe to repeat: the second release gives nothing back. A released reservation takes no more units. |
 
 ## Inbound
 
@@ -169,7 +169,7 @@ Identity: `PutawayTaskId`. Holds the receipt, the ASN reference, the goods (prod
 
 ### Order
 
-Identity: `OrderId`. Holds the external reference, the customer, the ship-to address, the priority, the cut-off time and the lines (product, ordered, allocated, picked and shipped quantities).
+Identity: `OrderId`. Holds the external reference, the warehouse it is served from, the customer, the ship-to address, the priority (low, normal, high, urgent), the cut-off time and the lines (a line number from 1, the product, and the ordered and allocated quantities, plus the reservation that holds the stock; picked and shipped quantities arrive with picking and shipping). Allocating an order asks Inventory for one reservation per line that is not fully covered, and doing it again tops them up.
 
 ```mermaid
 stateDiagram-v2
@@ -195,7 +195,7 @@ stateDiagram-v2
 | OUT-01 | The external reference is unique per tenant, so importing the same order twice changes nothing. |
 | OUT-02 | Ordered quantities are positive whole numbers of the base unit, and the product is active. |
 | OUT-03 | For every line, allocated never exceeds ordered, picked never exceeds allocated, and shipped never exceeds picked. |
-| OUT-04 | Cancelling an order releases its reservations. A shipped order cannot be cancelled. |
+| OUT-04 | Cancelling an order releases its reservations, in the same transaction. A cancelled order cannot be cancelled or allocated again. A shipped order cannot be cancelled (shipping arrives later). |
 | OUT-05 | An order belongs to at most one open wave. |
 
 ### Wave

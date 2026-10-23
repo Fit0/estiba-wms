@@ -6,6 +6,7 @@ namespace App\Inbound\Infrastructure\Persistence\Doctrine\Type;
 
 use App\Inbound\Domain\ExpectedItem;
 use App\Inbound\Domain\ProductId;
+use App\Shared\Infrastructure\Persistence\Doctrine\Type\JsonRowsType;
 
 /**
  * What a receipt expected of each product when it opened.

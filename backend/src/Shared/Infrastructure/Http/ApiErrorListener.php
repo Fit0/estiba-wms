@@ -7,6 +7,7 @@ namespace App\Shared\Infrastructure\Http;
 use ApiPlatform\Metadata\Exception\HttpExceptionInterface as ApiPlatformHttpException;
 use App\Shared\Application\TenantNotResolved;
 use App\Shared\Domain\DomainError;
+use Doctrine\ORM\OptimisticLockException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
@@ -90,6 +91,8 @@ final readonly class ApiErrorListener
         return match (true) {
             $error instanceof HttpExceptionInterface, $error instanceof ApiPlatformHttpException => $error->getStatusCode(),
             $error instanceof SerializerException => Response::HTTP_BAD_REQUEST,
+            // Someone else changed the same data a moment ago, such as the stock of the same product. Asking again works.
+            $error instanceof OptimisticLockException => Response::HTTP_CONFLICT,
             default => null,
         };
     }
