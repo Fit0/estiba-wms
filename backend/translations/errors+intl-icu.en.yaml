@@ -16,6 +16,7 @@ shared:
     method_not_allowed: 'That method is not allowed on this resource.'
     not_acceptable: 'The requested response format is not available. This API answers in JSON.'
     unsupported_media_type: 'The content type of the request is not supported. Send JSON with the header Content-Type: application/json.'
+    concurrent_update: 'Another request changed the same data a moment ago, such as the stock of the same product. Try again.'
     request_invalid: 'The request is not valid.'
     internal_error: 'An unexpected error happened. Try again later.'
 
@@ -86,16 +87,40 @@ inbound:
     supplier_name_invalid: 'The supplier must have 1 to {maxLength} characters and no control characters.'
 
 inventory:
+    allocation_exceeds_requested: '{allocated} units were allocated to a reservation of {requested}.'
     lot_number_invalid: 'A lot number must have 1 to 40 characters and no control characters.'
     movement_quantity_not_positive: 'A {type, select, receipt {receipt} issue {issue} transfer_out {transfer out} transfer_in {transfer in} adjustment {adjustment} other {{type}}} movement must change the stock by at least one unit.'
     movement_text_invalid: 'The {field, select, reason {reason} reference {reference} other {text}} of a movement must have 1 to {maxLength} characters and no control characters.'
+    not_enough_available_stock: '{requested} units were asked for and only {available} are not reserved.'
+    product_not_allocatable: '{reason, select, unknown {Product {productId} does not exist, so no stock of it can be reserved.} unavailable {Product {productId} is blocked or discontinued, so no stock of it can be reserved.} other {No stock of product {productId} can be reserved.}}'
     product_not_found: 'There is no product with id {id}.'
     quantity_invalid: 'A quantity cannot be negative, and {units} was received.'
+    release_exceeds_reserved: 'Cannot release {requested} units from a stock item that has only {reserved} reserved.'
+    reservation_not_active: 'Reservation {id} is no longer active, so it cannot take more units.'
+    reservation_not_found: 'There is no reservation {id}.'
+    reservation_quantity_not_positive: 'A reservation must ask for at least one unit.'
+    reservation_reference_invalid: 'The reference of a reservation must have 1 to 80 characters and no control characters.'
+    reservation_request_changed: 'Reservation {reference} was made for {requested} units and {asked} are asked now. A reservation does not change what it covers.'
     stock_item_not_found: 'There is no stock item with id {id}.'
     stock_negative: 'Cannot take {requested} units from a stock item that holds only {onHand}. Stock cannot go negative.'
+    stock_not_reservable: 'Stock item {stockItemId} is {status, select, quarantine {in quarantine} damaged {damaged} on_hold {on hold} available {available} other {{status}}}, and only available stock can be reserved.'
     transfer_across_tenants: 'Stock can only be transferred between stock items of the same customer.'
     transfer_product_mismatch: 'Stock can only be transferred between stock items of the same product.'
     transfer_same_stock_item: 'A stock item cannot be transferred to itself.'
+
+outbound:
+    allocation_exceeds_ordered: 'Line {line} has {allocated} units allocated, and only {ordered} were ordered.'
+    customer_name_invalid: 'A customer name must have 1 to 100 characters and no control characters.'
+    order_already_cancelled: 'Order {reference} is already cancelled.'
+    order_line_not_found: 'The order has no line {line}.'
+    order_lines_invalid: '{reason, select, empty {An order needs at least one line.} too_many {An order holds {maxLines} lines at most.} other {The lines of the order are not valid.}}'
+    order_not_found: 'There is no order {id}.'
+    order_reference_already_used: 'There is already an order with reference {reference}.'
+    order_reference_invalid: 'The reference of an order must have 1 to {maxLength} characters and no control characters.'
+    ordered_quantity_invalid: 'Line {line} asks for {units} units, and an order line needs at least one.'
+    product_not_orderable: '{reason, select, unknown {Product {productId} does not exist, so it cannot be ordered.} unavailable {Product {productId} is blocked or discontinued, so it cannot be ordered.} other {Product {productId} cannot be ordered.}}'
+    shipping_address_invalid: 'The {field, select, street {street} postalCode {postal code} city {city} countryCode {country} other {address}} of the shipping address is not valid. {field, select, countryCode {It must be a two-letter country code, such as ES.} other {It needs 1 to {maxLength} characters and no control characters.}}'
+    warehouse_unknown: 'Warehouse {id} does not exist, so an order cannot be served from it.'
 
 warehouse:
     block_reason_invalid: 'A block reason must have 1 to {maxLength} characters and no control characters.'

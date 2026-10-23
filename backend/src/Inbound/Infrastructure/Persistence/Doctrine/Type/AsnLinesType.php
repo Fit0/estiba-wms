@@ -7,6 +7,7 @@ namespace App\Inbound\Infrastructure\Persistence\Doctrine\Type;
 use App\Inbound\Domain\AsnLine;
 use App\Inbound\Domain\LotNumber;
 use App\Inbound\Domain\ProductId;
+use App\Shared\Infrastructure\Persistence\Doctrine\Type\JsonRowsType;
 
 /**
  * The lines of an ASN.

@@ -69,10 +69,10 @@ final class StockMother
     /**
      * A stock item that already holds the units, with the movement of its receipt already pulled.
      */
-    public static function stockItemHolding(int $units, ?TenantId $tenantId = null, ?StockKey $key = null): StockItem
+    public static function stockItemHolding(int $units, ?TenantId $tenantId = null, ?StockKey $key = null, ?\DateTimeImmutable $receivedAt = null): StockItem
     {
         $stockItem = self::stockItem($tenantId, $key);
-        $stockItem->receive(self::movementId(), Quantity::of($units), null, self::author(), self::at());
+        $stockItem->receive(self::movementId(), Quantity::of($units), null, self::author(), $receivedAt ?? self::at());
         $stockItem->pullMovements();
         $stockItem->pullEvents();
 

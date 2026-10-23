@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Inventory\Domain\StockReservation" table="stock_reservations">
+        <unique-constraints>
+            <!-- A reference has one reservation, which later requests top up. Backs the lookup against races. -->
+            <unique-constraint name="uniq_stock_reservations_tenant_reference" columns="tenant_id,reference"/>
+        </unique-constraints>
+
+        <id name="id" type="reservation_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="reference" type="reservation_reference" length="80"/>
+        <field name="productId" column="product_id" type="stock_product_id"/>
+        <field name="requested" type="stock_quantity"/>
+        <field name="strategy" enum-type="App\Inventory\Domain\AllocationStrategy" length="10"/>
+        <field name="status" enum-type="App\Inventory\Domain\ReservationStatus" length="10"/>
+        <field name="allocations" type="inventory_allocations"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+    </entity>
+</doctrine-mapping>

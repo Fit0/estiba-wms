@@ -49,6 +49,7 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | Adjustment | Regularización | A movement that corrects stock after a count or a loss. It always has a reason and an author. |
 | Reservation | Reserva de stock | The stock set aside for one order line, possibly spread over several stock items. |
 | Allocation | Asignación | Choosing which stock items cover an order line. Uses FEFO or FIFO. |
+| Shortage | Faltante | The ordered units that no stock could cover when an order was allocated. It is reported, not an error, and allocating again covers it when stock arrives. |
 | FEFO | Primero en caducar, primero en salir | First expired, first out. Used for products tracked by expiry. |
 | FIFO | Primero en entrar, primero en salir | First in, first out. Used for the rest. |
 

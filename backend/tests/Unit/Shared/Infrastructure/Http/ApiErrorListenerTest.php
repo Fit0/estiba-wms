@@ -11,6 +11,7 @@ use App\Shared\Infrastructure\Http\ProblemFactory;
 use App\Shared\Infrastructure\Http\RequestLanguage;
 use App\Tests\Unit\Support\ErrorCatalog;
 use App\Warehouse\Domain\Exception\InvalidWarehouseCode;
+use Doctrine\ORM\OptimisticLockException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
@@ -108,6 +109,7 @@ final class ApiErrorListenerTest extends TestCase
         yield 'a method the resource does not offer' => [new MethodNotAllowedHttpException(['GET', 'POST']), 405, 'shared.method_not_allowed'];
         yield 'a content type the API does not read' => [new UnsupportedMediaTypeHttpException('text/plain'), 415, 'shared.unsupported_media_type'];
         yield 'a body that is not JSON' => [new NotEncodableValueException('Syntax error'), 400, 'shared.request_malformed'];
+        yield 'the same data changed by another request at the same time' => [OptimisticLockException::lockFailed(new \stdClass()), 409, 'shared.concurrent_update'];
     }
 
     public function testLeavesRequestsOutsideTheApiAlone(): void

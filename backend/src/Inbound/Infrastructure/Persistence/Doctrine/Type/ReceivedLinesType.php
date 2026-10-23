@@ -8,6 +8,7 @@ use App\Inbound\Domain\ItemCondition;
 use App\Inbound\Domain\LotNumber;
 use App\Inbound\Domain\ProductId;
 use App\Inbound\Domain\ReceivedLine;
+use App\Shared\Infrastructure\Persistence\Doctrine\Type\JsonRowsType;
 
 /**
  * The counts of a receipt, in the order they were made.

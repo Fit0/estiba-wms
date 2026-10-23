@@ -25,6 +25,14 @@ interface StockItemRepository
     public function findAt(TenantId $tenantId, array $locationIds): array;
 
     /**
+     * The stock items of the product that are available and have units nobody has promised.
+     * Whether their location is usable is for the caller to find out (STK-06).
+     *
+     * @return list<StockItem>
+     */
+    public function findReservable(TenantId $tenantId, ProductId $productId): array;
+
+    /**
      * Every stock item of every tenant, for work that goes over the whole ledger, such as building
      * a read model again.
      *

@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Inventory\Infrastructure\Persistence\Doctrine;
 
 use App\Inventory\Domain\LocationId;
+use App\Inventory\Domain\ProductId;
 use App\Inventory\Domain\StockItem;
 use App\Inventory\Domain\StockItemId;
 use App\Inventory\Domain\StockItemRepository;
 use App\Inventory\Domain\StockKey;
+use App\Inventory\Domain\StockStatus;
 use App\Shared\Domain\TenantId;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -79,6 +81,27 @@ final readonly class DoctrineStockItemRepository implements StockItemRepository
             ->setParameter('tenant', $tenantId, 'tenant_id')
             ->setParameter('locations', array_map(static fn (LocationId $id): string => $id->value, $locationIds))
             ->orderBy('s.key.locationId')
+            ->getQuery()
+            ->getResult();
+
+        return $items;
+    }
+
+    #[\Override]
+    public function findReservable(TenantId $tenantId, ProductId $productId): array
+    {
+        /** @var list<StockItem> $items */
+        $items = $this->entityManager->createQueryBuilder()
+            ->select('s')
+            ->from(StockItem::class, 's')
+            ->where('s.tenantId = :tenant')
+            ->andWhere('s.key.productId = :product')
+            ->andWhere('s.key.status = :status')
+            ->andWhere('s.onHand > s.reserved')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->setParameter('product', $productId, 'stock_product_id')
+            ->setParameter('status', StockStatus::Available)
+            ->orderBy('s.id')
             ->getQuery()
             ->getResult();
 
