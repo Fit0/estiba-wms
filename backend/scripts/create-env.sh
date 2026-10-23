@@ -23,3 +23,11 @@ sed \
     .env.example > .env
 
 echo "Created backend/.env with new secrets."
+
+# A JWT key pair is encrypted with the passphrase it was made with. The new passphrase cannot open
+# it, so tokens could not be signed. Dropping the old keys makes the stack generate new ones, which
+# is safe because they only exist in development.
+if [ -f config/jwt/private.pem ] || [ -f config/jwt/public.pem ]; then
+    rm -f config/jwt/private.pem config/jwt/public.pem
+    echo "Removed the JWT keys made with the old passphrase. Run 'make jwt-keys' or restart the stack to create new ones."
+fi
