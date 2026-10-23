@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Outbound\Domain\PickList" table="pick_lists">
+        <indexes>
+            <index name="idx_pick_lists_tenant_wave" columns="tenant_id,wave_id"/>
+        </indexes>
+
+        <id name="id" type="pick_list_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="waveId" column="wave_id" type="wave_id"/>
+        <field name="status" enum-type="App\Outbound\Domain\PickListStatus" length="10"/>
+        <field name="lines" type="outbound_pick_lines"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+    </entity>
+</doctrine-mapping>

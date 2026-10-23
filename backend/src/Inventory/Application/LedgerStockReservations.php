@@ -8,6 +8,7 @@ use App\Catalog\Application\Contract\ProductCatalog;
 use App\Catalog\Application\Contract\ProductSnapshot;
 use App\Inventory\Application\Contract\AllocationRequest;
 use App\Inventory\Application\Contract\AllocationResult;
+use App\Inventory\Application\Contract\ReservedStock;
 use App\Inventory\Application\Contract\StockReservations;
 use App\Inventory\Domain\AllocationPlanner;
 use App\Inventory\Domain\AllocationStrategy;
@@ -90,6 +91,25 @@ final readonly class LedgerStockReservations implements StockReservations
         }
 
         $this->reservations->save($reservation);
+    }
+
+    #[\Override]
+    public function stockOf(TenantId $tenantId, string $reservationId): array
+    {
+        $reservation = $this->reservations->find(ReservationId::fromString($reservationId));
+        if (!$reservation instanceof StockReservation || !$reservation->tenantId()->equals($tenantId)) {
+            throw ReservationNotFound::withId($reservationId);
+        }
+
+        $held = [];
+        foreach ($reservation->allocations() as $allocation) {
+            $stockItem = $this->stockItems->find($allocation->stockItemId) ?? throw StockItemNotFound::forId($allocation->stockItemId->value);
+            $key = $stockItem->key();
+
+            $held[] = new ReservedStock($stockItem->id()->value, $key->locationId->value, $key->lot?->value, $key->expiryDate, $allocation->quantity->units);
+        }
+
+        return $held;
     }
 
     private function reservationFor(AllocationRequest $request, ProductSnapshot $product): StockReservation

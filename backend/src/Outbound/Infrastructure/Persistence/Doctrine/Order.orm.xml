@@ -22,5 +22,9 @@
         <field name="registeredAt" column="registered_at" type="datetime_immutable"/>
         <field name="status" enum-type="App\Outbound\Domain\OrderStatus" length="20"/>
         <field name="lines" type="outbound_order_lines"/>
+        <!-- OUT-06: the customer accepts to receive less than ordered. -->
+        <field name="backorderAccepted" column="backorder_accepted" type="boolean"/>
+        <!-- OUT-05: the one wave the order belongs to. -->
+        <field name="waveId" column="wave_id" type="wave_id" nullable="true"/>
     </entity>
 </doctrine-mapping>

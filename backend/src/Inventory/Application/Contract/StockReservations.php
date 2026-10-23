@@ -29,4 +29,14 @@ interface StockReservations
      * @throws DomainError when the tenant has no such reservation
      */
     public function release(TenantId $tenantId, string $reservationId): void;
+
+    /**
+     * The stock items that hold the units of a reservation, with where each one is and its lot and
+     * expiry date, in no particular order. A released reservation holds nothing.
+     *
+     * @return list<ReservedStock>
+     *
+     * @throws DomainError when the tenant has no such reservation
+     */
+    public function stockOf(TenantId $tenantId, string $reservationId): array;
 }

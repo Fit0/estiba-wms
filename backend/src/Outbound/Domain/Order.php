@@ -8,10 +8,13 @@ use App\Outbound\Domain\Event\OrderAllocated;
 use App\Outbound\Domain\Event\OrderCancelled;
 use App\Outbound\Domain\Event\OrderRegistered;
 use App\Outbound\Domain\Exception\AllocationExceedsOrdered;
+use App\Outbound\Domain\Exception\BackorderNotApplicable;
 use App\Outbound\Domain\Exception\InvalidOrderedQuantity;
 use App\Outbound\Domain\Exception\InvalidOrderLines;
 use App\Outbound\Domain\Exception\OrderAlreadyCancelled;
+use App\Outbound\Domain\Exception\OrderAlreadyInWave;
 use App\Outbound\Domain\Exception\OrderLineNotFound;
+use App\Outbound\Domain\Exception\OrderNotWaveable;
 use App\Outbound\Domain\Exception\OrderReferenceAlreadyUsed;
 use App\Outbound\Domain\Exception\ProductNotOrderable;
 use App\Shared\Domain\AggregateRoot;
@@ -27,6 +30,12 @@ use App\Shared\Domain\TenantId;
 final class Order extends AggregateRoot
 {
     private OrderStatus $status = OrderStatus::Registered;
+
+    /** The customer accepts to receive less than ordered. A partly covered order can then go to the floor (OUT-06). */
+    private bool $backorderAccepted = false;
+
+    /** The one wave the order belongs to, if any (OUT-05). */
+    private ?WaveId $waveId = null;
 
     /**
      * @param non-empty-list<OrderLine> $lines
@@ -84,12 +93,14 @@ final class Order extends AggregateRoot
      * @param list<LineAllocation> $allocations
      *
      * @throws OrderAlreadyCancelled    OUT-04
+     * @throws OrderAlreadyInWave       OUT-07
      * @throws OrderLineNotFound
      * @throws AllocationExceedsOrdered OUT-03
      */
     public function recordAllocations(array $allocations, \DateTimeImmutable $at): void
     {
         $this->assertNotCancelled();
+        $this->assertNotInWave();
 
         // Everything is checked before anything changes, so a refused allocation leaves no trace.
         $lines = $this->lines;
@@ -133,9 +144,75 @@ final class Order extends AggregateRoot
         }
 
         $this->status = OrderStatus::Cancelled;
+        $this->waveId = null;
         $this->record(new OrderCancelled($this->id, $this->tenantId, $at));
 
         return $reservations;
+    }
+
+    /**
+     * The customer accepts to receive less than ordered, so the covered part can go out. Only an
+     * order that is partly covered has a backorder to accept. Accepting twice changes nothing.
+     *
+     * @throws OrderAlreadyCancelled  OUT-04
+     * @throws BackorderNotApplicable
+     */
+    public function acceptBackorder(): void
+    {
+        $this->assertNotCancelled();
+
+        if (OrderStatus::PartiallyAllocated !== $this->status) {
+            throw BackorderNotApplicable::forStatus($this->status);
+        }
+
+        $this->backorderAccepted = true;
+    }
+
+    /**
+     * The order joins a wave. It must be fully allocated, or partly allocated with the backorder
+     * accepted (OUT-06), and it can be in one wave only (OUT-05).
+     *
+     * @throws OrderAlreadyCancelled OUT-04
+     * @throws OrderAlreadyInWave    OUT-05
+     * @throws OrderNotWaveable      OUT-06
+     */
+    public function joinWave(WaveId $waveId): void
+    {
+        $this->assertNotCancelled();
+        $this->assertNotInWave();
+
+        $waveable = OrderStatus::Allocated === $this->status
+            || (OrderStatus::PartiallyAllocated === $this->status && $this->backorderAccepted);
+        if (!$waveable) {
+            throw OrderNotWaveable::forStatus($this->status, $this->backorderAccepted);
+        }
+
+        $this->waveId = $waveId;
+        $this->status = OrderStatus::InWave;
+    }
+
+    /**
+     * The order leaves its wave, such as when the wave is cancelled, and is what it was before it
+     * joined: allocated or partly allocated. Leaving when it is in no wave changes nothing.
+     */
+    public function leaveWave(): void
+    {
+        if (!$this->waveId instanceof WaveId) {
+            return;
+        }
+
+        $this->waveId = null;
+        $this->status = $this->statusOfLines();
+    }
+
+    /**
+     * @throws OrderAlreadyInWave OUT-05
+     */
+    public function assertNotInWave(): void
+    {
+        if ($this->waveId instanceof WaveId) {
+            throw OrderAlreadyInWave::forReference($this->reference);
+        }
     }
 
     /**
@@ -204,6 +281,16 @@ final class Order extends AggregateRoot
     public function status(): OrderStatus
     {
         return $this->status;
+    }
+
+    public function waveId(): ?WaveId
+    {
+        return $this->waveId;
+    }
+
+    public function backorderAccepted(): bool
+    {
+        return $this->backorderAccepted;
     }
 
     /**
