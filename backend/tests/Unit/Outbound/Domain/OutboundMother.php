@@ -5,17 +5,24 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Outbound\Domain;
 
 use App\Outbound\Domain\CustomerName;
+use App\Outbound\Domain\LineAllocation;
+use App\Outbound\Domain\OperatorId;
 use App\Outbound\Domain\Order;
 use App\Outbound\Domain\OrderableProduct;
 use App\Outbound\Domain\OrderedItem;
 use App\Outbound\Domain\OrderId;
 use App\Outbound\Domain\OrderPriority;
 use App\Outbound\Domain\OrderReference;
+use App\Outbound\Domain\PickLine;
+use App\Outbound\Domain\PickList;
+use App\Outbound\Domain\PickListId;
 use App\Outbound\Domain\PickRequest;
 use App\Outbound\Domain\ProductId;
 use App\Outbound\Domain\ReservationId;
+use App\Outbound\Domain\ScannedPick;
 use App\Outbound\Domain\ShippingAddress;
 use App\Outbound\Domain\WarehouseId;
+use App\Outbound\Domain\WaveId;
 use App\Shared\Domain\TenantId;
 use App\Tests\Unit\Support\Ids;
 
@@ -57,12 +64,13 @@ final class OutboundMother
     /**
      * Units to pick from a location, for the first line of a new order unless told otherwise.
      */
-    public static function pickRequest(string $locationCode, int $zonePickSequence = 1, int $pickSequence = 10, int $orderLine = 1, ?OrderId $orderId = null, int $units = 1, ?string $lot = null, ?\DateTimeImmutable $expiryDate = null): PickRequest
+    public static function pickRequest(string $locationCode, int $zonePickSequence = 1, int $pickSequence = 10, int $orderLine = 1, ?OrderId $orderId = null, int $units = 1, ?string $lot = null, ?\DateTimeImmutable $expiryDate = null, ?string $stockItemId = null): PickRequest
     {
         return new PickRequest(
             $orderId ?? OrderId::fromString(Ids::next()),
             $orderLine,
             self::productId(),
+            $stockItemId ?? Ids::next(),
             Ids::next(),
             $locationCode,
             $zonePickSequence,
@@ -71,6 +79,47 @@ final class OutboundMother
             $expiryDate,
             $units,
         );
+    }
+
+    public static function operatorId(): OperatorId
+    {
+        return OperatorId::fromString(Ids::next());
+    }
+
+    /**
+     * A pick list for these picks, with its generation event pending.
+     *
+     * @param list<PickRequest> $route
+     */
+    public static function pickList(array $route): PickList
+    {
+        return PickList::generate(PickListId::fromString(Ids::next()), self::tenantId(), WaveId::fromString(Ids::next()), $route, self::at());
+    }
+
+    /**
+     * What an operator would scan at a line: its location, the barcode of its product and its lot.
+     */
+    public static function scanFor(PickLine $line): ScannedPick
+    {
+        return new ScannedPick($line->locationCode, $line->productId, $line->lot);
+    }
+
+    /**
+     * An order whose lines are all allocated, in a wave that is on the floor.
+     *
+     * @param list<int> $units the units of each line
+     */
+    public static function orderInWave(array $units): Order
+    {
+        $order = self::order(array_map(static fn (int $u): OrderedItem => self::item($u), $units));
+        $order->recordAllocations(
+            array_map(static fn (int $u, int $i): LineAllocation => new LineAllocation($i + 1, self::reservationId(), $u), $units, array_keys($units)),
+            self::at(),
+        );
+        $order->joinWave(WaveId::fromString(Ids::next()));
+        $order->pullEvents();
+
+        return $order;
     }
 
     /**

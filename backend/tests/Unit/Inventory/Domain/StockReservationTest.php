@@ -133,6 +133,102 @@ final class StockReservationTest extends TestCase
         }
     }
 
+    // STK-13: a pick moves the units to another stock item and they stay promised
+    public function testAPickMovesPartOfAnAllocationToAnotherStockItem(): void
+    {
+        $reservation = $this->reservation(10);
+        $shelf = StockItemId::fromString(Ids::next());
+        $staging = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($shelf, Quantity::of(10))]);
+
+        $reservation->shift($shelf, $staging, Quantity::of(6), Quantity::zero());
+
+        self::assertSame([[$shelf->value, 4], [$staging->value, 6]], array_map(static fn (Allocation $a): array => [$a->stockItemId->value, $a->quantity->units], $reservation->allocations()));
+        self::assertSame(10, $reservation->allocated()->units, 'Moved units are still promised.');
+    }
+
+    public function testPickingTheWholeAllocationRemovesItFromTheStockItemItLeft(): void
+    {
+        $reservation = $this->reservation(5);
+        $shelf = StockItemId::fromString(Ids::next());
+        $staging = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($shelf, Quantity::of(5))]);
+
+        $reservation->shift($shelf, $staging, Quantity::of(5), Quantity::zero());
+
+        self::assertSame([$staging->value], array_map(static fn (Allocation $a): string => $a->stockItemId->value, $reservation->allocations()));
+    }
+
+    public function testUnitsNotFoundStopBeingPromisedAndBecomeShortage(): void
+    {
+        $reservation = $this->reservation(10);
+        $shelf = StockItemId::fromString(Ids::next());
+        $staging = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($shelf, Quantity::of(10))]);
+
+        $reservation->shift($shelf, $staging, Quantity::of(7), Quantity::of(3));
+
+        self::assertSame(7, $reservation->allocated()->units);
+        self::assertSame(3, $reservation->missing()->units);
+        self::assertSame([$staging->value], array_map(static fn (Allocation $a): string => $a->stockItemId->value, $reservation->allocations()));
+    }
+
+    public function testNothingFoundMovesNothing(): void
+    {
+        $reservation = $this->reservation(4);
+        $shelf = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($shelf, Quantity::of(4))]);
+
+        $reservation->shift($shelf, null, Quantity::zero(), Quantity::of(4));
+
+        self::assertSame([], $reservation->allocations());
+        self::assertSame(4, $reservation->missing()->units);
+    }
+
+    public function testSeveralPicksToTheSameStockItemAddUp(): void
+    {
+        $reservation = $this->reservation(10);
+        $first = StockItemId::fromString(Ids::next());
+        $second = StockItemId::fromString(Ids::next());
+        $staging = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($first, Quantity::of(6)), new Allocation($second, Quantity::of(4))]);
+
+        $reservation->shift($first, $staging, Quantity::of(6), Quantity::zero());
+        $reservation->shift($second, $staging, Quantity::of(4), Quantity::zero());
+
+        self::assertCount(1, $reservation->allocations());
+        self::assertSame(10, $reservation->allocations()[0]->quantity->units);
+    }
+
+    // STK-02
+    public function testCannotPickMoreThanTheReservationHoldsThere(): void
+    {
+        $reservation = $this->reservation(10);
+        $shelf = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($shelf, Quantity::of(5))]);
+
+        self::assertDomainError('inventory.pick_exceeds_reservation', ['requested' => 6, 'held' => 5], static fn () => $reservation->shift($shelf, StockItemId::fromString(Ids::next()), Quantity::of(4), Quantity::of(2)));
+        self::assertSame(5, $reservation->allocated()->units, 'A refused pick changes nothing.');
+    }
+
+    public function testCannotPickFromAStockItemThatDoesNotCoverTheReservation(): void
+    {
+        $reservation = $this->reservation(10);
+        $reservation->allocate([new Allocation(StockItemId::fromString(Ids::next()), Quantity::of(5))]);
+
+        self::assertDomainError('inventory.pick_exceeds_reservation', ['requested' => 1, 'held' => 0], static fn () => $reservation->shift(StockItemId::fromString(Ids::next()), null, Quantity::of(1), Quantity::zero()));
+    }
+
+    public function testAReleasedReservationCannotBePicked(): void
+    {
+        $reservation = $this->reservation(10);
+        $shelf = StockItemId::fromString(Ids::next());
+        $reservation->allocate([new Allocation($shelf, Quantity::of(5))]);
+        $reservation->release();
+
+        self::assertDomainError('inventory.reservation_not_active', ['id' => $reservation->id()->value], static fn () => $reservation->shift($shelf, null, Quantity::of(1), Quantity::zero()));
+    }
+
     private function reservation(int $units): StockReservation
     {
         return StockReservation::open(

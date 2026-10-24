@@ -31,6 +31,16 @@ interface StockReservations
     public function release(TenantId $tenantId, string $reservationId): void;
 
     /**
+     * Records a pick: moves the units taken from the stock item that holds them to another location,
+     * as a transfer of the ledger, and keeps them promised to the reservation (STK-08, STK-13). The
+     * units not found stop being promised.
+     *
+     * @throws DomainError when the reservation or the stock item is not the tenant's, or the pick
+     *                     takes more than the reservation holds there
+     */
+    public function pick(StockPick $pick): void;
+
+    /**
      * The stock items that hold the units of a reservation, with where each one is and its lot and
      * expiry date, in no particular order. A released reservation holds nothing.
      *

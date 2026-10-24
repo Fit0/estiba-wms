@@ -7,6 +7,7 @@ namespace App\Tests\Unit\Outbound\Domain;
 use App\Outbound\Domain\CustomerName;
 use App\Outbound\Domain\OrderReference;
 use App\Outbound\Domain\ShippingAddress;
+use App\Outbound\Domain\ShortPickReason;
 use App\Tests\Unit\Support\AssertsDomainErrors;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -59,6 +60,19 @@ final class ValueObjectsTest extends TestCase
             self::assertDomainError('outbound.customer_name_invalid', [], static fn (): CustomerName => CustomerName::fromString($value));
         }
         self::assertSame(100, mb_strlen(CustomerName::fromString(str_repeat('a', 100))->value));
+    }
+
+    public function testKeepsTheShortPickReasonAsTyped(): void
+    {
+        self::assertSame('Balda vacía, había 2', ShortPickReason::fromString('  Balda vacía, había 2 ')->value);
+    }
+
+    public function testRejectsAnInvalidShortPickReason(): void
+    {
+        foreach (['', '   ', str_repeat('a', 201), "a\x07b"] as $value) {
+            self::assertDomainError('outbound.short_pick_reason_invalid', [], static fn (): ShortPickReason => ShortPickReason::fromString($value));
+        }
+        self::assertSame(200, mb_strlen(ShortPickReason::fromString(str_repeat('a', 200))->value));
     }
 
     public function testBuildsAnAddressWithTheCountryInCapitals(): void

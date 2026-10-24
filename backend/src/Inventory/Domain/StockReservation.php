@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Inventory\Domain;
 
 use App\Inventory\Domain\Exception\AllocationExceedsRequested;
+use App\Inventory\Domain\Exception\PickExceedsReservation;
 use App\Inventory\Domain\Exception\ReservationNotActive;
 use App\Inventory\Domain\Exception\ReservationQuantityNotPositive;
 use App\Shared\Domain\AggregateRoot;
@@ -83,6 +84,52 @@ final class StockReservation extends AggregateRoot
 
         foreach ($allocations as $allocation) {
             $this->allocations = $this->merged($this->allocations, $allocation);
+        }
+    }
+
+    /**
+     * A pick: some of the units a stock item covers have been taken to another stock item, where they
+     * stay promised to the reservation, and some could not be found and are given up. The reservation
+     * keeps covering what was moved, and covers that much less of what was not found, which becomes
+     * the shortage of the demand (STK-11).
+     *
+     * @throws ReservationNotActive   STK-13
+     * @throws PickExceedsReservation STK-02
+     */
+    public function shift(StockItemId $from, ?StockItemId $to, Quantity $moved, Quantity $dropped): void
+    {
+        if (ReservationStatus::Active !== $this->status) {
+            throw ReservationNotActive::forId($this->id);
+        }
+
+        $leaving = $moved->plus($dropped);
+        $held = Quantity::zero();
+        foreach ($this->allocations as $allocation) {
+            if ($allocation->stockItemId->equals($from)) {
+                $held = $allocation->quantity;
+            }
+        }
+        if ($leaving->units > $held->units) {
+            throw PickExceedsReservation::of($leaving->units, $held->units);
+        }
+
+        $remaining = [];
+        foreach ($this->allocations as $allocation) {
+            if (!$allocation->stockItemId->equals($from)) {
+                $remaining[] = $allocation;
+
+                continue;
+            }
+
+            $left = $allocation->quantity->minus($leaving);
+            if (!$left->isZero()) {
+                $remaining[] = new Allocation($allocation->stockItemId, $left);
+            }
+        }
+
+        $this->allocations = $remaining;
+        if ($to instanceof StockItemId && !$moved->isZero()) {
+            $this->allocations = $this->merged($this->allocations, new Allocation($to, $moved));
         }
     }
 

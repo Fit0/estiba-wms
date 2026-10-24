@@ -49,6 +49,7 @@ final readonly class PickRequests
                         $order->id(),
                         $line->lineNumber,
                         $line->productId,
+                        $held->stockItemId,
                         $place->id,
                         $place->code,
                         $place->zonePickSequence,

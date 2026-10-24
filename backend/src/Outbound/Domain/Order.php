@@ -6,6 +6,7 @@ namespace App\Outbound\Domain;
 
 use App\Outbound\Domain\Event\OrderAllocated;
 use App\Outbound\Domain\Event\OrderCancelled;
+use App\Outbound\Domain\Event\OrderPicked;
 use App\Outbound\Domain\Event\OrderRegistered;
 use App\Outbound\Domain\Exception\AllocationExceedsOrdered;
 use App\Outbound\Domain\Exception\BackorderNotApplicable;
@@ -13,9 +14,12 @@ use App\Outbound\Domain\Exception\InvalidOrderedQuantity;
 use App\Outbound\Domain\Exception\InvalidOrderLines;
 use App\Outbound\Domain\Exception\OrderAlreadyCancelled;
 use App\Outbound\Domain\Exception\OrderAlreadyInWave;
+use App\Outbound\Domain\Exception\OrderAlreadyPicked;
 use App\Outbound\Domain\Exception\OrderLineNotFound;
+use App\Outbound\Domain\Exception\OrderNotInWave;
 use App\Outbound\Domain\Exception\OrderNotWaveable;
 use App\Outbound\Domain\Exception\OrderReferenceAlreadyUsed;
+use App\Outbound\Domain\Exception\PickedExceedsAllocated;
 use App\Outbound\Domain\Exception\ProductNotOrderable;
 use App\Shared\Domain\AggregateRoot;
 use App\Shared\Domain\TenantId;
@@ -131,10 +135,14 @@ final class Order extends AggregateRoot
      * @return list<ReservationId>
      *
      * @throws OrderAlreadyCancelled OUT-04
+     * @throws OrderAlreadyPicked    when its goods are already off the shelves
      */
     public function cancel(\DateTimeImmutable $at): array
     {
         $this->assertNotCancelled();
+        if (OrderStatus::Picked === $this->status) {
+            throw OrderAlreadyPicked::forReference($this->reference);
+        }
 
         $reservations = [];
         foreach ($this->lines as $line) {
@@ -203,6 +211,35 @@ final class Order extends AggregateRoot
 
         $this->waveId = null;
         $this->status = $this->statusOfLines();
+    }
+
+    /**
+     * Units were picked for a line, and some that were allocated were not found. Those are no longer
+     * allocated: the shortage of the line grows, and the customer's backorder with it. The order is
+     * picked when everything that is still allocated has been picked.
+     *
+     * @throws OrderNotInWave         when the order is not in a wave on the floor
+     * @throws OrderLineNotFound
+     * @throws PickedExceedsAllocated OUT-03
+     */
+    public function recordPick(int $lineNumber, int $picked, int $notFound, \DateTimeImmutable $at): void
+    {
+        if (OrderStatus::InWave !== $this->status) {
+            throw OrderNotInWave::forReference($this->reference);
+        }
+
+        $position = $this->positionOf($lineNumber);
+        $line = $this->lines[$position]->withPick($picked, $notFound);
+        if ($line->pickedUnits > $line->allocatedUnits) {
+            throw PickedExceedsAllocated::forLine($lineNumber, $line->pickedUnits, $line->allocatedUnits);
+        }
+
+        $this->lines = array_map(static fn (OrderLine $existing): OrderLine => $existing->lineNumber === $lineNumber ? $line : $existing, $this->lines);
+
+        if ($this->everyLineIsPicked()) {
+            $this->status = OrderStatus::Picked;
+            $this->record(new OrderPicked($this->id, $this->tenantId, $at));
+        }
     }
 
     /**
@@ -330,6 +367,11 @@ final class Order extends AggregateRoot
         }
 
         return $lines;
+    }
+
+    private function everyLineIsPicked(): bool
+    {
+        return array_all($this->lines, static fn ($line) => $line->isFullyPicked());
     }
 
     private function positionOf(int $lineNumber): int

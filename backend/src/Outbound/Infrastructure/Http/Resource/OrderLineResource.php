@@ -14,6 +14,7 @@ final readonly class OrderLineResource
         public int $orderedUnits,
         public int $allocatedUnits,
         public int $shortageUnits,
+        public int $pickedUnits,
         public ?string $reservationId,
     ) {
     }
@@ -26,6 +27,7 @@ final readonly class OrderLineResource
             $line->orderedUnits,
             $line->allocatedUnits,
             $line->shortageUnits(),
+            $line->pickedUnits,
             $line->reservationId?->value,
         );
     }

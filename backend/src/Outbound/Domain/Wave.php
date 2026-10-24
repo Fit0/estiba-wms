@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Outbound\Domain;
 
 use App\Outbound\Domain\Event\WaveCancelled;
+use App\Outbound\Domain\Event\WaveCompleted;
 use App\Outbound\Domain\Event\WaveCreated;
 use App\Outbound\Domain\Event\WaveReleased;
 use App\Outbound\Domain\Exception\InvalidPickList;
 use App\Outbound\Domain\Exception\InvalidWaveOrders;
 use App\Outbound\Domain\Exception\WaveAlreadyCancelled;
+use App\Outbound\Domain\Exception\WaveAlreadyCompleted;
 use App\Outbound\Domain\Exception\WaveAlreadyReleased;
 use App\Outbound\Domain\Exception\WaveWarehouseMismatch;
 use App\Shared\Domain\AggregateRoot;
@@ -28,6 +30,8 @@ final class Wave extends AggregateRoot
     private WaveStatus $status = WaveStatus::Planned;
 
     private ?\DateTimeImmutable $releasedAt = null;
+
+    private ?\DateTimeImmutable $completedAt = null;
 
     /** @var list<PickListId> */
     private array $pickListIds = [];
@@ -139,6 +143,38 @@ final class Wave extends AggregateRoot
     }
 
     /**
+     * The wave is complete when every one of its pick lists is completed or cancelled, and one at
+     * least is completed (OUT-08). It is asked after each list that finishes, and a wave that is not
+     * on the floor, or not done yet, stays as it is.
+     *
+     * @param list<PickListStatus> $pickLists the status of every pick list of the wave
+     */
+    public function completeWhenDone(array $pickLists, \DateTimeImmutable $at): void
+    {
+        if (WaveStatus::Released !== $this->status || [] === $pickLists) {
+            return;
+        }
+
+        $anyCompleted = false;
+        foreach ($pickLists as $status) {
+            if (PickListStatus::Completed === $status) {
+                $anyCompleted = true;
+
+                continue;
+            }
+            if (PickListStatus::Cancelled !== $status) {
+                return;
+            }
+        }
+
+        if ($anyCompleted) {
+            $this->status = WaveStatus::Completed;
+            $this->completedAt = $at;
+            $this->record(new WaveCompleted($this->id, $this->tenantId, $at));
+        }
+    }
+
+    /**
      * Calls the wave off, planned or on the floor. It returns its orders, for the caller to free.
      *
      * @return list<OrderId>
@@ -149,6 +185,9 @@ final class Wave extends AggregateRoot
     {
         if (WaveStatus::Cancelled === $this->status) {
             throw WaveAlreadyCancelled::forId($this->id->value);
+        }
+        if (WaveStatus::Completed === $this->status) {
+            throw WaveAlreadyCompleted::forId($this->id->value);
         }
 
         $orderIds = $this->orderIds;
@@ -204,11 +243,17 @@ final class Wave extends AggregateRoot
         return $this->releasedAt;
     }
 
+    public function completedAt(): ?\DateTimeImmutable
+    {
+        return $this->completedAt;
+    }
+
     private function assertPlanned(): void
     {
         match ($this->status) {
             WaveStatus::Released => throw WaveAlreadyReleased::forId($this->id->value),
             WaveStatus::Cancelled => throw WaveAlreadyCancelled::forId($this->id->value),
+            WaveStatus::Completed => throw WaveAlreadyCompleted::forId($this->id->value),
             WaveStatus::Planned => null,
         };
     }

@@ -62,6 +62,6 @@ final readonly class WaveProvider implements ProviderInterface
         }
 
         return WaveStatus::tryFrom($request->query->getString('status'))
-            ?? throw new BadRequestHttpException('The status filter must be planned, released or cancelled.');
+            ?? throw new BadRequestHttpException('The status filter must be planned, released, completed or cancelled.');
     }
 }
