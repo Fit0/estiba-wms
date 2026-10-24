@@ -10,7 +10,11 @@
         <id name="id" type="pick_list_id"/>
         <field name="tenantId" column="tenant_id" type="tenant_id"/>
         <field name="waveId" column="wave_id" type="wave_id"/>
-        <field name="status" enum-type="App\Outbound\Domain\PickListStatus" length="10"/>
+        <field name="status" enum-type="App\Outbound\Domain\PickListStatus" length="12"/>
+        <!-- OUT-12: the one operator who walks the list. -->
+        <field name="operatorId" column="operator_id" type="outbound_operator_id" nullable="true"/>
+        <field name="startedAt" column="started_at" type="datetime_immutable" nullable="true"/>
+        <field name="completedAt" column="completed_at" type="datetime_immutable" nullable="true"/>
         <field name="lines" type="outbound_pick_lines"/>
         <field name="createdAt" column="created_at" type="datetime_immutable"/>
     </entity>

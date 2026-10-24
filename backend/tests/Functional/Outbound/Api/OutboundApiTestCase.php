@@ -30,6 +30,10 @@ abstract class OutboundApiTestCase extends ApiTestCase
 
     protected string $otherWarehouseId;
 
+    protected const string SHIRT_GTIN = '8412345678905';
+
+    protected const string YOGHURT_GTIN = '8412345678929';
+
     protected string $shirtId;
 
     /** Tracked by lot and expiry date, and it must reach the customer with 30 days left. */
@@ -43,6 +47,8 @@ abstract class OutboundApiTestCase extends ApiTestCase
 
     protected string $dockId;
 
+    protected string $stagingId;
+
     protected string $otherWarehouseLocationId;
 
     /** The zone of the main warehouse, for tests that need more locations. */
@@ -53,8 +59,8 @@ abstract class OutboundApiTestCase extends ApiTestCase
     {
         parent::setUp();
 
-        $this->shirtId = $this->product('CAM-001');
-        $this->yoghurtId = $this->product('YOG-001', ['trackedByLot' => true, 'trackedByExpiry' => true, 'minShelfLifeAtShipmentDays' => 30]);
+        $this->shirtId = $this->product('CAM-001', gtin: self::SHIRT_GTIN);
+        $this->yoghurtId = $this->product('YOG-001', ['trackedByLot' => true, 'trackedByExpiry' => true, 'minShelfLifeAtShipmentDays' => 30], self::YOGHURT_GTIN);
 
         $this->warehouseId = $this->id($this->request('POST', '/api/warehouses', ['code' => 'ZGZ1', 'name' => 'Zaragoza']));
         $zone = $this->id($this->request('POST', '/api/warehouses/'.$this->warehouseId.'/zones', ['code' => 'ALM', 'name' => 'Almacén', 'storageClass' => 'ambient']));
@@ -63,6 +69,7 @@ abstract class OutboundApiTestCase extends ApiTestCase
         $this->secondReserveId = $this->location($this->warehouseId, $zone, 'A-01-02', 'reserve');
         $this->pickFaceId = $this->location($this->warehouseId, $zone, 'B-01-01', 'pick_face');
         $this->dockId = $this->location($this->warehouseId, $zone, 'D-01-01', 'dock');
+        $this->stagingId = $this->location($this->warehouseId, $zone, 'E-01-01', 'staging');
 
         $this->otherWarehouseId = $this->id($this->request('POST', '/api/warehouses', ['code' => 'MAD1', 'name' => 'Madrid']));
         $otherZone = $this->id($this->request('POST', '/api/warehouses/'.$this->otherWarehouseId.'/zones', ['code' => 'ALM', 'name' => 'Almacén', 'storageClass' => 'ambient']));
@@ -170,9 +177,9 @@ abstract class OutboundApiTestCase extends ApiTestCase
     /**
      * @param array<string, mixed> $tracking
      */
-    private function product(string $sku, array $tracking = []): string
+    private function product(string $sku, array $tracking = [], ?string $gtin = null): string
     {
-        return $this->id($this->request('POST', '/api/products', $tracking + [
+        $id = $this->id($this->request('POST', '/api/products', $tracking + [
             'sku' => $sku,
             'name' => 'Producto '.$sku,
             'baseUnit' => 'each',
@@ -182,6 +189,12 @@ abstract class OutboundApiTestCase extends ApiTestCase
             'heightMm' => 30,
             'weightGrams' => 250,
         ]));
+
+        if (null !== $gtin) {
+            $this->request('POST', '/api/products/'.$id.'/gtins', ['gtin' => $gtin]);
+        }
+
+        return $id;
     }
 
     /**

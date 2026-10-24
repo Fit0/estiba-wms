@@ -50,6 +50,7 @@ security:
         - { path: '^/api/asns/[^/]+/receipts$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/receipts/[^/]+/(items|close)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/putaway-tasks/[^/]+/(confirm|split)$', methods: [POST], roles: ROLE_OPERATOR }
+        - { path: '^/api/pick-lists/[^/]+/(start|lines/[0-9]+/confirm)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
         - { path: ^/api, roles: ROLE_SUPERVISOR }
 

@@ -21,6 +21,9 @@ enum OrderStatus: string
     /** Released to the floor with a wave, or waiting for it to be released (OUT-05). */
     case InWave = 'in_wave';
 
+    /** Everything that was allocated has been picked and waits for packing. */
+    case Picked = 'picked';
+
     /** The customer will not receive it. Its reservations are released (OUT-04). */
     case Cancelled = 'cancelled';
 }

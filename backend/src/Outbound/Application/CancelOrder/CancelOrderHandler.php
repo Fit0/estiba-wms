@@ -45,7 +45,9 @@ final readonly class CancelOrderHandler implements CommandHandler
                 throw OrderAlreadyInReleasedWave::forReference($order->reference());
             }
 
-            $wave->removeOrder($order->id());
+            if (WaveStatus::Planned === $wave->status()) {
+                $wave->removeOrder($order->id());
+            }
         }
 
         foreach ($order->cancel($this->clock->now()) as $reservationId) {

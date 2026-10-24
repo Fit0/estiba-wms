@@ -197,6 +197,8 @@ flowchart TB
 | `ConfirmPickLine` | Operator scans location, product and lot | `PickList` | The scan does not match the line, or more is picked than asked |
 | `TransferStock` | Policy on `PutawayConfirmed` | `StockItem` | The source would go below zero |
 
+In the code, `ConfirmPickLine` moves the picked units to staging at once, one stop at a time, and not in a policy when the list completes ([ADR 0016](../adr/0016-confirming-picks-and-moving-the-stock-to-staging.md)). A short pick gives up the units that were not found: they stop being promised and become part of the shortage of the order line, and the policy below is left to a supervisor, who can allocate the order again and put it in another wave.
+
 On a short pick the policy first tries to allocate the missing quantity from other stock. If there is none, the order line keeps the missing quantity as a backorder and the rest of the order continues.
 
 ## 3. Packing and dispatch

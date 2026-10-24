@@ -59,6 +59,7 @@ final readonly class WaveResource
         public array $pickListIds,
         public string $createdAt,
         public ?string $releasedAt,
+        public ?string $completedAt,
     ) {
     }
 
@@ -72,6 +73,7 @@ final readonly class WaveResource
             array_map(static fn (PickListId $id): string => $id->value, $wave->pickListIds()),
             $wave->createdAt()->format(\DATE_ATOM),
             $wave->releasedAt()?->format(\DATE_ATOM),
+            $wave->completedAt()?->format(\DATE_ATOM),
         );
     }
 }

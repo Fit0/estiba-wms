@@ -11,6 +11,7 @@ use App\Outbound\Domain\OrderStatus;
 use App\Outbound\Domain\PickList;
 use App\Outbound\Domain\PickListId;
 use App\Outbound\Domain\PickListStatus;
+use App\Outbound\Domain\ShortPickReason;
 use App\Outbound\Domain\Wave;
 use App\Outbound\Domain\WaveId;
 use App\Outbound\Domain\WaveStatus;
@@ -177,6 +178,82 @@ final class DoctrineWaveRepositoryTest extends PersistenceTestCase
         self::assertInstanceOf(Order::class, $loaded);
         self::assertNull($loaded->waveId());
         self::assertFalse($loaded->backorderAccepted());
+    }
+
+    public function testSavesWhoWalksAPickListAndHowFarTheyGot(): void
+    {
+        $operator = OutboundMother::operatorId();
+        $pickList = OutboundMother::pickList([
+            OutboundMother::pickRequest('A-01-01', units: 3),
+            OutboundMother::pickRequest('A-01-02', pickSequence: 20, units: 2),
+        ]);
+        $pickList->start($operator, new \DateTimeImmutable('2026-10-25T08:00:00+00:00'));
+        $pickList->confirmLine(1, OutboundMother::scanFor($pickList->lines()[0]), 1, ShortPickReason::fromString('Solo había una'), $operator, OutboundMother::at());
+        $this->pickLists->save($pickList);
+        $this->flushAndForget();
+
+        $loaded = $this->pickLists->find($pickList->id());
+
+        self::assertInstanceOf(PickList::class, $loaded);
+        self::assertSame(PickListStatus::InProgress, $loaded->status());
+        self::assertSame($operator->value, $loaded->operatorId()?->value);
+        self::assertEquals(new \DateTimeImmutable('2026-10-25T08:00:00+00:00'), $loaded->startedAt());
+        self::assertNull($loaded->completedAt());
+        self::assertTrue($loaded->lines()[0]->confirmed);
+        self::assertSame(1, $loaded->lines()[0]->quantityPicked);
+        self::assertSame('Solo había una', $loaded->lines()[0]->shortReason?->value);
+        self::assertSame(2, $loaded->lines()[0]->missingUnits());
+        self::assertFalse($loaded->lines()[1]->confirmed);
+        self::assertSame($pickList->lines()[0]->stockItemId, $loaded->lines()[0]->stockItemId);
+        self::assertSame(1, $loaded->unitsPicked());
+    }
+
+    public function testASavedCompletedPickListStaysCompleted(): void
+    {
+        $operator = OutboundMother::operatorId();
+        $pickList = OutboundMother::pickList([OutboundMother::pickRequest('A-01-01', units: 3)]);
+        $pickList->start($operator, OutboundMother::at());
+        $pickList->confirmLine(1, OutboundMother::scanFor($pickList->lines()[0]), 3, null, $operator, OutboundMother::at());
+        $this->pickLists->save($pickList);
+        $this->flushAndForget();
+
+        $loaded = $this->pickLists->find($pickList->id());
+
+        self::assertInstanceOf(PickList::class, $loaded);
+        self::assertSame(PickListStatus::Completed, $loaded->status());
+        self::assertEquals(OutboundMother::at(), $loaded->completedAt());
+    }
+
+    public function testSavesACompletedWave(): void
+    {
+        $order = OutboundMother::order();
+        $wave = Wave::plan(WaveId::fromString(Ids::next()), $order->tenantId(), [$order], OutboundMother::at());
+        $wave->release([PickListId::fromString(Ids::next())], OutboundMother::at());
+        $wave->completeWhenDone([PickListStatus::Completed], new \DateTimeImmutable('2026-10-25T12:00:00+00:00'));
+        $this->waves->save($wave);
+        $this->flushAndForget();
+
+        $loaded = $this->waves->find($wave->id());
+
+        self::assertInstanceOf(Wave::class, $loaded);
+        self::assertSame(WaveStatus::Completed, $loaded->status());
+        self::assertEquals(new \DateTimeImmutable('2026-10-25T12:00:00+00:00'), $loaded->completedAt());
+    }
+
+    public function testAnOrderRemembersWhatWasPickedAndWhatWasNotFound(): void
+    {
+        $order = OutboundMother::orderInWave([10, 4]);
+        $order->recordPick(1, 7, 3, OutboundMother::at());
+        $this->orders->save($order);
+        $this->flushAndForget();
+
+        $loaded = $this->orders->find($order->id());
+
+        self::assertInstanceOf(Order::class, $loaded);
+        self::assertSame(7, $loaded->lines()[0]->pickedUnits);
+        self::assertSame(7, $loaded->lines()[0]->allocatedUnits);
+        self::assertSame(0, $loaded->lines()[1]->pickedUnits);
+        self::assertSame(3, $loaded->shortageUnits());
     }
 
     private function plannedWave(TenantId $tenantId, string $at): Wave

@@ -25,6 +25,8 @@ final readonly class LocationSnapshot
 
     public const string TYPE_QUARANTINE = 'quarantine';
 
+    public const string TYPE_STAGING = 'staging';
+
     /**
      * @param list<ProductFamily> $families
      */

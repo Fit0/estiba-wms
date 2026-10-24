@@ -5,11 +5,13 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Outbound\Domain;
 
 use App\Outbound\Domain\Event\WaveCancelled;
+use App\Outbound\Domain\Event\WaveCompleted;
 use App\Outbound\Domain\Event\WaveCreated;
 use App\Outbound\Domain\Event\WaveReleased;
 use App\Outbound\Domain\Order;
 use App\Outbound\Domain\OrderId;
 use App\Outbound\Domain\PickListId;
+use App\Outbound\Domain\PickListStatus;
 use App\Outbound\Domain\Wave;
 use App\Outbound\Domain\WaveId;
 use App\Outbound\Domain\WaveStatus;
@@ -169,6 +171,77 @@ final class WaveTest extends TestCase
         self::assertDomainError('outbound.wave_already_cancelled', $error, static fn (): array => $wave->cancel(OutboundMother::at()));
         self::assertDomainError('outbound.wave_already_cancelled', $error, static fn () => $wave->assertReleasable());
         self::assertDomainError('outbound.wave_already_cancelled', $error, static fn () => $wave->removeOrder($order->id()));
+    }
+
+    // OUT-08
+    public function testIsCompleteWhenEveryPickListIsCompletedOrCancelled(): void
+    {
+        $wave = $this->releasedWave();
+        $wave->pullEvents();
+
+        $wave->completeWhenDone([PickListStatus::Completed, PickListStatus::Cancelled, PickListStatus::Completed], new \DateTimeImmutable('2026-10-25T12:00:00+00:00'));
+
+        self::assertSame(WaveStatus::Completed, $wave->status());
+        self::assertEquals(new \DateTimeImmutable('2026-10-25T12:00:00+00:00'), $wave->completedAt());
+        self::assertInstanceOf(WaveCompleted::class, $wave->pullEvents()[0]);
+    }
+
+    // OUT-08
+    public function testIsNotCompleteWhileAPickListIsStillOpen(): void
+    {
+        $wave = $this->releasedWave();
+
+        foreach ([PickListStatus::Generated, PickListStatus::InProgress] as $open) {
+            $wave->completeWhenDone([PickListStatus::Completed, $open], OutboundMother::at());
+            self::assertSame(WaveStatus::Released, $wave->status());
+        }
+    }
+
+    public function testAWaveWhoseListsAreAllCancelledIsNotCompleted(): void
+    {
+        $wave = $this->releasedWave();
+
+        $wave->completeWhenDone([PickListStatus::Cancelled, PickListStatus::Cancelled], OutboundMother::at());
+
+        self::assertSame(WaveStatus::Released, $wave->status());
+    }
+
+    public function testAWaveThatIsNotOnTheFloorIsNotCompleted(): void
+    {
+        $order = OutboundMother::order();
+        $planned = $this->plan([$order], $order);
+
+        $planned->completeWhenDone([PickListStatus::Completed], OutboundMother::at());
+
+        self::assertSame(WaveStatus::Planned, $planned->status());
+    }
+
+    public function testNoPickListsIsNotDone(): void
+    {
+        $wave = $this->releasedWave();
+
+        $wave->completeWhenDone([], OutboundMother::at());
+
+        self::assertSame(WaveStatus::Released, $wave->status());
+    }
+
+    public function testACompletedWaveIsFinished(): void
+    {
+        $wave = $this->releasedWave();
+        $wave->completeWhenDone([PickListStatus::Completed], OutboundMother::at());
+        $error = ['id' => $wave->id()->value];
+
+        self::assertDomainError('outbound.wave_already_completed', $error, static fn (): array => $wave->cancel(OutboundMother::at()));
+        self::assertDomainError('outbound.wave_already_completed', $error, static fn () => $wave->assertReleasable());
+    }
+
+    private function releasedWave(): Wave
+    {
+        $order = OutboundMother::order();
+        $wave = $this->plan([$order], $order);
+        $wave->release([PickListId::fromString(Ids::next())], OutboundMother::at());
+
+        return $wave;
     }
 
     /**

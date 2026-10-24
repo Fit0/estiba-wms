@@ -17,6 +17,7 @@ final readonly class PickRequest
         public OrderId $orderId,
         public int $orderLineNumber,
         public ProductId $productId,
+        public string $stockItemId,
         public string $locationId,
         public string $locationCode,
         public int $zonePickSequence,

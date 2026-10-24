@@ -388,7 +388,7 @@ final class WaveApiTest extends OutboundApiTestCase
         self::assertCount(2, $this->request('GET', '/api/waves'));
         self::assertSame([$this->id($planned)], array_column($this->request('GET', '/api/waves', query: ['status' => 'planned']), 'id'));
         self::assertSame([$this->id($cancelled)], array_column($this->request('GET', '/api/waves', query: ['status' => 'cancelled']), 'id'));
-        $this->assertProblem(400, 'shared.request_malformed', $this->request('GET', '/api/waves', query: ['status' => 'completed']));
+        $this->assertProblem(400, 'shared.request_malformed', $this->request('GET', '/api/waves', query: ['status' => 'finished']));
     }
 
     public function testAWaveAndItsPickListsAreHiddenFromAnotherTenant(): void

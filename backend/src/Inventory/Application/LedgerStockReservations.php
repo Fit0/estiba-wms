@@ -9,23 +9,32 @@ use App\Catalog\Application\Contract\ProductSnapshot;
 use App\Inventory\Application\Contract\AllocationRequest;
 use App\Inventory\Application\Contract\AllocationResult;
 use App\Inventory\Application\Contract\ReservedStock;
+use App\Inventory\Application\Contract\StockPick;
 use App\Inventory\Application\Contract\StockReservations;
 use App\Inventory\Domain\AllocationPlanner;
 use App\Inventory\Domain\AllocationStrategy;
+use App\Inventory\Domain\AuthorId;
 use App\Inventory\Domain\Exception\ProductNotAllocatable;
 use App\Inventory\Domain\Exception\ReservationNotActive;
 use App\Inventory\Domain\Exception\ReservationNotFound;
 use App\Inventory\Domain\Exception\ReservationRequestChanged;
 use App\Inventory\Domain\Exception\StockItemNotFound;
+use App\Inventory\Domain\LocationId;
+use App\Inventory\Domain\MovementReference;
 use App\Inventory\Domain\ProductId;
 use App\Inventory\Domain\Quantity;
 use App\Inventory\Domain\ReservationId;
 use App\Inventory\Domain\ReservationReference;
 use App\Inventory\Domain\ReservationStatus;
 use App\Inventory\Domain\StockItem;
+use App\Inventory\Domain\StockItemId;
 use App\Inventory\Domain\StockItemRepository;
+use App\Inventory\Domain\StockKey;
+use App\Inventory\Domain\StockMovementId;
 use App\Inventory\Domain\StockReservation;
 use App\Inventory\Domain\StockReservationRepository;
+use App\Inventory\Domain\StockStatus;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\TenantId;
 use App\Warehouse\Application\Contract\LocationDirectory;
@@ -53,6 +62,7 @@ final readonly class LedgerStockReservations implements StockReservations
         private LocationDirectory $locations,
         private AllocationPlanner $planner,
         private IdGenerator $ids,
+        private EventBus $events,
     ) {
     }
 
@@ -78,10 +88,7 @@ final readonly class LedgerStockReservations implements StockReservations
     #[\Override]
     public function release(TenantId $tenantId, string $reservationId): void
     {
-        $reservation = $this->reservations->find(ReservationId::fromString($reservationId));
-        if (!$reservation instanceof StockReservation || !$reservation->tenantId()->equals($tenantId)) {
-            throw ReservationNotFound::withId($reservationId);
-        }
+        $reservation = $this->reservationOf($tenantId, $reservationId);
 
         // Nothing comes back the second time (STK-14), so the stock items are only freed once.
         foreach ($reservation->release() as $allocation) {
@@ -94,12 +101,52 @@ final readonly class LedgerStockReservations implements StockReservations
     }
 
     #[\Override]
+    public function pick(StockPick $pick): void
+    {
+        $reservation = $this->reservationOf($pick->tenantId, $pick->reservationId);
+        $source = $this->stockItems->find(StockItemId::fromString($pick->stockItemId));
+        if (!$source instanceof StockItem || !$source->tenantId()->equals($pick->tenantId)) {
+            throw StockItemNotFound::forId($pick->stockItemId);
+        }
+
+        $units = Quantity::of($pick->units);
+        $short = Quantity::of($pick->shortUnits);
+        $destination = $units->isZero() ? null : $this->stockItemFor($pick->tenantId, new StockKey(
+            $source->key()->productId,
+            LocationId::fromString($pick->toLocationId),
+            $source->key()->lot,
+            $source->key()->expiryDate,
+            StockStatus::Available,
+        ));
+
+        // The reservation checks that it holds that much in the stock item before anything changes.
+        $reservation->shift($source->id(), $destination?->id(), $units, $short);
+
+        $source->unreserve($units->plus($short));
+        if ($destination instanceof StockItem) {
+            $source->transferTo(
+                $destination,
+                $units,
+                StockMovementId::fromString($this->ids->next()),
+                StockMovementId::fromString($this->ids->next()),
+                MovementReference::fromString($pick->reference),
+                AuthorId::fromString($pick->authorId),
+                $pick->at,
+            );
+            // The units are still promised to the demand: now they wait where they were taken.
+            $destination->reserve($units);
+            $this->stockItems->save($destination);
+        }
+
+        $this->stockItems->save($source);
+        $this->events->publish(...$source->pullEvents(), ...($destination instanceof StockItem ? $destination->pullEvents() : []));
+        $this->reservations->save($reservation);
+    }
+
+    #[\Override]
     public function stockOf(TenantId $tenantId, string $reservationId): array
     {
-        $reservation = $this->reservations->find(ReservationId::fromString($reservationId));
-        if (!$reservation instanceof StockReservation || !$reservation->tenantId()->equals($tenantId)) {
-            throw ReservationNotFound::withId($reservationId);
-        }
+        $reservation = $this->reservationOf($tenantId, $reservationId);
 
         $held = [];
         foreach ($reservation->allocations() as $allocation) {
@@ -110,6 +157,28 @@ final readonly class LedgerStockReservations implements StockReservations
         }
 
         return $held;
+    }
+
+    /**
+     * @throws ReservationNotFound when the tenant has no such reservation
+     */
+    private function reservationOf(TenantId $tenantId, string $reservationId): StockReservation
+    {
+        $reservation = $this->reservations->find(ReservationId::fromString($reservationId));
+        if (!$reservation instanceof StockReservation || !$reservation->tenantId()->equals($tenantId)) {
+            throw ReservationNotFound::withId($reservationId);
+        }
+
+        return $reservation;
+    }
+
+    /**
+     * The stock item of the key, or a new one when nothing has been put there yet.
+     */
+    private function stockItemFor(TenantId $tenantId, StockKey $key): StockItem
+    {
+        return $this->stockItems->findByKey($tenantId, $key)
+            ?? StockItem::open(StockItemId::fromString($this->ids->next()), $tenantId, $key);
     }
 
     private function reservationFor(AllocationRequest $request, ProductSnapshot $product): StockReservation

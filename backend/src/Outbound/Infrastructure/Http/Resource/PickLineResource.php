@@ -19,6 +19,8 @@ final readonly class PickLineResource
         public ?string $expiryDate,
         public int $quantityToPick,
         public int $quantityPicked,
+        public bool $confirmed,
+        public ?string $shortReason,
     ) {
     }
 
@@ -35,6 +37,8 @@ final readonly class PickLineResource
             $line->expiryDate?->format('Y-m-d'),
             $line->quantityToPick,
             $line->quantityPicked,
+            $line->confirmed,
+            $line->shortReason?->value,
         );
     }
 }
