@@ -93,6 +93,65 @@ final class StockReservationTest extends TestCase
         self::assertSame(ReservationStatus::Released, $reservation->status());
     }
 
+    // STK-13, STK-16
+    public function testConsumingGivesTheAllocationsToIssueAndHoldsNothing(): void
+    {
+        $reservation = $this->reservation(10);
+        $reservation->allocate([$this->allocation(6), $this->allocation(2)]);
+
+        $held = $reservation->consume();
+
+        self::assertSame([6, 2], array_map(static fn (Allocation $allocation): int => $allocation->quantity->units, $held));
+        self::assertSame(ReservationStatus::Consumed, $reservation->status());
+        self::assertTrue($reservation->allocated()->isZero());
+    }
+
+    // STK-13: the units leave once
+    public function testAReservationIsConsumedOnce(): void
+    {
+        $reservation = $this->reservation(10);
+        $reservation->allocate([$this->allocation(6)]);
+        $reservation->consume();
+
+        self::assertDomainError('inventory.reservation_already_consumed', ['id' => $reservation->id()->value], static fn (): array => $reservation->consume());
+    }
+
+    public function testAReservationThatHoldsNothingCanBeConsumed(): void
+    {
+        $reservation = $this->reservation(10);
+
+        self::assertSame([], $reservation->consume());
+        self::assertSame(ReservationStatus::Consumed, $reservation->status());
+    }
+
+    public function testAReleasedReservationCannotBeConsumed(): void
+    {
+        $reservation = $this->reservation(10);
+        $reservation->allocate([$this->allocation(6)]);
+        $reservation->release();
+
+        self::assertDomainError('inventory.reservation_not_active', ['id' => $reservation->id()->value], static fn (): array => $reservation->consume());
+    }
+
+    // STK-16: units that already left cannot come back
+    public function testAConsumedReservationHasNothingToRelease(): void
+    {
+        $reservation = $this->reservation(10);
+        $reservation->allocate([$this->allocation(6)]);
+        $reservation->consume();
+
+        self::assertSame([], $reservation->release());
+        self::assertSame(ReservationStatus::Consumed, $reservation->status(), 'It stays consumed.');
+    }
+
+    public function testAConsumedReservationTakesNoMoreUnitsAndCannotBePicked(): void
+    {
+        $reservation = $this->reservation(10);
+        $reservation->consume();
+
+        self::assertDomainError('inventory.reservation_not_active', ['id' => $reservation->id()->value], fn () => $reservation->allocate([$this->allocation(1)]));
+    }
+
     public function testAReleasedReservationTakesNoMoreUnits(): void
     {
         $reservation = $this->reservation(10);

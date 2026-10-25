@@ -8,8 +8,8 @@ namespace App\Outbound\Domain;
  * One product of an order, how many units were ordered, how many are reserved for it and how many
  * have been picked.
  *
- * Allocated never exceeds ordered, and picked never exceeds allocated (OUT-03). Shipped quantities arrive
- * with shipping. The reservation that holds the units is Inventory's: the line only remembers its
+ * Allocated never exceeds ordered, picked never exceeds allocated, and shipped never exceeds picked
+ * (OUT-03). The reservation that holds the units is Inventory's: the line only remembers its
  * identifier, so that cancelling the order can release it.
  */
 final readonly class OrderLine
@@ -21,12 +21,13 @@ final readonly class OrderLine
         public int $allocatedUnits = 0,
         public ?ReservationId $reservationId = null,
         public int $pickedUnits = 0,
+        public int $shippedUnits = 0,
     ) {
     }
 
     public function withAllocation(ReservationId $reservationId, int $allocatedUnits): self
     {
-        return new self($this->lineNumber, $this->productId, $this->orderedUnits, $allocatedUnits, $reservationId, $this->pickedUnits);
+        return new self($this->lineNumber, $this->productId, $this->orderedUnits, $allocatedUnits, $reservationId, $this->pickedUnits, $this->shippedUnits);
     }
 
     /**
@@ -35,7 +36,15 @@ final readonly class OrderLine
      */
     public function withPick(int $picked, int $notFound): self
     {
-        return new self($this->lineNumber, $this->productId, $this->orderedUnits, $this->allocatedUnits - $notFound, $this->reservationId, $this->pickedUnits + $picked);
+        return new self($this->lineNumber, $this->productId, $this->orderedUnits, $this->allocatedUnits - $notFound, $this->reservationId, $this->pickedUnits + $picked, $this->shippedUnits);
+    }
+
+    /**
+     * The goods left the warehouse: everything that was picked is shipped, and nothing else (OUT-03).
+     */
+    public function withShipment(): self
+    {
+        return new self($this->lineNumber, $this->productId, $this->orderedUnits, $this->allocatedUnits, $this->reservationId, $this->pickedUnits, $this->pickedUnits);
     }
 
     /**

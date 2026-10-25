@@ -9,6 +9,7 @@ use App\Inbound\Domain\PutawayTask;
 use App\Inbound\Domain\PutawayTaskId;
 use App\Inbound\Domain\PutawayTaskRepository;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 
@@ -18,6 +19,7 @@ final readonly class SplitPutawayTaskHandler implements CommandHandler
         private PutawayTaskLookup $lookup,
         private PutawayTaskRepository $tasks,
         private IdGenerator $ids,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -28,6 +30,8 @@ final readonly class SplitPutawayTaskHandler implements CommandHandler
 
         $newTask = $task->split(PutawayTaskId::fromString($this->ids->next()), $command->units, $this->clock->now());
         $this->tasks->save($newTask);
+
+        $this->events->publish(...$task->pullEvents(), ...$newTask->pullEvents());
 
         return $newTask;
     }

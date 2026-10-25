@@ -9,6 +9,7 @@ use App\Identity\Domain\Exception\UserNotFound;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserRepository;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 
 /**
@@ -18,6 +19,7 @@ final readonly class DisableUserHandler implements CommandHandler
 {
     public function __construct(
         private UserRepository $users,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -30,6 +32,8 @@ final readonly class DisableUserHandler implements CommandHandler
         $user = $this->users->findByEmail(Email::fromString($command->email)) ?? throw UserNotFound::forEmail($command->email);
         $user->disable($this->clock->now());
         $this->users->save($user);
+
+        $this->events->publish(...$user->pullEvents());
 
         return $user;
     }

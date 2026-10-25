@@ -83,4 +83,7 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | SSCC | Código de serie de unidad de envío | 18-digit GS1 code that identifies one parcel or pallet: an extension digit, the GS1 company prefix, a serial and a check digit. Printed as a label, in a GS1-128 barcode. |
 | Parcel label | Etiqueta de bulto | The label stuck on a parcel: who it is for, the order, the weight and the SSCC as a barcode. Printed as ZPL for a Zebra printer or as a PDF. |
 | Shipment | Expedición | The parcels of one order, handed to the carrier. |
+| Dispatch | Despacho | Handing the packed parcels of a shipment to the carrier. The goods leave the warehouse and the stock is issued. |
+| Carrier | Transportista | The company that takes the parcels from the warehouse. |
+| Tracking number | Número de seguimiento | What the carrier gives to follow the parcels on their way. |
 | Dispatch | Salida, despacho | The moment a shipment leaves the warehouse. |

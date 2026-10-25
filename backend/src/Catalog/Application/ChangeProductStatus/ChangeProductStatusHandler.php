@@ -8,12 +8,14 @@ use App\Catalog\Application\ProductLookup;
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductStatus;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 
 final readonly class ChangeProductStatusHandler implements CommandHandler
 {
     public function __construct(
         private ProductLookup $lookup,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -28,6 +30,8 @@ final readonly class ChangeProductStatusHandler implements CommandHandler
             ProductStatus::Active => $product->unblock($at),
             ProductStatus::Discontinued => $product->discontinue($at),
         };
+
+        $this->events->publish(...$product->pullEvents());
 
         return $product;
     }

@@ -6,6 +6,7 @@ namespace App\Inventory\Domain;
 
 use App\Inventory\Domain\Exception\AllocationExceedsRequested;
 use App\Inventory\Domain\Exception\PickExceedsReservation;
+use App\Inventory\Domain\Exception\ReservationAlreadyConsumed;
 use App\Inventory\Domain\Exception\ReservationNotActive;
 use App\Inventory\Domain\Exception\ReservationQuantityNotPositive;
 use App\Shared\Domain\AggregateRoot;
@@ -141,12 +142,37 @@ final class StockReservation extends AggregateRoot
      */
     public function release(): array
     {
-        if (ReservationStatus::Released === $this->status) {
+        // A consumed reservation has nothing to give back: its units left the warehouse (STK-16).
+        if (ReservationStatus::Active !== $this->status) {
             return [];
         }
 
         $held = $this->allocations;
         $this->status = ReservationStatus::Released;
+        $this->allocations = [];
+
+        return $held;
+    }
+
+    /**
+     * The units leave the warehouse with a dispatch. It returns the allocations that were holding
+     * them, for the caller to issue from their stock items. A reservation is consumed once (STK-13).
+     *
+     * @return list<Allocation>
+     *
+     * @throws ReservationAlreadyConsumed STK-13
+     * @throws ReservationNotActive       when it was released
+     */
+    public function consume(): array
+    {
+        match ($this->status) {
+            ReservationStatus::Consumed => throw ReservationAlreadyConsumed::forId($this->id),
+            ReservationStatus::Released => throw ReservationNotActive::forId($this->id),
+            ReservationStatus::Active => null,
+        };
+
+        $held = $this->allocations;
+        $this->status = ReservationStatus::Consumed;
         $this->allocations = [];
 
         return $held;

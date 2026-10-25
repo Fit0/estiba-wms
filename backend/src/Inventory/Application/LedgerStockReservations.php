@@ -9,6 +9,7 @@ use App\Catalog\Application\Contract\ProductSnapshot;
 use App\Inventory\Application\Contract\AllocationRequest;
 use App\Inventory\Application\Contract\AllocationResult;
 use App\Inventory\Application\Contract\ReservedStock;
+use App\Inventory\Application\Contract\StockConsumption;
 use App\Inventory\Application\Contract\StockPick;
 use App\Inventory\Application\Contract\StockReservations;
 use App\Inventory\Domain\AllocationPlanner;
@@ -140,6 +141,27 @@ final readonly class LedgerStockReservations implements StockReservations
 
         $this->stockItems->save($source);
         $this->events->publish(...$source->pullEvents(), ...($destination instanceof StockItem ? $destination->pullEvents() : []));
+        $this->reservations->save($reservation);
+    }
+
+    #[\Override]
+    public function consume(StockConsumption $consumption): void
+    {
+        $reservation = $this->reservationOf($consumption->tenantId, $consumption->reservationId);
+        $reference = MovementReference::fromString($consumption->reference);
+        $author = AuthorId::fromString($consumption->authorId);
+
+        // The reservation says what it holds, and fails first if it was consumed or released.
+        foreach ($reservation->consume() as $allocation) {
+            $stockItem = $this->stockItems->find($allocation->stockItemId) ?? throw StockItemNotFound::forId($allocation->stockItemId->value);
+
+            // The promise ends where the units leave, and only then can they be issued (STK-02).
+            $stockItem->unreserve($allocation->quantity);
+            $stockItem->issue(StockMovementId::fromString($this->ids->next()), $allocation->quantity, $reference, $author, $consumption->at);
+            $this->stockItems->save($stockItem);
+            $this->events->publish(...$stockItem->pullEvents());
+        }
+
         $this->reservations->save($reservation);
     }
 

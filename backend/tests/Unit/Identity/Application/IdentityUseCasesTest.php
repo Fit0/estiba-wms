@@ -119,8 +119,8 @@ final class IdentityUseCasesTest extends TestCase
     public function testDisablesAndEnablesAUser(): void
     {
         $this->registerTenant()(new RegisterTenant('Acme', 'es', 'admin@acme.test', 'correct-horse-battery'));
-        $disable = new DisableUserHandler($this->fakes->users, IdentityFakes::clock());
-        $enable = new EnableUserHandler($this->fakes->users, IdentityFakes::clock());
+        $disable = new DisableUserHandler($this->fakes->users, IdentityFakes::events(), IdentityFakes::clock());
+        $enable = new EnableUserHandler($this->fakes->users, IdentityFakes::events(), IdentityFakes::clock());
 
         self::assertFalse($disable(new DisableUser(' ADMIN@acme.test '))->isActive());
         self::assertTrue($enable(new EnableUser('admin@acme.test'))->isActive());
@@ -128,18 +128,18 @@ final class IdentityUseCasesTest extends TestCase
 
     public function testReportsAUserThatDoesNotExist(): void
     {
-        $disable = new DisableUserHandler($this->fakes->users, IdentityFakes::clock());
+        $disable = new DisableUserHandler($this->fakes->users, IdentityFakes::events(), IdentityFakes::clock());
 
         self::assertDomainError('identity.user_not_found', ['email' => 'nobody@acme.test'], static fn (): User => $disable(new DisableUser('nobody@acme.test')));
     }
 
     private function registerTenant(): RegisterTenantHandler
     {
-        return new RegisterTenantHandler($this->fakes->tenants, $this->fakes->users, IdentityFakes::hasher(), IdentityFakes::ids(), IdentityFakes::clock());
+        return new RegisterTenantHandler($this->fakes->tenants, $this->fakes->users, IdentityFakes::hasher(), IdentityFakes::ids(), IdentityFakes::events(), IdentityFakes::clock());
     }
 
     private function registerUser(): RegisterUserHandler
     {
-        return new RegisterUserHandler($this->fakes->tenants, $this->fakes->users, IdentityFakes::hasher(), IdentityFakes::ids(), IdentityFakes::clock());
+        return new RegisterUserHandler($this->fakes->tenants, $this->fakes->users, IdentityFakes::hasher(), IdentityFakes::ids(), IdentityFakes::events(), IdentityFakes::clock());
     }
 }

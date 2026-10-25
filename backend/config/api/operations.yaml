@@ -230,7 +230,7 @@ operations:
     description: 'The most urgent first, and among them the ones that have to leave first.'
     role: operator
     query:
-      - { name: status, description: 'Only the orders in this status.', enum: [registered, partially_allocated, allocated, in_wave, picked, cancelled] }
+      - { name: status, description: 'Only the orders in this status.', enum: [registered, partially_allocated, allocated, in_wave, picked, shipped, cancelled] }
   'POST /api/orders':
     summary: 'Register an order'
     description: 'The reference is unique in the tenant. Each line names a product that can be ordered and the units. Stock is not reserved yet: use allocate.'
@@ -238,7 +238,7 @@ operations:
     example: { reference: 'PED-2026-1187', warehouseId: '0192f2b4-7c3e-7a10-9d5b-3c1f0a8e6b21', customer: 'Marea Moda Zaragoza', shipTo: { street: 'Calle Mayor 12', postalCode: '50001', city: 'Zaragoza', countryCode: 'ES' }, cutOffAt: '2026-10-28T14:00:00+00:00', priority: 'normal', lines: [{ productId: '0192f2b4-7c3e-7a13-8d5b-3c1f0a8e6b24', units: 24 }] }
   'GET /api/orders/{id}':
     summary: 'Get an order'
-    description: 'With its lines, what is allocated and picked of each, and the shortage.'
+    description: 'With its lines, what is allocated, picked and shipped of each, and the shortage.'
     role: operator
   'POST /api/orders/{id}/allocate':
     summary: 'Reserve stock for an order'
@@ -250,7 +250,7 @@ operations:
     role: supervisor
   'POST /api/orders/{id}/cancel':
     summary: 'Cancel an order'
-    description: 'Releases its reservations. An order in a wave on the floor, or already picked, cannot be cancelled.'
+    description: 'Releases its reservations. An order in a wave on the floor, already picked or shipped, cannot be cancelled.'
     role: supervisor
 
   # ------------------------------------------------------------------ Outbound: waves and picking
@@ -305,7 +305,7 @@ operations:
     summary: 'List the shipments'
     role: operator
     query:
-      - { name: status, description: 'Only the shipments in this status.', enum: [packing, packed] }
+      - { name: status, description: 'Only the shipments in this status.', enum: [packing, packed, dispatched] }
   'POST /api/shipments':
     summary: 'Start packing a picked order'
     description: 'An order has one shipment. Only a picked order with something picked can start one, and what was short picked is not packed.'
@@ -313,7 +313,7 @@ operations:
     example: { orderId: '0192f2b4-7c3e-7a14-8d5b-3c1f0a8e6b2b' }
   'GET /api/shipments/{id}':
     summary: 'Get a shipment'
-    description: 'With what was picked, what is still to pack and the parcels closed.'
+    description: 'With what was picked, what is still to pack, the parcels closed and, once it has gone, the carrier and the date.'
     role: operator
   'POST /api/shipments/{id}/parcels':
     summary: 'Close a parcel'
@@ -324,6 +324,12 @@ operations:
     summary: 'Complete the packing'
     description: 'Every picked unit must be in a parcel. A packed shipment cannot change.'
     role: operator
+
+  'POST /api/shipments/{id}/dispatch':
+    summary: 'Dispatch a packed shipment to a carrier'
+    description: 'Hands the parcels to the carrier. The order is shipped and the stock that waited at staging is issued from the warehouse, in the same transaction. Only a packed shipment can be dispatched, and only once. The tracking number is optional.'
+    role: supervisor
+    example: { carrier: 'SEUR', trackingNumber: 'SE0042261187' }
 
   # ------------------------------------------------------------------ Audit
   'GET /api/audit-log':

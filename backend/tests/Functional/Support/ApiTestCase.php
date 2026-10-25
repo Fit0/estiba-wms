@@ -103,7 +103,10 @@ abstract class ApiTestCase extends WebTestCase
         $tenant = TenantId::fromString($tenantId);
 
         if (!isset($this->tenants[$tenantId])) {
-            $entityManager->persist(Tenant::register($tenant, TenantName::fromString('Tenant '.substr($tenantId, -4)), Language::Spanish, $at));
+            $registered = Tenant::register($tenant, TenantName::fromString('Tenant '.substr($tenantId, -4)), Language::Spanish, $at);
+            // A fixture made by hand, not by a use case: its events are not for anybody.
+            $registered->pullEvents();
+            $entityManager->persist($registered);
             $this->tenants[$tenantId] = true;
         }
 
@@ -116,6 +119,7 @@ abstract class ApiTestCase extends WebTestCase
             new DoctrineUserRepository($entityManager),
             $at,
         );
+        $user->pullEvents();
         $entityManager->persist($user);
         $entityManager->flush();
 

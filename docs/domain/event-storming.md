@@ -237,6 +237,8 @@ Closing a parcel assigns its SSCC and produces its label. In the code a parcel e
 
 ### 3.2 Dispatch
 
+In the code the two policies below are not policies: `DispatchShipment` ships the order and consumes the reservations in its own transaction, so the goods never leave the books apart from the shipment, and the ERP confirmation waits for the ERP integration ([ADR 0020](../adr/0020-dispatching-a-shipment-issues-the-stock.md)).
+
 ```mermaid
 flowchart TB
     supervisor(["Supervisor"]):::actor

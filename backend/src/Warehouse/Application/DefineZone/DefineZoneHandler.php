@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Warehouse\Application\DefineZone;
 
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Warehouse\Application\WarehouseLookup;
@@ -21,6 +22,7 @@ final readonly class DefineZoneHandler implements CommandHandler
         private WarehouseLookup $lookup,
         private WarehouseRepository $warehouses,
         private IdGenerator $ids,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -42,6 +44,8 @@ final readonly class DefineZoneHandler implements CommandHandler
         );
 
         $this->warehouses->save($warehouse);
+
+        $this->events->publish(...$warehouse->pullEvents());
 
         return $warehouse;
     }

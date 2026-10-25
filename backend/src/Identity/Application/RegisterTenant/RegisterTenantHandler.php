@@ -16,6 +16,7 @@ use App\Identity\Domain\User;
 use App\Identity\Domain\UserId;
 use App\Identity\Domain\UserRepository;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\Language;
@@ -32,6 +33,7 @@ final readonly class RegisterTenantHandler implements CommandHandler
         private UserRepository $users,
         private PasswordHasher $hasher,
         private IdGenerator $ids,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -54,6 +56,8 @@ final readonly class RegisterTenantHandler implements CommandHandler
 
         $this->tenants->save($tenant);
         $this->users->save($admin);
+
+        $this->events->publish(...$tenant->pullEvents(), ...$admin->pullEvents());
 
         return new RegisteredTenant($tenant, $admin);
     }

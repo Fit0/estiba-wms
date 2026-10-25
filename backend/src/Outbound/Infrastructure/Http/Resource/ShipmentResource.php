@@ -12,9 +12,11 @@ use ApiPlatform\Metadata\Post;
 use App\Outbound\Domain\Shipment;
 use App\Outbound\Domain\ShipmentStatus;
 use App\Outbound\Infrastructure\Http\Input\CloseParcelInput;
+use App\Outbound\Infrastructure\Http\Input\DispatchShipmentInput;
 use App\Outbound\Infrastructure\Http\Input\StartPackingInput;
 use App\Outbound\Infrastructure\Http\State\CloseParcelProcessor;
 use App\Outbound\Infrastructure\Http\State\CompletePackingProcessor;
+use App\Outbound\Infrastructure\Http\State\DispatchShipmentProcessor;
 use App\Outbound\Infrastructure\Http\State\ShipmentProvider;
 use App\Outbound\Infrastructure\Http\State\StartPackingProcessor;
 
@@ -38,6 +40,8 @@ use App\Outbound\Infrastructure\Http\State\StartPackingProcessor;
             deserialize: false,
             processor: CompletePackingProcessor::class,
         ),
+        // Dispatching hands the parcels to the carrier: the order is shipped and the stock leaves.
+        new Post(uriTemplate: '/shipments/{id}/dispatch', status: 200, input: DispatchShipmentInput::class, read: false, processor: DispatchShipmentProcessor::class),
     ],
 )]
 final readonly class ShipmentResource
@@ -57,6 +61,9 @@ final readonly class ShipmentResource
         public array $parcels,
         public string $startedAt,
         public ?string $packedAt,
+        public ?string $carrier,
+        public ?string $trackingNumber,
+        public ?string $dispatchedAt,
     ) {
     }
 
@@ -72,6 +79,9 @@ final readonly class ShipmentResource
             array_map(ParcelResource::fromDomain(...), $shipment->parcels()),
             $shipment->startedAt()->format(\DATE_ATOM),
             $shipment->packedAt()?->format(\DATE_ATOM),
+            $shipment->carrier(),
+            $shipment->trackingNumber(),
+            $shipment->dispatchedAt()?->format(\DATE_ATOM),
         );
     }
 }

@@ -8,4 +8,5 @@ enum ShipmentStatus: string
 {
     case Packing = 'packing';
     case Packed = 'packed';
+    case Dispatched = 'dispatched';
 }

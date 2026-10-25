@@ -24,6 +24,24 @@ abstract class AggregateRoot
         return $events;
     }
 
+    /**
+     * Whether the aggregate raised events that nobody has taken yet, without taking them.
+     */
+    final public function hasPendingEvents(): bool
+    {
+        return [] !== $this->events;
+    }
+
+    /**
+     * The classes of the events that nobody has taken yet, without taking them.
+     *
+     * @return list<class-string<DomainEvent>>
+     */
+    final public function pendingEventClasses(): array
+    {
+        return array_map(static fn (DomainEvent $event): string => $event::class, $this->events);
+    }
+
     final protected function record(DomainEvent $event): void
     {
         $this->events[] = $event;

@@ -34,6 +34,7 @@ final class OrderLinesType extends JsonRowsType
             'allocated_units' => $item->allocatedUnits,
             'reservation_id' => $item->reservationId?->value,
             'picked_units' => $item->pickedUnits,
+            'shipped_units' => $item->shippedUnits,
         ];
     }
 
@@ -42,6 +43,7 @@ final class OrderLinesType extends JsonRowsType
     {
         $reservationId = $row['reservation_id'] ?? null;
         $picked = $row['picked_units'] ?? 0;
+        $shipped = $row['shipped_units'] ?? 0;
 
         if (!\is_int($row['line_number'] ?? null)
             || !\is_string($row['product_id'] ?? null)
@@ -49,6 +51,7 @@ final class OrderLinesType extends JsonRowsType
             || !\is_int($row['allocated_units'] ?? null)
             || (null !== $reservationId && !\is_string($reservationId))
             || !\is_int($picked)
+            || !\is_int($shipped)
         ) {
             return null;
         }
@@ -60,6 +63,7 @@ final class OrderLinesType extends JsonRowsType
             $row['allocated_units'],
             null === $reservationId ? null : ReservationId::fromString($reservationId),
             $picked,
+            $shipped,
         );
     }
 }

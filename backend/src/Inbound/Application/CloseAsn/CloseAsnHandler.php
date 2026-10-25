@@ -7,12 +7,14 @@ namespace App\Inbound\Application\CloseAsn;
 use App\Inbound\Application\AsnLookup;
 use App\Inbound\Domain\Asn;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 
 final readonly class CloseAsnHandler implements CommandHandler
 {
     public function __construct(
         private AsnLookup $lookup,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -22,6 +24,8 @@ final readonly class CloseAsnHandler implements CommandHandler
         $asn = $this->lookup->get($command->asnId);
 
         $asn->close($this->clock->now());
+
+        $this->events->publish(...$asn->pullEvents());
 
         return $asn;
     }

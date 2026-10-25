@@ -23,12 +23,15 @@ final readonly class SaveTenantHandler
      */
     public function __invoke(SaveTenant $command): bool
     {
-        $this->entityManager->persist(Tenant::register(
+        $tenant = Tenant::register(
             TenantId::fromString($command->tenantId),
             TenantName::fromString('Tenant of a bus test'),
             Language::Spanish,
             new \DateTimeImmutable('2026-10-21T10:00:00+00:00'),
-        ));
+        );
+        // The tenant is only something to write: what this fixture tests is the bus, not its events.
+        $tenant->pullEvents();
+        $this->entityManager->persist($tenant);
 
         if ($command->failAfterFlushing) {
             $this->entityManager->flush();

@@ -8,6 +8,7 @@ use App\Outbound\Domain\Event\OrderAllocated;
 use App\Outbound\Domain\Event\OrderCancelled;
 use App\Outbound\Domain\Event\OrderPicked;
 use App\Outbound\Domain\Event\OrderRegistered;
+use App\Outbound\Domain\Event\OrderShipped;
 use App\Outbound\Domain\Exception\AllocationExceedsOrdered;
 use App\Outbound\Domain\Exception\BackorderNotApplicable;
 use App\Outbound\Domain\Exception\InvalidOrderedQuantity;
@@ -15,8 +16,10 @@ use App\Outbound\Domain\Exception\InvalidOrderLines;
 use App\Outbound\Domain\Exception\OrderAlreadyCancelled;
 use App\Outbound\Domain\Exception\OrderAlreadyInWave;
 use App\Outbound\Domain\Exception\OrderAlreadyPicked;
+use App\Outbound\Domain\Exception\OrderAlreadyShipped;
 use App\Outbound\Domain\Exception\OrderLineNotFound;
 use App\Outbound\Domain\Exception\OrderNotInWave;
+use App\Outbound\Domain\Exception\OrderNotPicked;
 use App\Outbound\Domain\Exception\OrderNotWaveable;
 use App\Outbound\Domain\Exception\OrderReferenceAlreadyUsed;
 use App\Outbound\Domain\Exception\PickedExceedsAllocated;
@@ -140,6 +143,9 @@ final class Order extends AggregateRoot
     public function cancel(\DateTimeImmutable $at): array
     {
         $this->assertNotCancelled();
+        if (OrderStatus::Shipped === $this->status) {
+            throw OrderAlreadyShipped::forReference($this->reference);
+        }
         if (OrderStatus::Picked === $this->status) {
             throw OrderAlreadyPicked::forReference($this->reference);
         }
@@ -245,6 +251,38 @@ final class Order extends AggregateRoot
     /**
      * @throws OrderAlreadyInWave OUT-05
      */
+    /**
+     * The goods left the warehouse: what was picked of every line is shipped (OUT-03). It returns the
+     * reservations of the order, for the caller to consume in the stock.
+     *
+     * @return list<ReservationId>
+     *
+     * @throws OrderAlreadyShipped OUT-25
+     * @throws OrderNotPicked      OUT-25
+     */
+    public function recordShipment(\DateTimeImmutable $at): array
+    {
+        if (OrderStatus::Shipped === $this->status) {
+            throw OrderAlreadyShipped::forReference($this->reference);
+        }
+        if (OrderStatus::Picked !== $this->status) {
+            throw OrderNotPicked::forOrder($this->reference, $this->status->value);
+        }
+
+        $this->lines = array_map(static fn (OrderLine $line): OrderLine => $line->withShipment(), $this->lines);
+        $this->status = OrderStatus::Shipped;
+        $this->record(new OrderShipped($this->id, $this->tenantId, $at));
+
+        $reservations = [];
+        foreach ($this->lines as $line) {
+            if ($line->reservationId instanceof ReservationId) {
+                $reservations[] = $line->reservationId;
+            }
+        }
+
+        return $reservations;
+    }
+
     public function assertNotInWave(): void
     {
         if ($this->waveId instanceof WaveId) {
