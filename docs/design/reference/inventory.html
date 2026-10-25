@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Plus+Jakarta+Sans:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-fixed": "#00174b", "secondary-container": "#3f465c", "surface-dim": "#081425", "on-background": "#d8e3fb", "on-tertiary-fixed": "#002113", "outline": "#8d90a0", "primary-container": "#2563eb", "on-tertiary": "#003824", "surface-variant": "#2a3548", "background": "#081425", "surface-container-high": "#1f2a3c", "surface-tint": "#b4c5ff", "on-surface": "#d8e3fb", "on-secondary-fixed-variant": "#3f465c", "on-secondary-fixed": "#131b2e", "on-secondary": "#283044", "on-tertiary-container": "#bdffdb", "tertiary-container": "#007d55", "surface-container": "#152031", "on-primary-container": "#eeefff", "on-error-container": "#ffdad6", "surface-container-highest": "#2a3548", "primary-fixed-dim": "#b4c5ff", "error": "#ffb4ab", "on-error": "#690005", "secondary": "#bec6e0", "surface-bright": "#2f3a4c", "inverse-surface": "#d8e3fb", "primary-fixed": "#dbe1ff", "inverse-on-surface": "#263143", "surface": "#081425", "on-secondary-container": "#adb4ce", "on-tertiary-fixed-variant": "#005236", "surface-container-low": "#111c2d", "tertiary-fixed-dim": "#4edea3", "secondary-fixed": "#dae2fd", "on-primary": "#002a78", "tertiary": "#4edea3", "inverse-primary": "#0053db", "secondary-fixed-dim": "#bec6e0", "error-container": "#93000a", "tertiary-fixed": "#6ffbbe", "surface-container-lowest": "#040e1f", "on-primary-fixed-variant": "#003ea8", "outline-variant": "#434655", "primary": "#b4c5ff", "on-surface-variant": "#c3c6d7" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-md": "0.75rem", "margin": "1rem", "space-lg": "1rem", "gutter-lg": "1.25rem", "margin-lg": "1.5rem", "space-xs": "0.25rem", "space-sm": "0.5rem", "gutter": "0.75rem", "space-xl": "1.5rem" }, "fontFamily": { "data-mono": ["Inter"], "headline-md": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "label-md": ["Inter"], "body-lg": ["Inter"], "headline-sm": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "body-sm": ["Inter"], "label-sm": ["Inter"], "headline-lg": ["Plus Jakarta Sans"], "body-md": ["Inter"] }, "fontSize": { "data-mono": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" }], "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "headline-sm": ["16px", { "lineHeight": "24px", "fontWeight": "600" }], "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.015em", "fontWeight": "600" }], "body-md": ["13px", { "lineHeight": "18px", "fontWeight": "400" }] } } } }</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-screen w-64 bg-surface-container-low z-40 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col flex-1 min-h-0"><div class="h-14 px-margin-lg flex items-center justify-between bg-surface-container-low"><div class="flex items-center gap-space-sm"><span class="font-headline-sm text-headline-sm text-primary uppercase tracking-wider">NexusWMS</span><span class="font-label-sm text-label-sm px-space-xs py-0.5 bg-surface-container-high text-tertiary rounded">v4.2-PRO</span></div></div><div class="overflow-y-auto flex-1 px-space-md py-space-sm space-y-space-md"><div class="space-y-space-xs"><p class="px-space-sm font-label-sm text-label-sm uppercase tracking-wider text-outline">Principal</p><nav class="space-y-0.5" data-active-classes="bg-primary-container text-on-primary-container font-headline-sm"><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="dashboard-resumen" href="#"><span class="material-symbols-outlined text-lg">dashboard</span><span class="font-body-md text-body-md truncate">Dashboard Resumen</span></a><a aria-current="page" class="flex items-center gap-space-sm px-space-sm py-space-xs rounded transition-colors bg-primary-container text-on-primary-container font-headline-sm" data-path="inventario-y-stock" href="#"><span class="material-symbols-outlined text-lg">inventory_2</span><span class="font-body-md text-body-md truncate">Inventario y Stock</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="busqueda-avanzada-y-trazabilidad" href="#"><span class="material-symbols-outlined text-lg">travel_explore</span><span class="font-body-md text-body-md truncate">Búsqueda & Trazabilidad</span></a></nav></div><div class="space-y-space-xs"><p class="px-space-sm font-label-sm text-label-sm uppercase tracking-wider text-outline">Operaciones</p><nav class="space-y-0.5" data-active-classes="bg-primary-container text-on-primary-container font-headline-sm"><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="entradas-recepciones" href="#"><span class="material-symbols-outlined text-lg">move_to_inbox</span><span class="font-body-md text-body-md truncate">Entradas (Recepciones)</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="salidas-y-picking" href="#"><span class="material-symbols-outlined text-lg">outbox</span><span class="font-body-md text-body-md truncate">Salidas & Picking</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="transferencias-entre-almacenes" href="#"><span class="material-symbols-outlined text-lg">sync_alt</span><span class="font-body-md text-body-md truncate">Transferencias</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="auditoria-conteo-ciclico" href="#"><span class="material-symbols-outlined text-lg">fact_check</span><span class="font-body-md text-body-md truncate">Auditoría / Conteo Cíclico</span></a></nav></div><div class="space-y-space-xs"><p class="px-space-sm font-label-sm text-label-sm uppercase tracking-wider text-outline">Configuración</p><nav class="space-y-0.5" data-active-classes="bg-primary-container text-on-primary-container font-headline-sm"><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="ubicaciones-y-pasillos" href="#"><span class="material-symbols-outlined text-lg">grid_view</span><span class="font-body-md text-body-md truncate">Ubicaciones & Pasillos</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="proveedores-y-clientes" href="#"><span class="material-symbols-outlined text-lg">hub</span><span class="font-body-md text-body-md truncate">Proveedores & Clientes</span></a><a class="flex items-center gap-space-sm px-space-sm py-space-xs rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="ajustes-del-sistema" href="#"><span class="material-symbols-outlined text-lg">settings</span><span class="font-body-md text-body-md truncate">Ajustes del Sistema</span></a></nav></div></div></div><div class="p-space-md bg-surface-container-lowest m-space-sm rounded-lg space-y-space-xs"><div class="flex items-center justify-between text-on-surface"><span class="font-label-sm text-label-sm text-on-surface-variant">Capacidad Ocupada</span><span class="font-data-mono text-data-mono text-primary font-bold">84.6%</span></div><div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden"><div class="bg-primary-container h-full rounded-full" style="width: 84.6%"></div></div><div class="flex items-center justify-between font-label-sm text-label-sm text-outline"><span class="font-data-mono text-data-mono">12.450 / 14.800 m³</span><span class="flex items-center gap-1 font-data-mono text-data-mono text-tertiary"><span class="inline-block w-1.5 h-1.5 rounded-full bg-tertiary"></span>14ms</span></div></div></aside><div class="pl-64 flex flex-col min-h-screen"><header class="fixed top-0 left-64 right-0 z-30 h-14 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="w-full h-14 px-gutter-lg flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md min-w-0"><img alt="NexusWMS Logo" class="h-8 w-auto object-contain flex-shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1VeFdU7OQkXhDmskAm2xFzsM3-wbjWYjchjUAs4cm1HtoSVhPJf74rlzzJjCMHQD6lEyo0nNi0zO0CbsDuSPj2lvjrFaGjaMg9xUvCNbpiCNBkXn3jmVUIr4HSPECtzrfcFJD2WxumWuNCN8G0RgaHrg918PXB9Uu-ttACZC89nknwztqeVKZsDj21jhk9I5Kam9vx7J0k7hpy7gj7slsE22SOocb90wHJts3qhrMJ_"/><div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-1 rounded text-on-surface"><span class="material-symbols-outlined text-sm text-primary">warehouse</span><select class="bg-transparent font-body-sm text-body-sm text-on-surface outline-none cursor-pointer pr-space-xs"><option class="bg-surface-container-high text-on-surface" value="madrid">Hub Madrid Norte #04</option><option class="bg-surface-container-high text-on-surface" value="bcn">Hub Barcelona Port</option><option class="bg-surface-container-high text-on-surface" value="valencia">Hub Valencia Sur</option></select></div></div><div class="flex-1 max-w-md hidden lg:block"><div class="relative flex items-center bg-surface-container-high rounded px-space-sm py-1 text-on-surface-variant focus-within:text-on-surface"><span class="material-symbols-outlined text-sm mr-space-xs">search</span><input class="w-full bg-transparent font-body-sm text-body-sm text-on-surface placeholder-outline outline-none" placeholder="Buscar SKU, Lote, Ubicación o Contenedor..." type="text"/><span class="material-symbols-outlined text-sm text-primary mx-space-xs">barcode_scanner</span><kbd class="font-data-mono text-data-mono bg-surface-container-lowest px-1.5 py-0.5 rounded text-outline text-[10px]">Ctrl + K</kbd></div></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="hidden xl:flex items-center gap-1.5 font-label-sm text-label-sm text-tertiary bg-tertiary-container/20 px-space-sm py-1 rounded"><span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span><span>Sincronizado en tiempo real</span></div><button class="relative p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-on-error font-label-sm text-[10px] font-bold">3</span></button><button class="p-1.5 rounded hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Alternar Tema Oscuro/Claro"><span class="material-symbols-outlined text-xl">light_mode</span></button><div class="flex items-center gap-space-sm pl-space-xs"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBac3ZeKJYQDEVhz5MNG1xCpkfE3tp8zKEO-_hJaI5Ft6KduAjB-zehvoWVSbLUKBVpEe-XdTWNARUCo3ssPqxFSInn-rIMZPbB_7cm5IINSQphkJQjmDnc6fHVwUKfATaUqtM2S-NiJ5fBHm_cF7WEMl3KEBsBztHfE8bg4GIQCEOfjt85EIo6bdv4KPeNb-ju6SEEo4w8RCIjWf_1j7L7fhZE-cJ06yBmBYDNcAyi"/><div class="hidden sm:flex flex-col text-left"><span class="font-headline-sm text-body-sm text-on-surface leading-tight">Carlos M.</span><span class="font-label-sm text-label-sm text-outline leading-tight">Jefe Operaciones & Logística</span></div></div></div></div></header><main class="w-full pt-14 flex-1 bg-surface"><div class="flex flex-col w-full bg-surface text-on-surface">
+<!-- Top Context Header & KPI Strip -->
+<div class="px-gutter-lg pt-space-lg pb-space-md bg-surface-container-lowest">
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md mb-space-md">
+<!-- Breadcrumb & Title -->
+<div class="space-y-space-xs min-w-0">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-outline">
+<span class="hover:text-primary cursor-pointer transition-colors">NexusWMS</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">Inventario y Stock</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-on-surface font-semibold">Catálogo General de Existencias</span>
+</div>
+<div class="flex items-center gap-space-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Inventario en Tiempo Real</h1>
+<span class="inline-flex items-center gap-1.5 px-space-xs py-0.5 rounded font-data-mono text-data-mono bg-tertiary-container/30 text-tertiary font-bold">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>LIVE HUB-04
+          </span>
+</div>
+</div>
+<!-- Action Buttons Bar -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="flex items-center gap-space-xs h-8 px-space-md rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm text-secondary">qr_code_scanner</span>
+<span class="font-body-md text-body-md">Imprimir Etiquetas / QR</span>
+</button>
+<button class="flex items-center gap-space-xs h-8 px-space-md rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm text-secondary">cloud_sync</span>
+<span class="font-body-md text-body-md">Sincronizar ERP (SAP)</span>
+</button>
+<button class="flex items-center gap-space-xs h-8 px-space-md rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors shadow-sm">
+<span class="material-symbols-outlined text-sm text-secondary">tune</span>
+<span class="font-body-md text-body-md">Ajuste Rápido</span>
+</button>
+<button class="flex items-center gap-space-xs h-8 px-space-md rounded bg-primary-container hover:bg-primary-container/90 text-on-primary-container font-semibold transition-all shadow-sm">
+<span class="material-symbols-outlined text-sm">add_box</span>
+<span class="font-body-md text-body-md">Nuevo SKU / Producto</span>
+</button>
+</div>
+</div>
+<!-- Quick Metrics Deck -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md pt-space-xs">
+<div class="p-space-md rounded bg-surface-container-low flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline block">Total SKUs Activos</span>
+<span class="font-display text-headline-lg text-on-surface font-bold font-data-mono">14.280</span>
+</div>
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+</div>
+<div class="p-space-md rounded bg-surface-container-low flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline block">Valor Total en Almacén</span>
+<span class="font-display text-headline-lg text-tertiary font-bold font-data-mono">€4.850.210</span>
+</div>
+<div class="w-10 h-10 rounded bg-tertiary-container/20 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+</div>
+<div class="p-space-md rounded bg-surface-container-low flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error block">Stock Crítico / Ruptura</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-headline-lg text-error font-bold font-data-mono">18</span>
+<span class="font-label-sm text-label-sm text-outline">líneas</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">warning</span>
+</div>
+</div>
+<div class="p-space-md rounded bg-surface-container-low flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline block">Entradas Programadas Hoy</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-headline-lg text-primary font-bold font-data-mono">340</span>
+<span class="font-label-sm text-label-sm text-outline">pallets (Dock 02)</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">conveyor_belt</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Filters, Status Tabs & Data Density Controls -->
+<div class="px-gutter-lg pt-space-md pb-space-sm bg-surface-container-low space-y-space-sm">
+<!-- Status Segment Tabs -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1">
+<button class="px-space-md py-1.5 rounded font-label-md text-label-md bg-primary-container text-on-primary-container font-semibold whitespace-nowrap shadow-sm">
+        Todos los artículos (14.280)
+      </button>
+<button class="px-space-md py-1.5 rounded font-label-md text-label-md bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors whitespace-nowrap">
+        Stock Óptimo (12.490)
+      </button>
+<button class="px-space-md py-1.5 rounded font-label-md text-label-md bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors whitespace-nowrap">
+        Bajo Mínimo (240)
+      </button>
+<button class="px-space-md py-1.5 rounded font-label-md text-label-md bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors whitespace-nowrap">
+        Sin Stock (38)
+      </button>
+<button class="px-space-md py-1.5 rounded font-label-md text-label-md bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors whitespace-nowrap">
+        En Cuarentena / QA (12)
+      </button>
+</div>
+<!-- Dropdowns & Multi-Filter Matrix -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Search field with Scanner indicator -->
+<div class="relative flex items-center bg-surface-container-lowest rounded px-space-sm py-1 h-8 w-72">
+<span class="material-symbols-outlined text-sm text-outline mr-space-xs">search</span>
+<input class="w-full bg-transparent font-body-sm text-body-sm text-on-surface placeholder-outline outline-none" placeholder="Filtrar por SKU, EAN o Nombre..." type="text"/>
+<span class="material-symbols-outlined text-sm text-primary" title="Escanear con terminal">barcode_scanner</span>
+</div>
+<!-- Filter Selects -->
+<div class="flex items-center bg-surface-container-lowest rounded px-space-sm h-8">
+<span class="font-label-sm text-label-sm text-outline mr-1.5">Categoría:</span>
+<select class="bg-transparent font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option value="all">Todas las Categorías</option>
+<option value="el">Electrónica & Control</option>
+<option value="pa">Paletería Pesada</option>
+<option value="fr">Frío Industrial (-22ºC)</option>
+<option value="tx">Textil & Packaging</option>
+<option value="adr">Peligrosos (ADR)</option>
+</select>
+</div>
+<div class="flex items-center bg-surface-container-lowest rounded px-space-sm h-8">
+<span class="font-label-sm text-label-sm text-outline mr-1.5">Zona / Pasillo:</span>
+<select class="bg-transparent font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option value="all">Todas las Ubicaciones</option>
+<option value="a">Pasillos A01 - A12 (Racks)</option>
+<option value="b">Zona B (Silos Autoportantes)</option>
+<option value="c">Zona C (Picking Dinámico)</option>
+<option value="d">Zona D (Muelles)</option>
+</select>
+</div>
+<div class="flex items-center bg-surface-container-lowest rounded px-space-sm h-8">
+<span class="font-label-sm text-label-sm text-outline mr-1.5">Tipo Embalaje:</span>
+<select class="bg-transparent font-body-sm text-body-sm text-on-surface outline-none cursor-pointer">
+<option value="all">Cualquier Unidad</option>
+<option value="euro">Pallet Euro (1200x800)</option>
+<option value="master">Caja Master K-04</option>
+<option value="unit">Unidad Suelta</option>
+</select>
+</div>
+<button class="h-8 px-space-sm rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-sm">filter_alt_off</span>
+          Limpiar
+        </button>
+</div>
+<!-- Quick Export & View Controls -->
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center bg-surface-container-lowest rounded p-0.5">
+<button class="px-2 py-1 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm" title="Vista Densidad Compacta">
+<span class="material-symbols-outlined text-sm">density_small</span>
+</button>
+<button class="px-2 py-1 rounded hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm" title="Vista Estándar">
+<span class="material-symbols-outlined text-sm">density_medium</span>
+</button>
+</div>
+<button class="h-8 px-space-sm rounded bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center gap-1 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-sm text-tertiary">download</span>
+          Exportar CSV
+        </button>
+</div>
+</div>
+</div>
+<!-- Main Content Layout (Table + Context Drawer) -->
+<div class="flex-1 flex overflow-hidden">
+<!-- High Density Industrial DataGrid -->
+<div class="flex-1 overflow-x-auto min-w-0 bg-surface">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 z-20 bg-surface-container-low font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant select-none">
+<tr class="h-9">
+<th class="w-10 px-space-sm text-center">
+<input class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</th>
+<th class="px-space-sm font-semibold">SKU / Identificador</th>
+<th class="px-space-sm font-semibold min-w-[240px]">Descripción del Artículo</th>
+<th class="px-space-sm font-semibold">Categoría</th>
+<th class="px-space-sm font-semibold">Ubicación Física</th>
+<th class="px-space-sm font-semibold min-w-[200px]">Desglose de Stock</th>
+<th class="px-space-sm font-semibold text-center">Nivel / Estado</th>
+<th class="px-space-sm font-semibold text-center">Rotación</th>
+<th class="px-space-sm font-semibold text-right">P. Unitario</th>
+<th class="px-space-sm font-semibold text-right">Valor Total</th>
+<th class="px-space-sm font-semibold text-center w-28">Acciones</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md divide-y divide-surface-container/50">
+<!-- Item 1 (Selected Row) -->
+<tr class="h-10 hover:bg-surface-container-high/60 transition-colors bg-surface-container/40">
+<td class="px-space-sm text-center">
+<input checked="" class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono font-semibold text-primary">
+<div class="flex items-center gap-space-xs">
+<img class="w-6 h-6 object-cover rounded bg-surface-container-high" data-alt="High quality close up photography of industrial three-phase power inverter module in clean factory storage setting with LED lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvbCO2zWoFvmguBlLbs0CObXQrtdMOWMxAsyqZW4Xmk_iVHFwqTrtjeSuBYLUH6J-vksCBBVGfx99RCmjTtE1T-tk_Mia_j5yn0dCoeb4-kn5uhc3D-Q2UzLWDV9-Wil30CbLaGOPZvLJfD0zGV37_G01l_5N7Z67fLgMLVe_8lFsrpGhuYuL19kkTR_Pc1_jRCrB8NXhu6EPDz8Y8rF8WAratxfckM9V91Y-eqFhT"/>
+<span>NX-8842-EL</span>
+</div>
+</td>
+<td class="px-space-sm font-medium text-on-surface truncate">
+              Módulo Inversor Trifásico 15kW Industrial
+            </td>
+<td class="px-space-sm">
+<span class="px-space-xs py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-primary">
+                Electrónica
+              </span>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-outline">location_on</span>
+                RACK-B04-N3-P12
+              </span>
+</td>
+<td class="px-space-sm">
+<div class="space-y-0.5">
+<div class="flex justify-between font-data-mono text-data-mono text-[11px]">
+<span class="text-on-surface font-semibold">Total: 850</span>
+<span class="text-tertiary">Disp: 720</span>
+<span class="text-outline">Comp: 130</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden flex">
+<div class="bg-tertiary h-full" style="width: 84.7%"></div>
+<div class="bg-outline h-full" style="width: 15.3%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-sm text-center">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-tertiary-container/20 text-tertiary font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>Óptimo
+              </span>
+</td>
+<td class="px-space-sm text-center font-data-mono text-data-mono font-bold text-primary">
+              A
+            </td>
+<td class="px-space-sm text-right font-data-mono text-data-mono">€425,00</td>
+<td class="px-space-sm text-right font-data-mono text-data-mono font-bold text-on-surface">€361.250,00</td>
+<td class="px-space-sm text-center">
+<div class="flex items-center justify-center gap-0.5">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Transferir Ubicación">
+<span class="material-symbols-outlined text-base">sync_alt</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Historial Kardex">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" title="Opciones avanzadas">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 2 -->
+<tr class="h-10 hover:bg-surface-container-high/60 transition-colors">
+<td class="px-space-sm text-center">
+<input class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono font-semibold text-primary">
+<div class="flex items-center gap-space-xs">
+<img class="w-6 h-6 object-cover rounded bg-surface-container-high" data-alt="High precision optical laser guidance sensor mounted for AGV automated guided vehicles in clean logistics testing facility" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKLiSzITCpOZIAHHr9ZSxQt0YUuQ2whpWCmVlyMP7FpKIdM_VeyUEr-nykdJRd_-hpSvT6hUbTi7BtSHt9UqDWH0bDrj4tZkST4bcRjLc4spMzrHlCbotWQptnzbxZFDhlPcmG1Mt2-d1_gBAO-sH4SKFkXtwug9BZ4_6zY6BJqdLRX1V9DcJtj8Vu0TuMezYWOFomIjWKCtP6rFCgE94sHzO6bphstO2pAMUmBZho"/>
+<span>NX-4910-AG</span>
+</div>
+</td>
+<td class="px-space-sm font-medium text-on-surface truncate">
+              Sensor Láser Guía Racks AGV 360°
+            </td>
+<td class="px-space-sm">
+<span class="px-space-xs py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-primary">
+                Robótica & AGV
+              </span>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-outline">location_on</span>
+                RACK-A02-N1-P04
+              </span>
+</td>
+<td class="px-space-sm">
+<div class="space-y-0.5">
+<div class="flex justify-between font-data-mono text-data-mono text-[11px]">
+<span class="text-on-surface font-semibold">Total: 42</span>
+<span class="text-tertiary">Disp: 12</span>
+<span class="text-outline">Comp: 30</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden flex">
+<div class="bg-tertiary h-full" style="width: 28%"></div>
+<div class="bg-outline h-full" style="width: 72%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-sm text-center">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-secondary-container/40 text-on-surface font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>Bajo Mínimo
+              </span>
+</td>
+<td class="px-space-sm text-center font-data-mono text-data-mono font-bold text-tertiary">
+              A
+            </td>
+<td class="px-space-sm text-right font-data-mono text-data-mono">€1.180,00</td>
+<td class="px-space-sm text-right font-data-mono text-data-mono font-bold text-on-surface">€49.560,00</td>
+<td class="px-space-sm text-center">
+<div class="flex items-center justify-center gap-0.5">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">sync_alt</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 3 -->
+<tr class="h-10 hover:bg-surface-container-high/60 transition-colors">
+<td class="px-space-sm text-center">
+<input class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono font-semibold text-primary">
+<div class="flex items-center gap-space-xs">
+<img class="w-6 h-6 object-cover rounded bg-surface-container-high" data-alt="Industrial rolls of heavy-duty stretch film polyethylene packaging materials stored neatly on wooden pallets in bright logistics depot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAj4ZqIbdOHCq2Jb0ctZpSahx0jraAGmD2h2L_Ld3Y_nZhVhpLBwv2ABKI3RZK4E8zKoQ9X4eFDshpyznlrMSZgceg5MeLMRDrMjtKKxrFW8DqE0sVFrQuMAoEp4GsgxxqX-M5X6oKxN2r4Debkky7NaRXr5YrHdy8UjR3N5Ebz_7jgtmtBd34wEAd3m2sUM9XWvjEiLoAnpTu-gn_x89rmUnBoV_r_sLyE9EISmWzw"/>
+<span>NX-1022-PK</span>
+</div>
+</td>
+<td class="px-space-sm font-medium text-on-surface truncate">
+              Embalaje Polietileno Bobina 500m x 23µm
+            </td>
+<td class="px-space-sm">
+<span class="px-space-xs py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-on-surface-variant">
+                Packaging
+              </span>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-outline">location_on</span>
+                ZONA-C-SUELO-08
+              </span>
+</td>
+<td class="px-space-sm">
+<div class="space-y-0.5">
+<div class="flex justify-between font-data-mono text-data-mono text-[11px]">
+<span class="text-on-surface font-semibold">Total: 1.450</span>
+<span class="text-tertiary">Disp: 1.390</span>
+<span class="text-outline">Comp: 60</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden flex">
+<div class="bg-tertiary h-full" style="width: 95.8%"></div>
+<div class="bg-outline h-full" style="width: 4.2%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-sm text-center">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-tertiary-container/20 text-tertiary font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>Óptimo
+              </span>
+</td>
+<td class="px-space-sm text-center font-data-mono text-data-mono font-bold text-outline">
+              C
+            </td>
+<td class="px-space-sm text-right font-data-mono text-data-mono">€18,50</td>
+<td class="px-space-sm text-right font-data-mono text-data-mono font-bold text-on-surface">€26.825,00</td>
+<td class="px-space-sm text-center">
+<div class="flex items-center justify-center gap-0.5">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">sync_alt</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 4 (Stock Warning / Out) -->
+<tr class="h-10 hover:bg-surface-container-high/60 transition-colors">
+<td class="px-space-sm text-center">
+<input class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono font-semibold text-primary">
+<div class="flex items-center gap-space-xs">
+<img class="w-6 h-6 object-cover rounded bg-surface-container-high" data-alt="Macro studio view of a polished heavy-duty industrial tapered roller bearing with laser etched serial numbers in mechanical warehouse" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIks4Pu8qbeJy5l8QP1rnPpToHELouJ20v5PsHSJEQjIhU4Z6QqBDo8p0h9UYeIA5Pw5r9s1w16kXxC2HriyIFXKqba3U4txe6i1lJtpgSztpVxanbRn45hHgldQhr725naDh5yTsi0mqFYiXnOId1c06wF1UEXQSR2VlbsH8A80j4Xy0Mh7yhq_ZSWusll_ELUzROoZwKy_PRtjwdVBqc5wzxampJ2TbYEIK-TCbv"/>
+<span>NX-7301-MC</span>
+</div>
+</td>
+<td class="px-space-sm font-medium text-on-surface truncate">
+              Rodamiento Cónico SKF Heavy Duty 85mm
+            </td>
+<td class="px-space-sm">
+<span class="px-space-xs py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-primary">
+                Mecánica Pesada
+              </span>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-outline">location_on</span>
+                RACK-D12-N4-P01
+              </span>
+</td>
+<td class="px-space-sm">
+<div class="space-y-0.5">
+<div class="flex justify-between font-data-mono text-data-mono text-[11px]">
+<span class="text-error font-semibold">Total: 0</span>
+<span class="text-error">Disp: 0</span>
+<span class="text-outline">Comp: 24</span>
+</div>
+<div class="w-full bg-error-container/30 h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full" style="width: 100%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-sm text-center">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-error-container/20 text-error font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>Agotado
+              </span>
+</td>
+<td class="px-space-sm text-center font-data-mono text-data-mono font-bold text-primary">
+              A
+            </td>
+<td class="px-space-sm text-right font-data-mono text-data-mono">€89,20</td>
+<td class="px-space-sm text-right font-data-mono text-data-mono font-bold text-on-surface">€0,00</td>
+<td class="px-space-sm text-center">
+<div class="flex items-center justify-center gap-0.5">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">sync_alt</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 5 -->
+<tr class="h-10 hover:bg-surface-container-high/60 transition-colors">
+<td class="px-space-sm text-center">
+<input class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono font-semibold text-primary">
+<div class="flex items-center gap-space-xs">
+<img class="w-6 h-6 object-cover rounded bg-surface-container-high" data-alt="Industrial cold chain insulated chemical containers with hazardous material ADR compliance labels stored in cryogenic subzero warehouse" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDExDFmtD7QdRAdkdtSrhcurnMb--KCJWDXbptWGErC0oYp3Oq-pEXMEkltRgmRhIRDOlrxDDHrkQjfoaBLEmBZstdwvcO0Vlj4arXysJu4RDeTc8mUIYpgrA11X6xCUuFBo5U1jwn-X6k_tmhOrHY9geFvMKXI_LTEte0rp88KvqbDfOMSV871KzZk1Oim6MBJuWmtKqg2V4VslZ9KFvofb2i-dSDM1IjNJK2v1oeK"/>
+<span>NX-3390-CH</span>
+</div>
+</td>
+<td class="px-space-sm font-medium text-on-surface truncate">
+              Refrigerante R449A Botella Presurizada 12kg (ADR)
+            </td>
+<td class="px-space-sm">
+<span class="px-space-xs py-0.5 rounded font-label-sm text-label-sm bg-error-container/20 text-error">
+                Peligrosos ADR
+              </span>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-outline">location_on</span>
+                SILO-FRIO-01-E4
+              </span>
+</td>
+<td class="px-space-sm">
+<div class="space-y-0.5">
+<div class="flex justify-between font-data-mono text-data-mono text-[11px]">
+<span class="text-on-surface font-semibold">Total: 210</span>
+<span class="text-tertiary">Disp: 195</span>
+<span class="text-outline">Comp: 15</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden flex">
+<div class="bg-tertiary h-full" style="width: 92.8%"></div>
+<div class="bg-outline h-full" style="width: 7.2%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-sm text-center">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-tertiary-container/20 text-tertiary font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>Óptimo
+              </span>
+</td>
+<td class="px-space-sm text-center font-data-mono text-data-mono font-bold text-secondary">
+              B
+            </td>
+<td class="px-space-sm text-right font-data-mono text-data-mono">€215,00</td>
+<td class="px-space-sm text-right font-data-mono text-data-mono font-bold text-on-surface">€45.150,00</td>
+<td class="px-space-sm text-center">
+<div class="flex items-center justify-center gap-0.5">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">sync_alt</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Item 6 (QA Hold) -->
+<tr class="h-10 hover:bg-surface-container-high/60 transition-colors">
+<td class="px-space-sm text-center">
+<input class="rounded bg-surface-container-high cursor-pointer text-primary focus:ring-0" type="checkbox"/>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono font-semibold text-primary">
+<div class="flex items-center gap-space-xs">
+<img class="w-6 h-6 object-cover rounded bg-surface-container-high" data-alt="Microcontroller circuit board wafers stored in antistatic ESD protective packaging in high-tech pharmaceutical clean room warehouse" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmJox3IaJ-KfDHNhuvraQQY1jg6b0sJgOzBO4Cjerw8diZz7E5ejTXqb7I8-PNo-W-aaUlJFIyO_tgQZcZEesKHnSgOhmZ7Ox3I_S2yvfw300tahJmVYsNkrVdpuNI9_sKJrQMjboqydj9MU5BfZQK2ArB_XjEfd0x4t_Ekadi13PlIoph3ZazCpfFiwRz40LlK2SlgdR5HGwtadVsUmUiYs0TJnYXypXLrCEjQV8B"/>
+<span>NX-6110-QA</span>
+</div>
+</td>
+<td class="px-space-sm font-medium text-on-surface truncate">
+              Placa Base IPC Control Servo Multieje
+            </td>
+<td class="px-space-sm">
+<span class="px-space-xs py-0.5 rounded font-label-sm text-label-sm bg-surface-container-high text-primary">
+                Electrónica
+              </span>
+</td>
+<td class="px-space-sm font-data-mono text-data-mono text-on-surface-variant">
+<span class="inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-outline">location_on</span>
+                JAULA-QA-01
+              </span>
+</td>
+<td class="px-space-sm">
+<div class="space-y-0.5">
+<div class="flex justify-between font-data-mono text-data-mono text-[11px]">
+<span class="text-on-surface font-semibold">Total: 64</span>
+<span class="text-outline">Disp: 0</span>
+<span class="text-primary font-bold">Bloq QA: 64</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 100%"></div>
+</div>
+</div>
+</td>
+<td class="px-space-sm text-center">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-primary-container/20 text-primary font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>Cuarentena
+              </span>
+</td>
+<td class="px-space-sm text-center font-data-mono text-data-mono font-bold text-secondary">
+              B
+            </td>
+<td class="px-space-sm text-right font-data-mono text-data-mono">€540,00</td>
+<td class="px-space-sm text-right font-data-mono text-data-mono font-bold text-on-surface">€34.560,00</td>
+<td class="px-space-sm text-center">
+<div class="flex items-center justify-center gap-0.5">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">sync_alt</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">receipt_long</span>
+</button>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Inspector Context Utility Drawer (Collapsible right panel) -->
+<div class="w-80 bg-surface-container-low hidden 2xl:flex flex-col justify-between flex-shrink-0">
+<div class="p-space-md space-y-space-md overflow-y-auto">
+<!-- Drawer Header -->
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-base">info</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Detalle de Artículo</span>
+</div>
+<button class="p-1 rounded hover:bg-surface-container text-outline hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<!-- Selected Product Mini Hero -->
+<div class="p-space-sm rounded bg-surface-container space-y-space-xs">
+<div class="flex gap-space-sm">
+<img class="w-16 h-16 object-cover rounded bg-surface-container-high" data-alt="Technical specification render of modular three phase electronic inverter chassis with serial heat sinks" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs9nRyPWaCMBt7F-6FblwGC8IYs12AvDhusPb-gYrjpDpX1g9ZI0EIwmPXHm0LIgwbjWYg-7ytyLBMNbYpETMLtyYVMFEzaInYsF9GcIGH8rTgrZ7zLCfOFfjCxnfdlGQvUrPqfPJ2bm9bblHM_dykvyllVd90CXSabl4qaV5cOFSaLHGQt6JcmSgyCgSTFLD46-ZXGNQ8HN3JL6kOhiH_jEfJjyMaCE_8cKFx0gRD"/>
+<div class="min-w-0 flex-1">
+<span class="font-data-mono text-data-mono text-primary font-bold block">NX-8842-EL</span>
+<p class="font-body-md text-body-md text-on-surface font-semibold truncate">Módulo Inversor Trifásico 15kW</p>
+<span class="font-label-sm text-label-sm text-outline">EAN-13: 8437021990421</span>
+</div>
+</div>
+<div class="pt-space-xs flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-outline">Proveedor Principal:</span>
+<span class="font-semibold text-on-surface">Siemens Energy AG</span>
+</div>
+</div>
+<!-- Batch / Lote Live Status -->
+<div class="space-y-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline block">Lotes Activos en Ubicación</span>
+<div class="p-space-sm rounded bg-surface-container space-y-space-xs">
+<div class="flex items-center justify-between font-data-mono text-data-mono">
+<span class="font-semibold text-on-surface">LOT-2024-08A</span>
+<span class="text-tertiary">420 uds</span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-outline">
+<span>Caducidad: 12/2028</span>
+<span>Rack B04-N3</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 100%"></div>
+</div>
+</div>
+<div class="p-space-sm rounded bg-surface-container space-y-space-xs">
+<div class="flex items-center justify-between font-data-mono text-data-mono">
+<span class="font-semibold text-on-surface">LOT-2024-11C</span>
+<span class="text-tertiary">430 uds</span>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-outline">
+<span>Caducidad: 05/2029</span>
+<span>Rack B04-N3</span>
+</div>
+<div class="w-full bg-surface-container-high h-1 rounded-full overflow-hidden">
+<div class="bg-primary-container h-full" style="width: 100%"></div>
+</div>
+</div>
+</div>
+<!-- Fast SVG Micro Sparkline Trend -->
+<div class="p-space-sm rounded bg-surface-container space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Velocidad Salidas (30d)</span>
+<span class="font-data-mono text-data-mono text-tertiary font-bold">+14.2%</span>
+</div>
+<div class="h-12 w-full flex items-end">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 100 30">
+<path class="text-tertiary" d="M0,25 Q15,22 30,15 T60,18 T80,8 T100,2" fill="none" stroke="currentColor" stroke-width="2"></path>
+<path class="text-tertiary/10" d="M0,25 Q15,22 30,15 T60,18 T80,8 T100,2 L100,30 L0,30 Z" fill="currentColor"></path>
+</svg>
+</div>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-outline pt-1">
+<span>Rotación mensual: 340 uds</span>
+<span>Lead time: 4 días</span>
+</div>
+</div>
+<!-- Recent Audit Log -->
+<div class="space-y-space-xs">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline block">Último Conteo Cíclico</span>
+<div class="p-space-sm rounded bg-surface-container font-label-sm text-label-sm space-y-1">
+<div class="flex justify-between">
+<span class="text-outline">Fecha:</span>
+<span class="text-on-surface font-data-mono">Ayer, 18:42</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Auditor:</span>
+<span class="text-on-surface font-semibold">David R. (#OP-09)</span>
+</div>
+<div class="flex justify-between">
+<span class="text-outline">Discrepancia:</span>
+<span class="text-tertiary font-bold">0 uds (100% OK)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Drawer Bottom Action Buttons -->
+<div class="p-space-md bg-surface-container space-y-space-xs">
+<button class="w-full h-8 rounded bg-primary-container hover:bg-primary-container/90 text-on-primary-container font-body-md text-body-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-sm">inventory</span>
+          Abrir Ficha Técnica Completa
+        </button>
+<button class="w-full h-8 rounded bg-surface-container-high hover:bg-surface-bright text-on-surface font-body-md text-body-md transition-colors flex items-center justify-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-sm">history</span>
+          Ver Historial de Movimientos
+        </button>
+</div>
+</div>
+</div>
+<!-- Table Pagination & Density Control Footer -->
+<div class="h-12 px-gutter-lg bg-surface-container-lowest flex items-center justify-between">
+<!-- Rows count info -->
+<div class="flex items-center gap-space-md font-body-sm text-body-sm text-outline">
+<span>Mostrando <strong class="text-on-surface font-data-mono">1 - 25</strong> de <strong class="text-on-surface font-data-mono">14.280</strong> productos registrados</span>
+<div class="hidden sm:flex items-center gap-1.5">
+<span>Filas por página:</span>
+<select class="bg-surface-container rounded px-1.5 py-0.5 text-on-surface font-data-mono text-data-mono outline-none cursor-pointer">
+<option value="25">25</option>
+<option value="50">50</option>
+<option value="100">100</option>
+</select>
+</div>
+</div>
+<!-- Pagination Controls -->
+<div class="flex items-center gap-space-xs">
+<button class="p-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface disabled:opacity-40 transition-colors" disabled="" title="Página anterior">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<div class="flex items-center gap-1 font-data-mono text-data-mono">
+<button class="w-7 h-7 rounded bg-primary-container text-on-primary-container font-bold flex items-center justify-center">1</button>
+<button class="w-7 h-7 rounded bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors">2</button>
+<button class="w-7 h-7 rounded bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors">3</button>
+<span class="px-1 text-outline">...</span>
+<button class="w-7 h-7 rounded bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center transition-colors">572</button>
+</div>
+<button class="p-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors" title="Página siguiente">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</div></main></div></body></html>
