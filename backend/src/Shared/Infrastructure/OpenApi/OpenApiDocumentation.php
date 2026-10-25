@@ -120,7 +120,7 @@ final readonly class OpenApiDocumentation
      *
      * @return list<array<string, mixed>>
      */
-    private static function maps(mixed $value): array
+    private function maps(mixed $value): array
     {
         $maps = [];
         foreach (\is_array($value) ? $value : [] as $item) {
@@ -363,12 +363,12 @@ final readonly class OpenApiDocumentation
      */
     private function parameters(mixed $existing, array $documentation, string $method, string $path): array
     {
-        $parameters = self::maps($existing);
+        $parameters = $this->maps($existing);
 
         if ('get' === $method && $this->isCollection($parameters)) {
             $parameters = false === ($documentation['paged'] ?? true) ? $this->withoutPaging($parameters) : $this->withPaging($parameters);
         }
-        foreach (self::maps($documentation['query'] ?? null) as $filter) {
+        foreach ($this->maps($documentation['query'] ?? null) as $filter) {
             if (\is_string($filter['name'] ?? null)) {
                 $parameters[] = $this->filter($filter);
             }

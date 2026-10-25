@@ -124,7 +124,7 @@ final class AuditingEventBusTest extends TestCase
         $created = new WaveCreated(WaveId::fromString(Ids::next()), TenantId::fromString(Ids::next()), new \DateTimeImmutable('2026-10-25T08:01:00+00:00'));
 
         $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('A policy failed.');
+        $this->expectExceptionMessageIsOrContains('A policy failed.');
 
         $this->bus($failing, $audit)->publish($created);
     }
