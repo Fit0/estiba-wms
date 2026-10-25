@@ -14,6 +14,7 @@ api_platform:
             - '%kernel.project_dir%/src/Catalog/Infrastructure/Http/Resource'
             - '%kernel.project_dir%/src/Inbound/Infrastructure/Http/Resource'
             - '%kernel.project_dir%/src/Outbound/Infrastructure/Http/Resource'
+            - '%kernel.project_dir%/src/Audit/Infrastructure/Http/Resource'
 
     formats:
         json: ['application/json']

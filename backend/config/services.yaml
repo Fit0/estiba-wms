@@ -34,6 +34,10 @@ services:
         App\Shared\Application\Bus\EventHandler:
             tags: [{ name: messenger.message_handler, bus: event.bus }]
 
+    # The event bus has two implementations, the one of Messenger and the audit trail that wraps it
+    # (AuditingEventBus), so the interface says which is the real one.
+    App\Shared\Application\Bus\EventBus: '@App\Shared\Infrastructure\Messenger\MessengerEventBus'
+
     App\Inbound\Application\Putaway\PutawayPlanner:
         arguments:
             $strategy: '%env(enum:App\Inbound\Domain\Putaway\PutawayStrategyName:PUTAWAY_STRATEGY)%'

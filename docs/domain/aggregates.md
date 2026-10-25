@@ -258,6 +258,19 @@ stateDiagram-v2
 | OUT-23 | A shipment is packed only when all picked units are in parcels. |
 | OUT-24 | A packed shipment cannot change. (A dispatched one neither, when dispatch arrives.) |
 
+## Audit
+
+### AuditEntry
+
+Identity: `AuditEntryId`. It is a record, not an aggregate: it has no behavior, nothing depends on it and it raises no events. One line of the audit trail: the tenant, the type of the event (`outbound.pick_list_started`), when it happened and when it was written, the user who caused it, the aggregate it is about and what the event carried.
+
+| ID | Invariant |
+|---|---|
+| AUD-01 | An entry is written once and never changed or deleted. The trail only grows, and nothing in the API can alter it. |
+| AUD-02 | Every domain event that is published is written down, in the transaction of the change that caused it: a change that is rolled back leaves no entry, and one that is committed always does. The actor is the signed-in user, or nobody when a policy runs in a worker. |
+| AUD-03 | The trail holds no personal data. A field of an event marked `#[Sensitive]`, such as the email of a user, is left out. |
+| AUD-04 | An entry belongs to a tenant and is read only by that tenant's supervisors and admins. An event that names no tenant takes the one of the signed-in user, and one with neither is reported in the log and not written. |
+
 ## Rules that span contexts
 
 These cannot be guaranteed inside one aggregate. Each is handled by a policy or a contract call, and the table says how strong the guarantee is.

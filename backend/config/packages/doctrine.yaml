@@ -72,6 +72,7 @@ doctrine:
             outbound_wave_pick_lists: App\Outbound\Infrastructure\Persistence\Doctrine\Type\WavePickListsType
             outbound_pick_lines: App\Outbound\Infrastructure\Persistence\Doctrine\Type\PickLinesType
             outbound_operator_id: App\Outbound\Infrastructure\Persistence\Doctrine\Type\OperatorIdType
+            audit_entry_id: App\Audit\Infrastructure\Persistence\Doctrine\Type\AuditEntryIdType
             shipment_id: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ShipmentIdType
             outbound_shipment_picked: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ShipmentPickedType
             outbound_parcels: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ParcelsType
@@ -131,6 +132,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Outbound/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Outbound\Domain'
                 alias: Outbound
+            Audit:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Audit/Infrastructure/Persistence/Doctrine'
+                prefix: 'App\Audit\Domain'
+                alias: Audit
             OutboundSscc:
                 type: xml
                 is_bundle: false

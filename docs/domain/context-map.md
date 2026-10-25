@@ -1,6 +1,6 @@
 # Context map
 
-How the five bounded contexts depend on each other, and what each one publishes. The rules come from [ADR 0001](../adr/0001-modular-monolith-with-hexagonal-bounded-contexts.md) and [ADR 0003](../adr/0003-cross-context-communication-through-published-contracts.md).
+How the bounded contexts depend on each other, and what each one publishes. The rules come from [ADR 0001](../adr/0001-modular-monolith-with-hexagonal-bounded-contexts.md) and [ADR 0003](../adr/0003-cross-context-communication-through-published-contracts.md).
 
 ## Dependencies
 
@@ -42,6 +42,7 @@ flowchart TB
 | Inventory | Core. The authority on how much stock exists and where. | Catalog, Warehouse |
 | Inbound | Downstream. Brings goods in. | Catalog, Warehouse, Inventory |
 | Outbound | Downstream. Sends goods out. | Catalog, Warehouse, Inventory |
+| Audit | Observer. Writes down every domain event of the others and answers who did what. It reads them through the event bus and knows none of them, so it depends on nothing and nothing depends on it ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)). | Nothing |
 
 Inbound and Outbound talk to the ERP through an anti-corruption layer (E08), so the ERP's model never reaches the domain.
 
@@ -84,6 +85,10 @@ None. The other contexts need no contract from it. The tenant of a request reach
 |---|---|
 | `ReceiptClosed` | Integration event. Used for the ERP export. |
 | `PutawayConfirmed` | Integration event, used by dashboards |
+
+### Audit
+
+None. It publishes no contract and uses none: it describes any event by reflection ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)).
 
 ### Outbound
 
