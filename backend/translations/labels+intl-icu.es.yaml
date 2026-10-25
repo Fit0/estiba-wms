@@ -1,0 +1,7 @@
+label:
+    closed_on: 'Fecha: {date}'
+    order: 'Pedido {reference}'
+    parcel: 'Bulto {number}'
+    ship_to: 'Destinatario'
+    units: '{units, plural, one {# unidad} other {# unidades}}'
+    weight: 'Peso: {grams, number} g'

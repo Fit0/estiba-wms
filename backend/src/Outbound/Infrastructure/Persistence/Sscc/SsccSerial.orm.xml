@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Outbound\Infrastructure\Persistence\Sscc\SsccSerial" table="sscc_serials">
+        <id name="companyPrefix" column="company_prefix" type="string" length="10"/>
+        <field name="lastSerial" column="last_serial" type="bigint"/>
+    </entity>
+</doctrine-mapping>

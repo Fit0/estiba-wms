@@ -109,14 +109,33 @@ final class OutboundMother
      *
      * @param list<int> $units the units of each line
      */
-    public static function orderInWave(array $units): Order
+    public static function orderInWave(array $units, ?TenantId $tenantId = null): Order
     {
-        $order = self::order(array_map(static fn (int $u): OrderedItem => self::item($u), $units));
+        $order = self::order(array_map(static fn (int $u): OrderedItem => self::item($u), $units), $tenantId);
         $order->recordAllocations(
             array_map(static fn (int $u, int $i): LineAllocation => new LineAllocation($i + 1, self::reservationId(), $u), $units, array_keys($units)),
             self::at(),
         );
         $order->joinWave(WaveId::fromString(Ids::next()));
+        $order->pullEvents();
+
+        return $order;
+    }
+
+    /**
+     * An order whose lines were all picked in full, ready to pack. A line listed in `$short` had that
+     * many units missing instead (the line number is its key).
+     *
+     * @param list<int>       $units the units of each line
+     * @param array<int, int> $short units not found, by line number
+     */
+    public static function pickedOrder(array $units, array $short = [], ?TenantId $tenantId = null): Order
+    {
+        $order = self::orderInWave($units, $tenantId);
+        foreach ($units as $index => $line) {
+            $notFound = $short[$index + 1] ?? 0;
+            $order->recordPick($index + 1, $line - $notFound, $notFound, self::at());
+        }
         $order->pullEvents();
 
         return $order;

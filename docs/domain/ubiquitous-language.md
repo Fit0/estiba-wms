@@ -80,6 +80,7 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | Serpentine route | Ruta en serpentina | Walking aisles alternately up and down, so the operator never backtracks: the first aisle with something to pick is walked one way, the next the other way, and so on. |
 | Packing | Embalaje | Putting picked goods into parcels. |
 | Parcel | Bulto | One physical package, identified by an SSCC. |
-| SSCC | Código de serie de unidad de envío | 18-digit GS1 code that identifies one parcel or pallet. Printed as a label. |
+| SSCC | Código de serie de unidad de envío | 18-digit GS1 code that identifies one parcel or pallet: an extension digit, the GS1 company prefix, a serial and a check digit. Printed as a label, in a GS1-128 barcode. |
+| Parcel label | Etiqueta de bulto | The label stuck on a parcel: who it is for, the order, the weight and the SSCC as a barcode. Printed as ZPL for a Zebra printer or as a PDF. |
 | Shipment | Expedición | The parcels of one order, handed to the carrier. |
 | Dispatch | Salida, despacho | The moment a shipment leaves the warehouse. |

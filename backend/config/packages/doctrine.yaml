@@ -72,6 +72,9 @@ doctrine:
             outbound_wave_pick_lists: App\Outbound\Infrastructure\Persistence\Doctrine\Type\WavePickListsType
             outbound_pick_lines: App\Outbound\Infrastructure\Persistence\Doctrine\Type\PickLinesType
             outbound_operator_id: App\Outbound\Infrastructure\Persistence\Doctrine\Type\OperatorIdType
+            shipment_id: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ShipmentIdType
+            outbound_shipment_picked: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ShipmentPickedType
+            outbound_parcels: App\Outbound\Infrastructure\Persistence\Doctrine\Type\ParcelsType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore
@@ -128,6 +131,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Outbound/Infrastructure/Persistence/Doctrine'
                 prefix: 'App\Outbound\Domain'
                 alias: Outbound
+            OutboundSscc:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Outbound/Infrastructure/Persistence/Sscc'
+                prefix: 'App\Outbound\Infrastructure\Persistence\Sscc'
+                alias: OutboundSscc
             CatalogGtinIndex:
                 type: xml
                 is_bundle: false

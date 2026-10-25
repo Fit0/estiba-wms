@@ -43,7 +43,7 @@ security:
     # Note: Only the *first* matching rule is applied.
     # Reading needs any signed-in user. Changing anything needs a supervisor or an admin, except the
     # work of the dock: opening a receipt, counting what arrives, closing it, and putting the goods
-    # away. Approving an over-receipt stays with supervisors (INB-08).
+    # away, walking a pick list, and packing parcels. Approving an over-receipt stays with supervisors (INB-08).
     access_control:
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }
@@ -51,6 +51,7 @@ security:
         - { path: '^/api/receipts/[^/]+/(items|close)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/putaway-tasks/[^/]+/(confirm|split)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/pick-lists/[^/]+/(start|lines/[0-9]+/confirm)$', methods: [POST], roles: ROLE_OPERATOR }
+        - { path: '^/api/shipments(/[^/]+/(parcels|complete))?$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
         - { path: ^/api, roles: ROLE_SUPERVISOR }
 
