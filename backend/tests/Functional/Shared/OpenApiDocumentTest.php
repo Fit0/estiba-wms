@@ -18,6 +18,9 @@ final class OpenApiDocumentTest extends ApiTestCase
 {
     private const array METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 
+    /** The operations that need no token: they are how a user gets one, keeps it or gives it up (ADR 0022). */
+    private const array PUBLIC = ['POST /api/auth/login', 'POST /api/auth/refresh', 'POST /api/auth/logout'];
+
     /** @var array<string, mixed>|null */
     private ?array $document = null;
 
@@ -101,7 +104,9 @@ final class OpenApiDocumentTest extends ApiTestCase
                     self::assertArrayHasKey('$ref', $this->asMap($response), $key.' '.$status.' keeps an error that API Platform guessed.');
                 }
             }
-            self::assertContains('401', array_map(strval(...), array_keys($answers)), $key);
+            if ('POST /api/auth/logout' !== $key) {
+                self::assertContains('401', array_map(strval(...), array_keys($answers)), $key);
+            }
         }
     }
 
@@ -119,7 +124,22 @@ final class OpenApiDocumentTest extends ApiTestCase
 
         self::assertSame([['bearerAuth' => []]], $this->document()['security'] ?? null);
         self::assertSame('bearer', $this->asMap($schemes['bearerAuth'] ?? null)['scheme'] ?? null);
-        self::assertSame([], $this->operations()['POST /api/auth/login']['security'] ?? null);
+        foreach (self::PUBLIC as $key) {
+            self::assertSame([], $this->operations()[$key]['security'] ?? null, $key);
+        }
+    }
+
+    public function testTheSessionRoutesAreDocumentedEvenThoughTheyAreNotResources(): void
+    {
+        $operations = $this->operations();
+
+        $refresh = $operations['POST /api/auth/refresh'] ?? [];
+        self::assertSame(['200', '401'], array_map(strval(...), array_keys($this->asMap($refresh['responses'] ?? null))));
+        self::assertArrayNotHasKey('requestBody', $refresh, 'The secret travels in a cookie, not in a body.');
+        self::assertSame(['Identity'], $refresh['tags'] ?? null);
+
+        $logout = $operations['POST /api/auth/logout'] ?? [];
+        self::assertSame(['204'], array_map(strval(...), array_keys($this->asMap($logout['responses'] ?? null))));
     }
 
     public function testTheListsSayTheirFilters(): void
@@ -155,7 +175,7 @@ final class OpenApiDocumentTest extends ApiTestCase
     {
         $mismatches = [];
         foreach ($this->operations() as $key => $operation) {
-            if ('POST /api/auth/login' === $key) {
+            if (\in_array($key, self::PUBLIC, true)) {
                 continue;
             }
             [$method, $path] = explode(' ', $key, 2);

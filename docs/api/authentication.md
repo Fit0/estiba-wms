@@ -1,6 +1,6 @@
 # Authentication
 
-Every endpoint under `/api` needs a token, except the login and the documentation. The decision is in [ADR 0008](../adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md).
+Every endpoint under `/api` needs a token, except signing in, renewing the session, signing out and the documentation. The decisions are in [ADR 0008](../adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md) and [ADR 0022](../adr/0022-sessions-with-a-rotating-refresh-token-in-a-cookie.md).
 
 ## Sign in
 
@@ -20,7 +20,25 @@ Send the token on every request:
 curl -s http://localhost:8080/api/me -H 'Authorization: Bearer <token>'
 ```
 
-A token lasts **one hour**. After that the API answers `shared.token_expired` and the client signs in again.
+A token lasts **one hour**. After that the API answers `shared.token_expired`, and the client renews it (below) or signs in again.
+
+## Keep the session: refresh and sign out
+
+Signing in also sets a cookie, `estiba_refresh`: the refresh token of the session. A script ignores it. A browser app does not have to do anything with it either, because JavaScript cannot read it (`HttpOnly`), the browser sends it only to `/api/auth/*` (`Path`) and only from our own site (`SameSite=Strict`).
+
+```bash
+curl -s -X POST http://localhost:8080/api/auth/refresh --cookie 'estiba_refresh=<secret>'
+```
+
+```json
+{ "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..." }
+```
+
+The answer is a new access token and a new cookie: **each refresh token works once**. Send no body and no `Authorization` header. The session lasts 30 days from signing in at most, however often it is renewed, and a refresh token lives 7 days if it is not used.
+
+`POST /api/auth/logout` revokes the refresh token and everything renewed from it, and clears the cookie. It answers `204` whether or not there was a session. The access token that was already issued works until it expires, up to an hour, as the user is still active.
+
+Two tabs that renew at the same moment with the same secret are not an attack: the second one is refused for 10 seconds without ending the session, and the client asks again with the cookie the first answer set. A spent token that shows up after that revokes the whole session, since someone kept a copy.
 
 ## Who am I
 
@@ -59,6 +77,7 @@ The API reads the roles from the database on every request, not from the token, 
 | 401 | `shared.unauthenticated` | The request carries no token |
 | 401 | `shared.token_invalid` | The token is malformed, forged, or belongs to a disabled user |
 | 401 | `shared.token_expired` | The token is older than one hour |
+| 401 | `identity.refresh_token_invalid` | Renewing a session whose cookie is missing, unknown, expired, revoked or spent, or whose user is disabled. The cookie is cleared. |
 | 403 | `shared.forbidden` | The user's role does not allow this |
 
 A 401 caused by a token carries `WWW-Authenticate: Bearer`. All of them use the [common error shape](errors.md) and the language of `Accept-Language`.

@@ -1,12 +1,14 @@
+import { RouterProvider, type DataRouter } from 'react-router';
+import type { AuthClient } from './auth/AuthClient';
+import { AuthProvider } from './auth/AuthContext';
+
 /**
- * The root of the app. It only says what it is for now: routes and sign-in arrive with E05-03, and the
- * text moves to the translation catalogs with E05-06.
+ * The root of the app: the session, and the routes that depend on it.
  */
-export function App() {
+export function App({ client, router }: { client: AuthClient; router: DataRouter }) {
   return (
-    <main>
-      <h1>Estiba WMS</h1>
-      <p>Warehouse management system.</p>
-    </main>
+    <AuthProvider client={client}>
+      <RouterProvider router={router} />
+    </AuthProvider>
   );
 }

@@ -15,6 +15,8 @@ use App\Tests\Functional\Support\ApiTestCase;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Encoder\JWTEncoderInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Symfony\Component\BrowserKit\Cookie;
+use Symfony\Component\HttpFoundation\Cookie as SymfonyCookie;
 
 /**
  * Signing in, the token, and what each role may do (ADR 0008).
@@ -238,6 +240,151 @@ final class AuthApiTest extends ApiTestCase
         self::assertFalse($this->entityManager()->getFilters()->isEnabled('tenant'), 'An anonymous request must not carry the previous tenant.');
     }
 
+    // IDN-08: signing in also starts a session, whose secret JavaScript can never read.
+    public function testSigningInSetsTheRefreshTokenInACookieOfItsOwn(): void
+    {
+        $this->signIn('op@acme.test', self::PASSWORD);
+
+        $cookie = $this->refreshCookie();
+        self::assertNotNull($cookie);
+        self::assertTrue($cookie->isHttpOnly(), 'JavaScript must not read it.');
+        self::assertSame('strict', $cookie->getSameSite());
+        self::assertSame('/api/auth', $cookie->getPath(), 'The browser sends it to the sign-in routes only.');
+        self::assertGreaterThan(40, \strlen($cookie->getValue()));
+        self::assertEqualsWithDelta(time() + 7 * 86400, $cookie->getExpiresTime(), 5);
+    }
+
+    public function testASecretIsNeverInTheBodyOfTheAnswer(): void
+    {
+        $answer = $this->signIn('op@acme.test', self::PASSWORD);
+
+        self::assertSame(['token'], array_keys($answer));
+    }
+
+    public function testRenewsTheSessionAndRotatesTheCookie(): void
+    {
+        $this->signIn('sup@acme.test', self::PASSWORD);
+        $before = $this->refreshCookie()?->getValue();
+
+        $answer = $this->refresh();
+
+        $this->assertStatus(200);
+        $token = $answer['token'] ?? null;
+        self::assertIsString($token);
+        self::assertSame('sup@acme.test', $this->claimsOf($token)['username']);
+        self::assertNotSame($before, $this->refreshCookie()?->getValue(), 'Every secret works once.');
+        self::assertStringContainsString('no-store', (string) $this->client->getResponse()->headers->get('Cache-Control'));
+
+        $me = $this->requestWithToken('GET', '/api/me', $token);
+        $this->assertStatus(200);
+        self::assertSame('sup@acme.test', $me['email']);
+    }
+
+    public function testASessionCanBeRenewedAgainAndAgain(): void
+    {
+        $this->signIn('op@acme.test', self::PASSWORD);
+
+        foreach ([1, 2, 3] as $_) {
+            $this->refresh();
+            $this->assertStatus(200);
+        }
+    }
+
+    public function testASessionWithoutACookieCannotBeRenewed(): void
+    {
+        $problem = $this->refresh();
+
+        $this->assertProblem(401, 'identity.refresh_token_invalid', $problem);
+    }
+
+    public function testASecretThatIsNotKnownCannotBeRenewedAndTheCookieIsCleared(): void
+    {
+        $this->client->getCookieJar()->set(new Cookie('estiba_refresh', 'made-up-secret', null, '/api/auth', 'localhost'));
+
+        $problem = $this->refresh();
+
+        $this->assertProblem(401, 'identity.refresh_token_invalid', $problem);
+        $cleared = $this->responseCookie();
+        self::assertNotNull($cleared);
+        self::assertSame('', $cleared->getValue(), 'The browser is told to drop the cookie.');
+        self::assertLessThan(time(), $cleared->getExpiresTime());
+    }
+
+    public function testExplainsAFailedRenewalInTheRequestedLanguage(): void
+    {
+        $this->acceptLanguage = 'en';
+
+        $problem = $this->refresh();
+
+        self::assertSame('The session cannot be renewed. Sign in again.', $this->text($problem, 'detail'));
+    }
+
+    // Two tabs ask at the same time with the same secret: the copy is refused, the session survives.
+    public function testASecretThatWasJustSpentDoesNotEndTheSession(): void
+    {
+        $this->signIn('op@acme.test', self::PASSWORD);
+        $spent = $this->refreshCookie();
+        self::assertNotNull($spent);
+        $this->refresh();
+        $this->assertStatus(200);
+        $newer = $this->refreshCookie();
+
+        $this->client->getCookieJar()->set($spent);
+        $this->refresh();
+        $this->assertStatus(401);
+
+        self::assertNotNull($newer);
+        $this->client->getCookieJar()->set($newer);
+        $this->refresh();
+        $this->assertStatus(200);
+    }
+
+    // IDN-06: a disabled user cannot get a new token with the old session.
+    public function testADisabledUserCannotRenewTheSession(): void
+    {
+        $this->signIn('op@acme.test', self::PASSWORD);
+        $this->handler(DisableUserHandler::class)(new DisableUser('op@acme.test'));
+        $this->entityManager()->flush();
+
+        $problem = $this->refresh();
+
+        $this->assertProblem(401, 'identity.refresh_token_invalid', $problem);
+    }
+
+    public function testASignedOutSessionCannotBeRenewed(): void
+    {
+        $this->signIn('op@acme.test', self::PASSWORD);
+        $secret = $this->refreshCookie();
+        self::assertNotNull($secret);
+
+        $this->client->request('POST', '/api/auth/logout');
+        $this->assertStatus(204);
+        self::assertSame('', $this->responseCookie()?->getValue());
+
+        $this->client->getCookieJar()->set($secret);
+        $problem = $this->refresh();
+        $this->assertProblem(401, 'identity.refresh_token_invalid', $problem);
+    }
+
+    public function testSigningOutWithoutASessionIsNotAnError(): void
+    {
+        $this->client->request('POST', '/api/auth/logout');
+
+        $this->assertStatus(204);
+    }
+
+    // The routes of the session need no token, and a stale one that is sent along gets in no way.
+    public function testRenewingIgnoresAnExpiredAccessToken(): void
+    {
+        $this->signIn('op@acme.test', self::PASSWORD);
+        $expired = $this->handler(JWTEncoderInterface::class)->encode(['username' => 'op@acme.test', 'roles' => ['ROLE_OPERATOR'], 'iat' => time() - 7200, 'exp' => time() - 3600]);
+
+        $answer = $this->refresh($expired);
+
+        $this->assertStatus(200);
+        self::assertIsString($answer['token'] ?? null);
+    }
+
     public function testThePublicPartsNeedNoToken(): void
     {
         $paths = $this->openApiPaths();
@@ -261,6 +408,43 @@ final class AuthApiTest extends ApiTestCase
         ], json_encode(['email' => $email, 'password' => $password], \JSON_THROW_ON_ERROR));
 
         return $this->decodedResponse();
+    }
+
+    /**
+     * @return array<array-key, mixed>
+     */
+    private function refresh(?string $staleToken = null): array
+    {
+        $headers = ['HTTP_ACCEPT' => 'application/json', 'HTTP_ACCEPT_LANGUAGE' => $this->acceptLanguage ?? ''];
+        if (null !== $staleToken) {
+            $headers['HTTP_AUTHORIZATION'] = 'Bearer '.$staleToken;
+        }
+
+        $this->client->request('POST', '/api/auth/refresh', [], [], $headers);
+
+        return $this->decodedResponse();
+    }
+
+    /**
+     * The refresh token cookie that the browser holds.
+     */
+    private function refreshCookie(): ?Cookie
+    {
+        return $this->client->getCookieJar()->get('estiba_refresh', '/api/auth');
+    }
+
+    /**
+     * The refresh token cookie of the last answer, as the server sent it.
+     */
+    private function responseCookie(): ?SymfonyCookie
+    {
+        foreach ($this->client->getResponse()->headers->getCookies() as $cookie) {
+            if ('estiba_refresh' === $cookie->getName()) {
+                return $cookie;
+            }
+        }
+
+        return null;
     }
 
     /**

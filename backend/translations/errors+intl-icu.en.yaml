@@ -42,6 +42,7 @@ identity:
     email_invalid: '"{value}" is not a valid email address.'
     language_invalid: '"{value}" is not a language. Use es or en.'
     password_invalid: 'A password must have {minLength} to {maxLength} characters.'
+    refresh_token_invalid: 'The session cannot be renewed. Sign in again.'
     role_invalid: '"{value}" is not a role. Use admin, supervisor or operator.'
     roles_required: 'A user needs at least one role.'
     tenant_name_invalid: 'A tenant name must have 1 to {maxLength} characters and no control characters.'

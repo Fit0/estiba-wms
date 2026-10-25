@@ -42,6 +42,7 @@ identity:
     email_invalid: '"{value}" no es una dirección de correo válida.'
     language_invalid: '"{value}" no es un idioma. Usa es o en.'
     password_invalid: 'La contraseña debe tener entre {minLength} y {maxLength} caracteres.'
+    refresh_token_invalid: 'No se ha podido renovar la sesión. Inicia sesión de nuevo.'
     role_invalid: '"{value}" no es un rol. Usa admin, supervisor u operator.'
     roles_required: 'Un usuario necesita al menos un rol.'
     tenant_name_invalid: 'El nombre de un cliente debe tener entre 1 y {maxLength} caracteres y no puede contener caracteres de control.'

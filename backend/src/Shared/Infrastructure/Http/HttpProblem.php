@@ -16,6 +16,7 @@ enum HttpProblem: string
     case TokenInvalid = 'shared.token_invalid';
     case TokenExpired = 'shared.token_expired';
     case CredentialsInvalid = 'identity.credentials_invalid';
+    case RefreshTokenInvalid = 'identity.refresh_token_invalid';
     case Forbidden = 'shared.forbidden';
     case RequestMalformed = 'shared.request_malformed';
     case NotFound = 'shared.not_found';

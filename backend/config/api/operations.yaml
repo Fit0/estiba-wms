@@ -13,6 +13,7 @@
 #   query        the filters of a list, besides `page` and `itemsPerPage`
 #   conflicts    false when the operation never answers 409
 #   paged        false for a list that is not paged
+#   unauthorized false for an operation that never answers 401
 #
 # Ids in the examples are made up but valid.
 
@@ -29,8 +30,15 @@ operations:
   # ------------------------------------------------------------------ Identity
   'POST /api/auth/login':
     summary: 'Sign in and get a token'
-    description: 'Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. Wrong credentials answer 401.'
+    description: 'Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. The answer also sets the `estiba_refresh` cookie (`HttpOnly`, `SameSite=Strict`, only sent to `/api/auth`), which keeps the session alive for `POST /api/auth/refresh`. Wrong credentials answer 401.'
     example: { email: 'ana@marea-moda.example', password: 'the-password-of-ana' }
+  'POST /api/auth/refresh':
+    summary: 'Renew the session and get a new token'
+    description: 'Send no body: the browser sends the `estiba_refresh` cookie by itself. Each refresh token works once, and the answer replaces it with a new one. A token that is unknown, expired, revoked, of a disabled user or already spent answers 401 `identity.refresh_token_invalid` and clears the cookie; a spent token that shows up again later also ends the whole session. A session lasts 30 days at most, however often it is renewed.'
+  'POST /api/auth/logout':
+    summary: 'End the session'
+    description: 'Revokes the refresh token of the cookie and everything renewed from it, and clears the cookie. It answers 204 whether or not there was a session.'
+    unauthorized: false
   'GET /api/me':
     summary: 'Get the signed-in user'
     description: 'The user, the roles and the tenant that the token stands for. The roles are read from the database on every request, not from the token.'
