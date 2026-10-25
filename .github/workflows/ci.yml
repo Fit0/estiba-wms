@@ -15,6 +15,7 @@ permissions:
 
 env:
   PHP_VERSION: "8.4"
+  NODE_VERSION: "24"
   PHP_EXTENSIONS: apcu, intl, pdo_pgsql, redis, zip
 
 defaults:
@@ -227,3 +228,41 @@ jobs:
             echo "::error title=Invalid PR title::\"$TITLE\" does not match <type>(<scope>): <description>. See CONTRIBUTING.md."
             exit 1
           fi
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Audit the dependencies that ship for known vulnerabilities
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Prettier
+        run: npm run format:check
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Tests
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+

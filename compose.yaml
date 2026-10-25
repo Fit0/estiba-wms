@@ -56,6 +56,33 @@ services:
       redis:
         condition: service_healthy
 
+  # The development server of the React app. It forwards /api and /health to the PHP service, so the
+  # browser talks to one address only and the API needs no CORS (ADR 0021). Like vendor/, node_modules
+  # lives in a Docker volume, and the entrypoint installs it again when package-lock.json changes.
+  frontend:
+    build:
+      context: ./frontend
+      target: frontend_dev
+    environment:
+      API_PROXY_TARGET: "http://php"
+      # A bind mount from Windows or macOS does not tell the container that a file changed.
+      VITE_USE_POLLING: "${VITE_USE_POLLING:-true}"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      # The first start installs the dependencies, which takes a few minutes.
+      start_period: 300s
+    depends_on:
+      php:
+        condition: service_started
+
   database:
     image: postgres:17-alpine
     environment:
@@ -85,3 +112,4 @@ volumes:
   database_data:
   php_vendor:
   php_var:
+  frontend_node_modules:

@@ -73,7 +73,7 @@ estiba-wms/
 - [x] **Warehouse and catalog**: locations, products, API, auth, multi-tenancy
 - [x] **Inventory and receiving**: stock ledger, CQRS, ASN receiving, putaway, stock read model
 - [x] **Shipping**: allocation, waves, picking, packing, SSCC labels, dispatch, audit trail (`v0.1`)
-- [ ] **Frontend**: React app for back-office operations
+- [ ] **Frontend**: React app for back-office operations (in progress: the project is set up)
 - [ ] **Picking PWA and dashboard**: barcode scanning, offline mode, KPIs
 - [ ] **Legacy ERP integration**: anti-corruption layer, scheduled imports, outbox
 - [ ] **AI features**: classification, slotting, anomaly detection, natural-language queries
@@ -117,6 +117,7 @@ The token goes in `Authorization: Bearer <token>`. See [authentication](docs/api
 | Service | Address |
 |---|---|
 | API | http://localhost:8080 |
+| Frontend | http://localhost:5173 (it forwards `/api` to the API) |
 | PostgreSQL 17 | `localhost:5433` (user, password and database: `estiba`) |
 | Redis 7.4 | internal to the Docker network |
 
@@ -128,6 +129,7 @@ make down                    # Stop it
 make console c=about         # Symfony console
 make composer c="require x"  # Composer
 make sh                      # Shell in the PHP container
+make front-qa                # Frontend checks: lint, format, types, tests, build
 make tenant name="X" email=a@b.co  # A tenant and its admin
 make demo                    # A fashion company with its warehouse and collection (dev only)
 ```
@@ -145,11 +147,12 @@ make demo                    # A fashion company with its warehouse and collecti
 | `make cs` | PHP-CS-Fixer check (Symfony rules, strict types) |
 | `make rector` | Rector dry run (PHP 8.4, dead code, code quality, type declarations) |
 | `make fix` | Apply Rector and PHP-CS-Fixer changes |
-| `make qa` | Every check above, as CI runs them |
+| `make front-qa` | The frontend checks: ESLint (strict TypeScript, React hooks, accessibility), Prettier, TypeScript, Vitest and the build |
+| `make qa` | Every check above, backend and frontend, as CI runs them |
 
 ### Continuous integration
 
-[GitHub Actions](.github/workflows/ci.yml) runs on every pull request and every push to `main`, as five independent jobs:
+[GitHub Actions](.github/workflows/ci.yml) runs on every pull request and every push to `main`, as six independent jobs:
 
 | Job | Checks |
 |---|---|
@@ -157,6 +160,7 @@ make demo                    # A fashion company with its warehouse and collecti
 | Code style | PHP-CS-Fixer and Rector (dry run) |
 | PHPStan | Static analysis at max level |
 | Tests | PHPUnit against real PostgreSQL 17 and Redis 7.4 services |
+| Frontend | `npm ci`, `npm audit` of what ships, ESLint, Prettier, TypeScript, Vitest and the build |
 | PR title | The title follows Conventional Commits, since it becomes the squash commit |
 
 A new push to the same branch cancels the run still in progress.

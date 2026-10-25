@@ -2,9 +2,10 @@
 
 DC  := docker compose
 PHP := $(DC) exec -T php
+FRONT := $(DC) exec -T frontend
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa
+.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -85,4 +86,33 @@ fix: ## Apply Rector refactorings and fix code style
 	$(PHP) vendor/bin/rector process
 	$(PHP) vendor/bin/php-cs-fixer fix
 
-qa: validate cs rector stan test ## Run every check (the same ones CI runs)
+qa: validate cs rector stan test front-qa ## Run every check (the same ones CI runs)
+
+## —— Frontend ———————————————————————————————————————————————
+front-sh: ## Open a shell in the frontend container
+	$(DC) exec frontend sh
+
+front-npm: ## Run npm in the frontend, e.g. make front-npm c="install foo". Commit package-lock.json after.
+	$(DC) exec frontend npm $(c)
+
+front-lint: ## Lint the frontend (ESLint)
+	$(FRONT) npm run lint
+
+front-format: ## Apply Prettier to the frontend
+	$(FRONT) npm run format
+
+front-typecheck: ## Type-check the frontend (TypeScript)
+	$(FRONT) npm run typecheck
+
+front-test: ## Run the frontend tests (Vitest)
+	$(FRONT) npm run test
+
+front-build: ## Build the frontend for production
+	$(FRONT) npm run build
+
+front-qa: ## Run every frontend check (the ones the Frontend job of CI runs)
+	$(FRONT) npm run lint
+	$(FRONT) npm run format:check
+	$(FRONT) npm run typecheck
+	$(FRONT) npm run test
+	$(FRONT) npm run build
