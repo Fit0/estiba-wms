@@ -20,8 +20,10 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Messaging | Symfony Messenger: command and query buses ([ADR 0009](docs/adr/0009-command-and-query-buses-with-symfony-messenger.md)) and an event bus for policies. Events wait for the command to commit; the routed ones go to a Redis stream (`symfony/redis-messenger`) handled by the `worker` service with retries, and the ones that keep failing to a PostgreSQL table (`symfony/doctrine-messenger`) ([ADR 0012](docs/adr/0012-asynchronous-policies-with-a-redis-transport.md)) | In use |
 | Auth | Symfony Security and LexikJWTAuthenticationBundle (RS256 tokens, one hour) | In use |
 | Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Backend in use, frontend planned (E05) |
-| Frontend | React 19, TypeScript (strict), Vite, TanStack Query, React Router, React Hook Form + Zod, shadcn/ui + Tailwind | Planned (E05) |
-| Frontend testing | Vitest, Testing Library, MSW, Playwright | Planned (E06) |
+| Frontend | React 19, TypeScript (strict), Vite, in Docker behind a proxy to the API ([ADR 0021](docs/adr/0021-the-frontend-project-in-docker-behind-a-proxy.md)) | In use (E05-02) |
+| Frontend libraries | TanStack Query, React Router, React Hook Form + Zod, shadcn/ui + Tailwind | Planned (E05-03 to E05-07) |
+| Frontend quality | ESLint 9 (`typescript-eslint` strict, `react-hooks`, `jsx-a11y`), Prettier, Testing Library | In use (E05-02) |
+| Frontend testing | Vitest (in use since E05-02), MSW, Playwright | MSW and Playwright planned (E06) |
 | Real time | Mercure | Planned (E07) |
 | CI | GitHub Actions | In use |
 
@@ -87,7 +89,10 @@ The business model lives in `docs/domain/` and comes before the code: [ubiquitou
 
 ### TypeScript (from E05)
 
-- `strict: true`. **No `any`**: use `unknown` and narrow it. No non-null assertions (`!`) to silence the compiler.
+The frontend lives in `frontend/` and runs in Docker like everything else: never run `npm` on the host. `make front-qa` runs what the `Frontend` job of CI runs, and it must pass before proposing a commit.
+
+- `strict: true`. **No `any`**: use `unknown` and narrow it. No non-null assertions (`!`) to silence the compiler. ESLint fails both. Do not add `eslint-disable` or `@ts-ignore` to make a check pass: fix the code, as with PHPStan.
+- Components call the API through relative paths (`/api/...`): the dev server forwards them to the backend, so there is no CORS and no address in the code.
 - API types are generated from the OpenAPI schema, never written by hand.
 - Server state goes through TanStack Query, never copied into local state.
 - Function components and hooks only.
@@ -131,7 +136,10 @@ Everything runs inside Docker. Use `make` from the repository root (`make` alone
 | `make stan` | PHPStan |
 | `make cs` / `make rector` | Style and refactoring checks (dry run) |
 | `make fix` | Apply Rector and PHP-CS-Fixer |
-| `make qa` | All checks. **Must pass before proposing a commit.** |
+| `make qa` | All checks, backend and frontend. **Must pass before proposing a commit.** |
+| `make front-qa` | The frontend checks only: lint, format, types, tests and build (the `Frontend` job of CI) |
+| `make front-npm c="..."` | npm in the frontend container, e.g. `make front-npm c="install foo"`; commit `package-lock.json` after |
+| `make front-sh` / `make front-format` | Shell in the frontend container / apply Prettier |
 | `make worker-logs` / `make worker-restart` | Follow / restart the worker that handles the asynchronous events |
 | `make failed` / `make retry-failed` | List / handle again the events that failed every retry |
 | `make stock-rebuild` | Build the stock read model again from the ledger (after a migration that creates it, or if it drifts) |
