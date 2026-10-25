@@ -41,6 +41,15 @@ interface StockReservations
     public function pick(StockPick $pick): void;
 
     /**
+     * The goods leave the warehouse with a dispatch: the units the reservation holds are issued from
+     * the stock items that hold them, as `issue` movements, and the reservation is consumed (STK-13,
+     * STK-16). A reservation that holds nothing, because every unit was short picked, is consumed too.
+     *
+     * @throws DomainError when the tenant has no such reservation, it was already consumed, or it was released
+     */
+    public function consume(StockConsumption $consumption): void;
+
+    /**
      * The stock items that hold the units of a reservation, with where each one is and its lot and
      * expiry date, in no particular order. A released reservation holds nothing.
      *

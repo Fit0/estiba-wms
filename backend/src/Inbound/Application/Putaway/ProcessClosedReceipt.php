@@ -12,6 +12,7 @@ use App\Inbound\Domain\Receipt;
 use App\Inbound\Domain\ReceiptRepository;
 use App\Inventory\Application\Contract\StockArrival;
 use App\Inventory\Application\Contract\StockMovements;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Bus\EventHandler;
 
 /**
@@ -30,6 +31,7 @@ final readonly class ProcessClosedReceipt implements EventHandler
         private PutawayTaskRepository $tasks,
         private StockMovements $stock,
         private PutawayPlanner $planner,
+        private EventBus $events,
     ) {
     }
 
@@ -48,8 +50,10 @@ final readonly class ProcessClosedReceipt implements EventHandler
         $this->bookStock($receipt, $asn, $event);
         foreach ($this->planner->plan($receipt, $asn->reference(), $event->occurredAt()) as $task) {
             $this->tasks->save($task);
+            $this->events->publish(...$task->pullEvents());
         }
         $receipt->recordStockBooked($event->occurredAt());
+        $this->events->publish(...$receipt->pullEvents());
     }
 
     private function bookStock(Receipt $receipt, Asn $asn, ReceiptClosed $event): void

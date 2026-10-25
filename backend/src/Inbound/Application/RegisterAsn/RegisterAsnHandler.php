@@ -13,6 +13,7 @@ use App\Inbound\Domain\ExpectedLine;
 use App\Inbound\Domain\LotNumber;
 use App\Inbound\Domain\SupplierName;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Application\IdGenerator;
@@ -24,6 +25,7 @@ final readonly class RegisterAsnHandler implements CommandHandler
         private ReceivableProducts $products,
         private CurrentTenant $tenant,
         private IdGenerator $ids,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -42,6 +44,8 @@ final readonly class RegisterAsnHandler implements CommandHandler
         );
 
         $this->asns->save($asn);
+
+        $this->events->publish(...$asn->pullEvents());
 
         return $asn;
     }

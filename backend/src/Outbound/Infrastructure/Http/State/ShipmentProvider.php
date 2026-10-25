@@ -62,6 +62,6 @@ final readonly class ShipmentProvider implements ProviderInterface
         }
 
         return ShipmentStatus::tryFrom($request->query->getString('status'))
-            ?? throw new BadRequestHttpException('The status filter must be packing or packed.');
+            ?? throw new BadRequestHttpException('The status filter must be packing, packed or dispatched.');
     }
 }

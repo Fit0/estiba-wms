@@ -20,12 +20,15 @@ final readonly class SaveTenantWhenSomethingHappened
 
     public function __invoke(SomethingHappened $event): void
     {
-        $this->entityManager->persist(Tenant::register(
+        $tenant = Tenant::register(
             TenantId::fromString($event->tenantId),
             TenantName::fromString('Tenant of a policy test'),
             Language::Spanish,
             $event->occurredAt(),
-        ));
+        );
+        // The tenant is only something to write: what this fixture tests is the bus, not its events.
+        $tenant->pullEvents();
+        $this->entityManager->persist($tenant);
 
         if ($event->policyFails) {
             $this->entityManager->flush();

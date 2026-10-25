@@ -9,11 +9,14 @@ use App\Catalog\Domain\Dimensions;
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductName;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 
 final readonly class UpdateProductDetailsHandler implements CommandHandler
 {
-    public function __construct(private ProductLookup $lookup)
-    {
+    public function __construct(
+        private ProductLookup $lookup,
+        private EventBus $events,
+    ) {
     }
 
     public function __invoke(UpdateProductDetails $command): Product
@@ -33,6 +36,8 @@ final readonly class UpdateProductDetailsHandler implements CommandHandler
                 $command->weightGrams ?? $current->weightGrams,
             ));
         }
+
+        $this->events->publish(...$product->pullEvents());
 
         return $product;
     }

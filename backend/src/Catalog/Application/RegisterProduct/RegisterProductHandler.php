@@ -12,6 +12,7 @@ use App\Catalog\Domain\ProductRepository;
 use App\Catalog\Domain\Sku;
 use App\Catalog\Domain\TrackingPolicy;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Application\IdGenerator;
@@ -27,6 +28,7 @@ final readonly class RegisterProductHandler implements CommandHandler
         private ProductRepository $products,
         private CurrentTenant $tenant,
         private IdGenerator $ids,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -60,6 +62,8 @@ final readonly class RegisterProductHandler implements CommandHandler
         }
 
         $this->products->save($product);
+
+        $this->events->publish(...$product->pullEvents());
 
         return $product;
     }

@@ -72,7 +72,7 @@ estiba-wms/
 - [x] **Foundations**: Docker environment, quality tooling, CI, architecture, domain model
 - [x] **Warehouse and catalog**: locations, products, API, auth, multi-tenancy
 - [x] **Inventory and receiving**: stock ledger, CQRS, ASN receiving, putaway, stock read model
-- [ ] **Shipping**: allocation, waves, picking, packing, SSCC labels (`v0.1`)
+- [x] **Shipping**: allocation, waves, picking, packing, SSCC labels, dispatch, audit trail (`v0.1`)
 - [ ] **Frontend**: React app for back-office operations
 - [ ] **Picking PWA and dashboard**: barcode scanning, offline mode, KPIs
 - [ ] **Legacy ERP integration**: anti-corruption layer, scheduled imports, outbox

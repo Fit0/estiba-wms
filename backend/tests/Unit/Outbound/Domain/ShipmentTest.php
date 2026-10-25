@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Outbound\Domain;
 
+use App\Outbound\Domain\CarrierName;
 use App\Outbound\Domain\Event\PackingCompleted;
 use App\Outbound\Domain\Event\PackingStarted;
 use App\Outbound\Domain\Event\ParcelClosed;
+use App\Outbound\Domain\Event\ShipmentDispatched;
 use App\Outbound\Domain\Order;
 use App\Outbound\Domain\Parcel;
 use App\Outbound\Domain\ParcelContent;
@@ -15,6 +17,7 @@ use App\Outbound\Domain\Shipment;
 use App\Outbound\Domain\ShipmentId;
 use App\Outbound\Domain\ShipmentStatus;
 use App\Outbound\Domain\Sscc;
+use App\Outbound\Domain\TrackingNumber;
 use App\Tests\Unit\Support\AssertsDomainErrors;
 use App\Tests\Unit\Support\Ids;
 use PHPUnit\Framework\TestCase;
@@ -241,6 +244,74 @@ final class ShipmentTest extends TestCase
         $shipment = $this->start(OutboundMother::pickedOrder([10]));
         $this->packEverything($shipment);
         $shipment->completePacking(OutboundMother::at());
+        $product = $shipment->picked()[0]->productId;
+
+        self::assertDomainError('outbound.shipment_already_packed', ['id' => $shipment->id()->value], static fn () => $shipment->closeParcel(Sscc::compose(0, '8400000', 9), [new ParcelContent($product, 1)], 900, OutboundMother::at()));
+        self::assertDomainError('outbound.shipment_already_packed', ['id' => $shipment->id()->value], static fn () => $shipment->completePacking(OutboundMother::at()));
+    }
+
+    // OUT-25
+    public function testAPackedShipmentIsDispatchedToACarrier(): void
+    {
+        $shipment = $this->start(OutboundMother::pickedOrder([10]));
+        $this->packEverything($shipment);
+        $shipment->completePacking(OutboundMother::at());
+        $shipment->pullEvents();
+        $at = new \DateTimeImmutable('2026-10-26T09:00:00+00:00');
+
+        $shipment->dispatch(CarrierName::fromString('SEUR'), TrackingNumber::fromString('SE0042261187'), $at);
+
+        self::assertSame(ShipmentStatus::Dispatched, $shipment->status());
+        self::assertSame('SEUR', $shipment->carrier());
+        self::assertSame('SE0042261187', $shipment->trackingNumber());
+        self::assertEquals($at, $shipment->dispatchedAt());
+        $events = $shipment->pullEvents();
+        self::assertCount(1, $events);
+        self::assertInstanceOf(ShipmentDispatched::class, $events[0]);
+        self::assertSame('SEUR', $events[0]->carrier);
+    }
+
+    public function testTheTrackingNumberIsOptional(): void
+    {
+        $shipment = $this->start(OutboundMother::pickedOrder([10]));
+        $this->packEverything($shipment);
+        $shipment->completePacking(OutboundMother::at());
+
+        $shipment->dispatch(CarrierName::fromString('Correos Express'), null, OutboundMother::at());
+
+        self::assertNull($shipment->trackingNumber());
+        self::assertSame('Correos Express', $shipment->carrier());
+    }
+
+    // OUT-25
+    public function testAShipmentStillBeingPackedCannotBeDispatched(): void
+    {
+        $shipment = $this->start(OutboundMother::pickedOrder([10]));
+
+        self::assertDomainError('outbound.shipment_not_packed', ['id' => $shipment->id()->value], static fn () => $shipment->dispatch(CarrierName::fromString('SEUR'), null, OutboundMother::at()));
+        self::assertSame(ShipmentStatus::Packing, $shipment->status());
+        self::assertNull($shipment->carrier());
+    }
+
+    // OUT-25
+    public function testAShipmentIsDispatchedOnce(): void
+    {
+        $shipment = $this->start(OutboundMother::pickedOrder([10]));
+        $this->packEverything($shipment);
+        $shipment->completePacking(OutboundMother::at());
+        $shipment->dispatch(CarrierName::fromString('SEUR'), null, OutboundMother::at());
+
+        self::assertDomainError('outbound.shipment_already_dispatched', ['id' => $shipment->id()->value], static fn () => $shipment->dispatch(CarrierName::fromString('MRW'), null, OutboundMother::at()));
+        self::assertSame('SEUR', $shipment->carrier(), 'The carrier is not changed.');
+    }
+
+    // OUT-24
+    public function testADispatchedShipmentCannotChange(): void
+    {
+        $shipment = $this->start(OutboundMother::pickedOrder([10]));
+        $this->packEverything($shipment);
+        $shipment->completePacking(OutboundMother::at());
+        $shipment->dispatch(CarrierName::fromString('SEUR'), null, OutboundMother::at());
         $product = $shipment->picked()[0]->productId;
 
         self::assertDomainError('outbound.shipment_already_packed', ['id' => $shipment->id()->value], static fn () => $shipment->closeParcel(Sscc::compose(0, '8400000', 9), [new ParcelContent($product, 1)], 900, OutboundMother::at()));

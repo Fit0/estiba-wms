@@ -61,7 +61,7 @@ final class PutawayTask extends AggregateRoot
         \DateTimeImmutable $at,
     ): self {
         $task = new self($id, $tenantId, $receiptId, $reference, $goods, $sourceLocationId, $suggestedLocationId, $at);
-        $task->record(new PutawayTaskPlanned($id, $receiptId, $suggestedLocationId, $at));
+        $task->record(new PutawayTaskPlanned($id, $tenantId, $receiptId, $suggestedLocationId, $at));
 
         return $task;
     }

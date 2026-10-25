@@ -161,7 +161,7 @@ final class OrderApiTest extends OutboundApiTestCase
         self::assertSame(['PED-2'], array_column($this->request('GET', '/api/orders', query: ['status' => 'registered']), 'reference'));
         self::assertCount(1, $this->request('GET', '/api/orders', query: ['itemsPerPage' => 1]));
 
-        $this->assertProblem(400, 'shared.request_malformed', $this->request('GET', '/api/orders', query: ['status' => 'shipped']));
+        $this->assertProblem(400, 'shared.request_malformed', $this->request('GET', '/api/orders', query: ['status' => 'lost']));
     }
 
     public function testAnOperatorCanReadOrdersButNotChangeThem(): void

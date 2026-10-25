@@ -15,10 +15,13 @@
         <field name="tenantId" column="tenant_id" type="tenant_id"/>
         <field name="orderId" column="order_id" type="order_id"/>
         <field name="warehouseId" column="warehouse_id" type="outbound_warehouse_id"/>
-        <field name="status" enum-type="App\Outbound\Domain\ShipmentStatus" length="7"/>
+        <field name="status" enum-type="App\Outbound\Domain\ShipmentStatus" length="10"/>
         <field name="picked" type="outbound_shipment_picked"/>
         <field name="parcels" type="outbound_parcels"/>
         <field name="startedAt" column="started_at" type="datetime_immutable"/>
         <field name="packedAt" column="packed_at" type="datetime_immutable" nullable="true"/>
+        <field name="carrier" length="60" nullable="true"/>
+        <field name="trackingNumber" column="tracking_number" length="60" nullable="true"/>
+        <field name="dispatchedAt" column="dispatched_at" type="datetime_immutable" nullable="true"/>
     </entity>
 </doctrine-mapping>

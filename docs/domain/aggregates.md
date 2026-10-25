@@ -111,6 +111,7 @@ stateDiagram-v2
 | STK-11 | The allocated quantity is the sum of the allocations and never exceeds the requested quantity. Allocating less is allowed, and the shortage is reported. |
 | STK-12 | Stock is chosen by earliest expiry date first for expiry-tracked products (FEFO), then by earliest receipt date (FIFO). Stock that would expire before the product's minimum shelf life at shipment, counted from the day of the allocation, is skipped. Stock that never expires goes after stock that does. Equal stock is chosen by identifier, so the plan is repeatable. |
 | STK-13 | A reservation is consumed once. Units that were not picked go back to available. |
+| STK-16 | Consuming a reservation issues the units it holds from the stock items that hold them, as `issue` movements, and ends the promise with them (the units cannot be issued while promised, STK-02). A reservation that holds nothing, because every unit was short picked, is consumed all the same. A consumed reservation has nothing to release, and cannot be consumed, allocated or picked again. |
 | STK-14 | Releasing a reservation is safe to repeat: the second release gives nothing back. A released reservation takes no more units. |
 | STK-15 | A pick moves units of a reservation from the stock item that holds them to a stock item in another location, as a transfer of the ledger, and the units stay promised there. The units not found stop being promised, and the reservation covers that much less. A pick never takes more than the reservation holds in that stock item. |
 
@@ -170,7 +171,7 @@ Identity: `PutawayTaskId`. Holds the receipt, the ASN reference, the goods (prod
 
 ### Order
 
-Identity: `OrderId`. Holds the external reference, the warehouse it is served from, the wave it belongs to (if any), whether the customer accepted the backorder, the customer, the ship-to address, the priority (low, normal, high, urgent), the cut-off time and the lines (a line number from 1, the product, and the ordered, allocated and picked quantities, plus the reservation that holds the stock; shipped quantities arrive with shipping). Allocating an order asks Inventory for one reservation per line that is not fully covered, and doing it again tops them up.
+Identity: `OrderId`. Holds the external reference, the warehouse it is served from, the wave it belongs to (if any), whether the customer accepted the backorder, the customer, the ship-to address, the priority (low, normal, high, urgent), the cut-off time and the lines (a line number from 1, the product, and the ordered, allocated, picked and shipped quantities, plus the reservation that holds the stock). Allocating an order asks Inventory for one reservation per line that is not fully covered, and doing it again tops them up.
 
 ```mermaid
 stateDiagram-v2
@@ -181,8 +182,7 @@ stateDiagram-v2
     Allocated --> InWave
     PartiallyAllocated --> InWave
     InWave --> Picked
-    Picked --> Packed
-    Packed --> Shipped
+    Picked --> Shipped: dispatched
     Registered --> Cancelled
     Allocated --> Cancelled
     PartiallyAllocated --> Cancelled
@@ -196,7 +196,7 @@ stateDiagram-v2
 | OUT-01 | The external reference is unique per tenant, so importing the same order twice changes nothing. |
 | OUT-02 | Ordered quantities are positive whole numbers of the base unit, and the product is active. |
 | OUT-03 | For every line, allocated never exceeds ordered, picked never exceeds allocated, and shipped never exceeds picked. Units an operator does not find are no longer allocated, so the shortage of the line, and the backorder, grow by them. The order is picked when everything still allocated has been picked. |
-| OUT-04 | Cancelling an order releases its reservations, in the same transaction. A cancelled order cannot be cancelled or allocated again. A picked order cannot be cancelled: its goods are off the shelves. A shipped order cannot be cancelled either (shipping arrives later). |
+| OUT-04 | Cancelling an order releases its reservations, in the same transaction. A cancelled order cannot be cancelled or allocated again. A picked order cannot be cancelled: its goods are off the shelves. A shipped order cannot be cancelled either: its goods are gone. |
 | OUT-05 | An order belongs to at most one open wave. |
 
 ### Wave
@@ -239,7 +239,7 @@ stateDiagram-v2
 
 ### Shipment
 
-Identity: `ShipmentId`. Holds the order, the warehouse, what the order had picked when packing began (by product), the status (packing or packed) and the parcels. A parcel is a value inside it: the `SSCC`, the contents by product, the weight in grams and when it was closed. A parcel exists only closed: the packer fills a physical box and tells the system what is inside when it is sealed. The carrier arrives with dispatch.
+Identity: `ShipmentId`. Holds the order, the warehouse, what the order had picked when packing began (by product), the status (packing, packed or dispatched) and the parcels. A parcel is a value inside it: the `SSCC`, the contents by product, the weight in grams and when it was closed. A parcel exists only closed: the packer fills a physical box and tells the system what is inside when it is sealed. Once dispatched it also holds the carrier, the tracking number if the carrier gave one, and when it went.
 
 ```mermaid
 stateDiagram-v2
@@ -256,7 +256,8 @@ stateDiagram-v2
 | OUT-21 | A parcel holds at least one product, a positive number of units of each, and weighs between 1 and 1,000,000 grams. The same product twice in a parcel is added up. |
 | OUT-22 | For every product, the units in parcels never exceed the units picked, and a parcel holds only products that were picked. |
 | OUT-23 | A shipment is packed only when all picked units are in parcels. |
-| OUT-24 | A packed shipment cannot change. (A dispatched one neither, when dispatch arrives.) |
+| OUT-24 | A packed shipment cannot change, and neither can a dispatched one. |
+| OUT-25 | Only a packed shipment is dispatched, and only once, by a supervisor. Dispatching hands the parcels to a named carrier and, in the same transaction, ships the order (every line ships what it picked, OUT-03) and consumes its reservations, so the goods leave the stock (STK-16). A shipped order cannot be dispatched or cancelled again. |
 
 ## Audit
 

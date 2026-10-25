@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Warehouse\Application\AssignZoneFamilies;
 
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Domain\ProductFamily;
 use App\Warehouse\Application\WarehouseLookup;
@@ -15,6 +16,7 @@ final readonly class AssignZoneFamiliesHandler implements CommandHandler
 {
     public function __construct(
         private WarehouseLookup $lookup,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -32,6 +34,8 @@ final readonly class AssignZoneFamiliesHandler implements CommandHandler
             array_map(ProductFamily::fromString(...), $command->families),
             $this->clock->now(),
         );
+
+        $this->events->publish(...$warehouse->pullEvents());
 
         return $warehouse;
     }

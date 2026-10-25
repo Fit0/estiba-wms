@@ -11,6 +11,7 @@ use App\Inbound\Domain\Receipt;
 use App\Inbound\Domain\ReceiptId;
 use App\Inbound\Domain\ReceiptRepository;
 use App\Shared\Application\Bus\CommandHandler;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Application\IdGenerator;
@@ -29,6 +30,7 @@ final readonly class OpenReceiptHandler implements CommandHandler
         private LocationDirectory $locations,
         private CurrentTenant $tenant,
         private IdGenerator $ids,
+        private EventBus $events,
         private Clock $clock,
     ) {
     }
@@ -40,6 +42,8 @@ final readonly class OpenReceiptHandler implements CommandHandler
 
         $receipt = $asn->openReceipt(ReceiptId::fromString($this->ids->next()), $dock, $this->clock->now());
         $this->receipts->save($receipt);
+
+        $this->events->publish(...$asn->pullEvents(), ...$receipt->pullEvents());
 
         return $receipt;
     }

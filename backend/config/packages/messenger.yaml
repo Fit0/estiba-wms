@@ -46,9 +46,36 @@ framework:
             App\Inbound\Domain\Event\PutawayConfirmed: async
             App\Inventory\Domain\Event\StockMovementRecorded: async
 
+when@dev:
+    framework:
+        messenger:
+            buses:
+                command.bus:
+                    # This list replaces the one above, so the transaction is named again. The guard is
+                    # inside it, and fails a command whose aggregates raised events nobody published.
+                    middleware:
+                        - doctrine_transaction
+                        - App\Shared\Infrastructure\Messenger\PendingEventsGuard
+                event.bus:
+                    # The policies are use cases too: what their aggregates raise must be published.
+                    middleware:
+                        - doctrine_ping_connection
+                        - doctrine_transaction
+                        - App\Shared\Infrastructure\Messenger\PendingEventsGuard
+
 when@test:
     framework:
         messenger:
+            buses:
+                command.bus:
+                    middleware:
+                        - doctrine_transaction
+                        - App\Shared\Infrastructure\Messenger\PendingEventsGuard
+                event.bus:
+                    middleware:
+                        - doctrine_ping_connection
+                        - doctrine_transaction
+                        - App\Shared\Infrastructure\Messenger\PendingEventsGuard
             # Tests handle the routed events at once, after the command commits, as a worker would.
             transports:
                 async: 'sync://'

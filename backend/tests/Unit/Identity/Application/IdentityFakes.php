@@ -13,8 +13,10 @@ use App\Identity\Domain\TenantRepository;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserId;
 use App\Identity\Domain\UserRepository;
+use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
+use App\Shared\Domain\DomainEvent;
 use App\Shared\Domain\TenantId;
 use App\Tests\Unit\Support\Ids;
 
@@ -50,6 +52,18 @@ final readonly class IdentityFakes
             public function next(): string
             {
                 return Ids::next();
+            }
+        };
+    }
+
+    /**
+     * An event bus that forgets what it is told: these tests look at the use cases, not at the policies.
+     */
+    public static function events(): EventBus
+    {
+        return new class implements EventBus {
+            public function publish(DomainEvent ...$events): void
+            {
             }
         };
     }

@@ -62,6 +62,6 @@ final readonly class OrderProvider implements ProviderInterface
         }
 
         return OrderStatus::tryFrom($request->query->getString('status'))
-            ?? throw new BadRequestHttpException('The status filter must be registered, partially_allocated, allocated, in_wave, picked or cancelled.');
+            ?? throw new BadRequestHttpException('The status filter must be registered, partially_allocated, allocated, in_wave, picked, shipped or cancelled.');
     }
 }

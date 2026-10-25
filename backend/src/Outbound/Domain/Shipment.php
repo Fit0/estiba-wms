@@ -7,6 +7,7 @@ namespace App\Outbound\Domain;
 use App\Outbound\Domain\Event\PackingCompleted;
 use App\Outbound\Domain\Event\PackingStarted;
 use App\Outbound\Domain\Event\ParcelClosed;
+use App\Outbound\Domain\Event\ShipmentDispatched;
 use App\Outbound\Domain\Exception\InvalidParcelUnits;
 use App\Outbound\Domain\Exception\InvalidParcelWeight;
 use App\Outbound\Domain\Exception\NothingToPack;
@@ -16,7 +17,9 @@ use App\Outbound\Domain\Exception\PackingIncomplete;
 use App\Outbound\Domain\Exception\ParcelEmpty;
 use App\Outbound\Domain\Exception\ParcelNotFound;
 use App\Outbound\Domain\Exception\ProductNotPicked;
+use App\Outbound\Domain\Exception\ShipmentAlreadyDispatched;
 use App\Outbound\Domain\Exception\ShipmentAlreadyPacked;
+use App\Outbound\Domain\Exception\ShipmentNotPacked;
 use App\Shared\Domain\AggregateRoot;
 use App\Shared\Domain\TenantId;
 
@@ -25,7 +28,8 @@ use App\Shared\Domain\TenantId;
  * and every parcel it closes takes a part of that.
  *
  * A parcel exists in the system only closed, with its SSCC: the packer fills a physical box and
- * tells the system what is inside when it is sealed (OUT-19, OUT-21).
+ * tells the system what is inside when it is sealed (OUT-19, OUT-21). When it is packed, a supervisor
+ * dispatches it to a carrier (OUT-25).
  */
 final class Shipment extends AggregateRoot
 {
@@ -35,6 +39,12 @@ final class Shipment extends AggregateRoot
     private ShipmentStatus $status = ShipmentStatus::Packing;
 
     private ?\DateTimeImmutable $packedAt = null;
+
+    private ?string $carrier = null;
+
+    private ?string $trackingNumber = null;
+
+    private ?\DateTimeImmutable $dispatchedAt = null;
 
     /** @var list<Parcel> */
     private array $parcels = [];
@@ -136,6 +146,28 @@ final class Shipment extends AggregateRoot
     }
 
     /**
+     * The parcels are handed to the carrier and the goods leave the warehouse (OUT-25). Whatever
+     * stock and order changes that means is for the caller to make in the same transaction.
+     *
+     * @throws ShipmentAlreadyDispatched OUT-25
+     * @throws ShipmentNotPacked         OUT-25
+     */
+    public function dispatch(CarrierName $carrier, ?TrackingNumber $trackingNumber, \DateTimeImmutable $at): void
+    {
+        match ($this->status) {
+            ShipmentStatus::Dispatched => throw ShipmentAlreadyDispatched::forId($this->id->value),
+            ShipmentStatus::Packing => throw ShipmentNotPacked::forId($this->id->value),
+            ShipmentStatus::Packed => null,
+        };
+
+        $this->status = ShipmentStatus::Dispatched;
+        $this->carrier = $carrier->value;
+        $this->trackingNumber = $trackingNumber?->value;
+        $this->dispatchedAt = $at;
+        $this->record(new ShipmentDispatched($this->id, $this->tenantId, $this->orderId, $carrier->value, $at));
+    }
+
+    /**
      * Picked units that are not in a parcel yet.
      */
     public function unitsToPack(): int
@@ -215,6 +247,21 @@ final class Shipment extends AggregateRoot
     public function parcels(): array
     {
         return $this->parcels;
+    }
+
+    public function carrier(): ?string
+    {
+        return $this->carrier;
+    }
+
+    public function trackingNumber(): ?string
+    {
+        return $this->trackingNumber;
+    }
+
+    public function dispatchedAt(): ?\DateTimeImmutable
+    {
+        return $this->dispatchedAt;
     }
 
     public function startedAt(): \DateTimeImmutable

@@ -24,6 +24,9 @@ enum OrderStatus: string
     /** Everything that was allocated has been picked and waits for packing. */
     case Picked = 'picked';
 
+    /** Dispatched: the goods have left the warehouse (OUT-25). */
+    case Shipped = 'shipped';
+
     /** The customer will not receive it. Its reservations are released (OUT-04). */
     case Cancelled = 'cancelled';
 }

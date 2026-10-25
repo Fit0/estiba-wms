@@ -41,3 +41,13 @@ A warehouse is asked who did what: who confirmed that pick, who blocked that loc
 - There is no protection against someone with access to the database. A chain of hashes between lines would show tampering; it is for later, if a customer needs it.
 - Personal data in a field not marked `#[Sensitive]` would be kept. A test covers the three events that carry an email, and a reviewer must look for the attribute whenever an event gets a field about a person.
 - A line's `data` is the event as it was. If an event changes its fields, old lines keep the old shape.
+
+## Update of 2026-10-25: events that were never published
+
+Writing the end-to-end test of E04-06 showed that the trail was missing events as basic as the creation of a warehouse or the registration of an ASN. The cause was not the trail: **25 use cases of Catalog, Warehouse, Identity, Inbound and Outbound, and one policy, raised events in their aggregates and never published them.** Nothing had noticed because nothing listened to those events. The decision above ("a new event is audited with no extra code") held only for a use case that published.
+
+What changed:
+
+- **They publish now.** The 25 use cases and the policy that plans putaway tasks publish the events of the aggregates they change.
+- **A guard makes the omission fail** (`PendingEventsGuard`). In development and in the tests, a middleware of the command bus and of the event bus checks, when a use case or a policy ends, whether any aggregate it loaded or created still holds events nobody took, and fails with the aggregate and the events. It is not active in production, where it would turn an omission into an error for the user. Fixtures that build an aggregate by hand take its events (`pullEvents()`) to say that they are not for anybody.
+- **An event names its tenant.** A policy runs in a worker with nobody signed in, so an event it publishes without a tenant would reach the trail with no way to know whose it is, and would only leave a warning in the log. `PutawayTaskPlanned`, which a policy publishes, was one: it carries its tenant now. A test (`EventsCarryTheirTenantTest`) makes a new event carry its tenant, and lists the 22 older ones that do not, which are published only by requests. The list can only shrink.

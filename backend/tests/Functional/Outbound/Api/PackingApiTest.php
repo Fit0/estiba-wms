@@ -11,18 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Packing a picked order into parcels with their SSCC, and printing the labels (OUT-19 to OUT-24).
  */
-final class PackingApiTest extends OutboundApiTestCase
+final class PackingApiTest extends ShipmentApiTestCase
 {
-    private string $shelf;
-
-    #[\Override]
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->shelf = $this->location($this->warehouseId, $this->zoneId, 'A-03-01', 'reserve', ['pickSequence' => 10]);
-    }
-
     public function testStartsPackingAPickedOrder(): void
     {
         $order = $this->pickedOrder();
@@ -196,7 +186,7 @@ final class PackingApiTest extends OutboundApiTestCase
 
         self::assertCount(1, $this->request('GET', '/api/shipments', query: ['status' => 'packed']));
         self::assertSame([], $this->request('GET', '/api/shipments', query: ['status' => 'packing']));
-        $this->request('GET', '/api/shipments', query: ['status' => 'dispatched']);
+        $this->request('GET', '/api/shipments', query: ['status' => 'lost']);
         $this->assertStatus(400);
     }
 
@@ -312,105 +302,6 @@ final class PackingApiTest extends OutboundApiTestCase
     }
 
     /**
-     * An order of ten shirts, picked in full: allocated, in a wave, and its only stop confirmed.
-     *
-     * @return array<array-key, mixed>
-     */
-    private function pickedOrder(): array
-    {
-        $this->stock($this->shirtId, $this->shelf, 10, received: '2026-09-01');
-        $order = $this->allocate($this->registerOrder('PED-1', [['productId' => $this->shirtId, 'units' => 10]]));
-        $wave = $this->request('POST', '/api/waves', ['orderIds' => [$this->id($order)]]);
-        $released = $this->request('POST', '/api/waves/'.$this->id($wave).'/release');
-        $listId = $this->listOf($released, 'pickListIds')[0] ?? null;
-        self::assertIsString($listId);
-
-        $this->request('POST', '/api/pick-lists/'.$listId.'/start');
-        $this->request('POST', '/api/pick-lists/'.$listId.'/lines/1/confirm', ['location' => 'A-03-01', 'gtin' => self::SHIRT_GTIN, 'units' => 10]);
-        $this->assertStatus(200);
-
-        $picked = $this->request('GET', '/api/orders/'.$this->id($order));
-        self::assertSame('picked', $picked['status']);
-
-        return $picked;
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    private function startPacking(): array
-    {
-        $shipment = $this->request('POST', '/api/shipments', ['orderId' => $this->id($this->pickedOrder())]);
-        $this->assertStatus(201);
-
-        return $shipment;
-    }
-
-    /**
-     * Closes a parcel of shirts.
-     *
-     * @param array<array-key, mixed> $shipment
-     *
-     * @return array<array-key, mixed>
-     */
-    private function closeParcel(array $shipment, int $units, int $weightGrams = 900): array
-    {
-        return $this->request('POST', '/api/shipments/'.$this->id($shipment).'/parcels', [
-            'weightGrams' => $weightGrams,
-            'contents' => [['productId' => $this->shirtId, 'units' => $units]],
-        ]);
-    }
-
-    /**
-     * @param array<array-key, mixed> $shipment
-     *
-     * @return list<array<array-key, mixed>>
-     */
-    private function parcelsOf(array $shipment): array
-    {
-        $parcels = $shipment['parcels'] ?? null;
-        self::assertIsArray($parcels);
-
-        $list = [];
-        foreach ($parcels as $parcel) {
-            self::assertIsArray($parcel);
-            $list[] = $parcel;
-        }
-
-        return $list;
-    }
-
-    /**
-     * @param array<array-key, mixed> $shipment
-     *
-     * @return array<array-key, mixed>
-     */
-    private function parcelAt(array $shipment, int $index): array
-    {
-        $parcels = $shipment['parcels'] ?? null;
-        self::assertIsArray($parcels);
-        $parcel = $parcels[$index] ?? null;
-        self::assertIsArray($parcel);
-
-        return $parcel;
-    }
-
-    /**
-     * The SSCC of the last parcel of a shipment.
-     *
-     * @param array<array-key, mixed> $shipment
-     */
-    private function sscc(array $shipment): string
-    {
-        $parcels = $shipment['parcels'] ?? null;
-        self::assertIsArray($parcels);
-        $sscc = $this->parcelAt($shipment, \count($parcels) - 1)['sscc'] ?? null;
-        self::assertIsString($sscc);
-
-        return $sscc;
-    }
-
-    /**
      * The label of a parcel. It is not JSON, so it is read from the response and not decoded.
      */
     private function label(string $shipmentId, string $sscc, string $format, ?string $tenant = null): Response
@@ -436,18 +327,5 @@ final class PackingApiTest extends OutboundApiTestCase
         }
 
         return (10 - $sum % 10) % 10;
-    }
-
-    /**
-     * @param array<array-key, mixed> $resource
-     *
-     * @return list<mixed>
-     */
-    private function listOf(array $resource, string $field): array
-    {
-        $list = $resource[$field] ?? null;
-        self::assertIsArray($list);
-
-        return array_values($list);
     }
 }
