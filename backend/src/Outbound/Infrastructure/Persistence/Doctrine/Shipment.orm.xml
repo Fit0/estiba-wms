@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Outbound\Domain\Shipment" table="shipments">
+        <indexes>
+            <index name="idx_shipments_tenant_status" columns="tenant_id,status"/>
+        </indexes>
+        <!-- OUT-20: an order is packed in one shipment, also against two packers starting it at once. -->
+        <unique-constraints>
+            <unique-constraint name="uniq_shipments_order" columns="order_id"/>
+        </unique-constraints>
+
+        <id name="id" type="shipment_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="orderId" column="order_id" type="order_id"/>
+        <field name="warehouseId" column="warehouse_id" type="outbound_warehouse_id"/>
+        <field name="status" enum-type="App\Outbound\Domain\ShipmentStatus" length="7"/>
+        <field name="picked" type="outbound_shipment_picked"/>
+        <field name="parcels" type="outbound_parcels"/>
+        <field name="startedAt" column="started_at" type="datetime_immutable"/>
+        <field name="packedAt" column="packed_at" type="datetime_immutable" nullable="true"/>
+    </entity>
+</doctrine-mapping>

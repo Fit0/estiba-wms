@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Catalog\Domain;
 
 use App\Catalog\Domain\Exception\InvalidGtin;
+use App\Shared\Domain\Gs1CheckDigit;
 
 /**
  * A GS1 barcode number: GTIN-8, GTIN-12 (UPC), GTIN-13 (EAN) or GTIN-14, whose last digit
@@ -43,15 +44,7 @@ final readonly class Gtin implements \Stringable
      */
     public static function checkDigitFor(string $digitsWithoutCheckDigit): int
     {
-        $sum = 0;
-        $weight = 3;
-
-        foreach (array_reverse(str_split($digitsWithoutCheckDigit)) as $digit) {
-            $sum += $weight * (int) $digit;
-            $weight = 4 - $weight;
-        }
-
-        return (10 - $sum % 10) % 10;
+        return Gs1CheckDigit::for($digitsWithoutCheckDigit);
     }
 
     public function equals(self $other): bool

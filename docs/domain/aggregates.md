@@ -239,22 +239,24 @@ stateDiagram-v2
 
 ### Shipment
 
-Identity: `ShipmentId`. Holds the order, the carrier and the parcels (`SSCC`, contents, weight, open or closed).
+Identity: `ShipmentId`. Holds the order, the warehouse, what the order had picked when packing began (by product), the status (packing or packed) and the parcels. A parcel is a value inside it: the `SSCC`, the contents by product, the weight in grams and when it was closed. A parcel exists only closed: the packer fills a physical box and tells the system what is inside when it is sealed. The carrier arrives with dispatch.
 
 ```mermaid
 stateDiagram-v2
     [*] --> Packing
     Packing --> Packed: all picked units packed
-    Packed --> Dispatched
+    Packed --> Dispatched: dispatch
     Dispatched --> [*]
 ```
 
 | ID | Invariant |
 |---|---|
-| OUT-14 | The SSCC passes the GS1 check digit, is unique, and is assigned once, when the parcel is closed. |
-| OUT-15 | For every product, the packed quantity never exceeds the picked quantity. |
-| OUT-16 | A shipment is packed only when all picked units are in parcels. |
-| OUT-17 | A dispatched shipment cannot change. |
+| OUT-19 | The SSCC has 18 digits and passes the GS1 check digit. It is the extension digit, the GS1 company prefix, a serial the company never repeats, and the check digit. It is assigned once, when the parcel is closed, and a parcel that is refused does not use a serial up. |
+| OUT-20 | An order is packed in one shipment, and only a picked order with something picked can start one. Units that were short picked are not packed. |
+| OUT-21 | A parcel holds at least one product, a positive number of units of each, and weighs between 1 and 1,000,000 grams. The same product twice in a parcel is added up. |
+| OUT-22 | For every product, the units in parcels never exceed the units picked, and a parcel holds only products that were picked. |
+| OUT-23 | A shipment is packed only when all picked units are in parcels. |
+| OUT-24 | A packed shipment cannot change. (A dispatched one neither, when dispatch arrives.) |
 
 ## Rules that span contexts
 

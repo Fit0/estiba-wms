@@ -1,0 +1,7 @@
+label:
+    closed_on: 'Date: {date}'
+    order: 'Order {reference}'
+    parcel: 'Parcel {number}'
+    ship_to: 'Ship to'
+    units: '{units, plural, one {# unit} other {# units}}'
+    weight: 'Weight: {grams, number} g'

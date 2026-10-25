@@ -9,6 +9,9 @@
 parameters:
     # How putaway suggests a location: first_free, by_family or by_turnover (ADR 0011).
     env(PUTAWAY_STRATEGY): 'by_family'
+    # The GS1 company prefix in front of every SSCC (OUT-19). This one is a placeholder for demos and
+    # tests: a company that ships real parcels sets the prefix GS1 licensed to it.
+    env(GS1_COMPANY_PREFIX): '8400000'
 
 services:
     # default configuration for services in *this* file
@@ -34,6 +37,10 @@ services:
     App\Inbound\Application\Putaway\PutawayPlanner:
         arguments:
             $strategy: '%env(enum:App\Inbound\Domain\Putaway\PutawayStrategyName:PUTAWAY_STRATEGY)%'
+
+    App\Outbound\Infrastructure\Persistence\Sscc\DbalSsccSequence:
+        arguments:
+            $companyPrefix: '%env(GS1_COMPANY_PREFIX)%'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

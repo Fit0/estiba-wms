@@ -233,7 +233,7 @@ flowchart TB
 | `CloseParcel` | Packer | `Shipment` | The parcel is empty, or it holds more than was picked |
 | `CompletePacking` | Packer | `Shipment` | Picked quantities are not all packed |
 
-Closing a parcel assigns its SSCC and produces its label.
+Closing a parcel assigns its SSCC and produces its label. In the code a parcel exists only closed: `CloseParcel` receives the contents and the weight of a box that is already sealed, and `StartPacking` is started by the packer on a picked order and not by a policy ([ADR 0017](../adr/0017-packing-parcels-with-sscc-labels.md)). The label is a query, not an event: it can be printed again at any time.
 
 ### 3.2 Dispatch
 

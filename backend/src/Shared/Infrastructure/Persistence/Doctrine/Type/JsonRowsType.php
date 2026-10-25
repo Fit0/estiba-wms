@@ -34,7 +34,7 @@ abstract class JsonRowsType extends Type
     /**
      * @param T $item
      *
-     * @return array<string, bool|int|string|null>
+     * @return array<string, mixed> plain values and lists of them, since the row becomes JSON
      */
     abstract protected function toRow(object $item): array;
 
