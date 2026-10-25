@@ -1,0 +1,344 @@
+# What the OpenAPI document says about each operation of the API (E04-05, ADR 0019).
+#
+# API Platform writes the shape of every request and response from the resources. This file adds
+# what a person needs to use them: a summary, the rules that matter, the role that may call it and an
+# example of the body. `OpenApiDocumentation` applies it, and `OpenApiDocumentationTest` fails when
+# an operation of the API is missing here, or an entry here no longer matches an operation.
+#
+# Per operation:
+#   summary      one sentence, in the imperative
+#   description  the rules that decide the answer; the role and the errors are added on their own
+#   role         operator, supervisor or admin: the lowest role that may call it (config/packages/security.yaml)
+#   example      the JSON body of the request
+#   query        the filters of a list, besides `page` and `itemsPerPage`
+#   conflicts    false when the operation never answers 409
+#   paged        false for a list that is not paged
+#
+# Ids in the examples are made up but valid.
+
+tags:
+  Identity: 'Signing in and the signed-in user.'
+  Warehouse: 'Warehouses, their zones and their locations.'
+  Catalog: 'Products, their barcodes and their packaging.'
+  Inventory: 'Stock by location, its ledger of movements and what each product has.'
+  Inbound: 'Expected deliveries (ASN), the receipts that count them at the dock, and putaway.'
+  Outbound: 'Orders, waves, pick lists and the packing of parcels with their SSCC labels.'
+  Audit: 'The trail of everything that happened, and who did it.'
+
+operations:
+  # ------------------------------------------------------------------ Identity
+  'POST /api/auth/login':
+    summary: 'Sign in and get a token'
+    description: 'Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. Wrong credentials answer 401.'
+    example: { email: 'ana@marea-moda.example', password: 'the-password-of-ana' }
+  'GET /api/me':
+    summary: 'Get the signed-in user'
+    description: 'The user, the roles and the tenant that the token stands for. The roles are read from the database on every request, not from the token.'
+    role: operator
+
+  # ------------------------------------------------------------------ Warehouse
+  'GET /api/warehouses':
+    summary: 'List the warehouses'
+    role: operator
+    paged: false
+  'POST /api/warehouses':
+    summary: 'Create a warehouse'
+    description: 'The code is unique in the tenant (2 to 12 letters or digits, with single hyphens between groups).'
+    role: supervisor
+    example: { code: 'ZAR-01', name: 'Centro logístico de Zaragoza' }
+  'GET /api/warehouses/{id}':
+    summary: 'Get a warehouse'
+    description: 'With its zones.'
+    role: operator
+  'POST /api/warehouses/{warehouseId}/zones':
+    summary: 'Define a zone of a warehouse'
+    description: 'A zone groups locations of one storage class. The pick sequence decides the order in which zones are walked when picking.'
+    role: supervisor
+    example: { code: 'A', name: 'Moda mujer', storageClass: 'ambient', pickSequence: 10 }
+  'GET /api/zones/{id}':
+    summary: 'Get a zone'
+    role: operator
+  'POST /api/zones/{id}/families':
+    summary: 'Assign product families to a zone'
+    description: 'Putaway prefers the zone that holds the family of the product. The list replaces the previous one.'
+    role: supervisor
+    example: { families: ['camisetas', 'vaqueros'] }
+  'GET /api/warehouses/{warehouseId}/locations':
+    summary: 'List the locations of a warehouse'
+    role: operator
+    query:
+      - { name: status, description: 'Only the locations in this status.', enum: [active, blocked] }
+      - { name: zoneId, description: 'Only the locations of this zone.', example: '0192f2b4-7c3e-7a11-8d5b-3c1f0a8e6b22' }
+  'POST /api/warehouses/{warehouseId}/locations':
+    summary: 'Define a location'
+    description: 'The code follows aisle-module-level, such as `A-03-02`, and is unique in the warehouse. Its type says what it is for: reserve, pick_face, dock, staging, packing or quarantine.'
+    role: supervisor
+    example: { zoneId: '0192f2b4-7c3e-7a11-8d5b-3c1f0a8e6b22', code: 'A-03-02', type: 'reserve', pickSequence: 20, maxWeightKg: 500, maxPalletPositions: 1 }
+  'GET /api/locations/{id}':
+    summary: 'Get a location'
+    role: operator
+  'POST /api/locations/{id}/block':
+    summary: 'Block a location'
+    description: 'Blocking a blocked location answers 409.'
+    role: supervisor
+    example: { reason: 'Estantería dañada, pendiente de revisión' }
+  'POST /api/locations/{id}/unblock':
+    summary: 'Unblock a location'
+    description: 'Unblocking a location that is not blocked answers 409.'
+    role: supervisor
+
+  # ------------------------------------------------------------------ Catalog
+  'GET /api/products':
+    summary: 'List the products'
+    role: operator
+    query:
+      - { name: status, description: 'Only the products in this status.', enum: [active, blocked, discontinued] }
+      - { name: sku, description: 'Only the product with this SKU.', example: 'CAM-LIN-BL-M' }
+  'POST /api/products':
+    summary: 'Register a product'
+    description: 'The SKU is unique in the tenant. A product tracked by lot needs the lot on every receipt and every pick, and one tracked by expiry date needs the date. Dimensions are in millimetres and the weight in grams.'
+    role: supervisor
+    example: { sku: 'CAM-LIN-BL-M', name: 'Camisa de lino blanca, talla M', baseUnit: 'each', storageClass: 'ambient', lengthMm: 300, widthMm: 220, heightMm: 30, weightGrams: 250, trackedByLot: false, trackedByExpiry: false, family: 'camisas', turnoverClass: 'B' }
+  'GET /api/products/{id}':
+    summary: 'Get a product'
+    role: operator
+  'PATCH /api/products/{id}':
+    summary: 'Change the name or the size of a product'
+    description: 'Only the fields you send change. It is a JSON merge patch, so the content type is `application/merge-patch+json`.'
+    role: supervisor
+    example: { name: 'Camisa de lino blanca, talla M (colección otoño)', weightGrams: 260 }
+  'POST /api/products/{id}/block':
+    summary: 'Block a product'
+    description: 'A blocked product is not available for operations: it cannot be ordered. A discontinued product cannot be blocked, and blocking a blocked one answers 409.'
+    role: supervisor
+  'POST /api/products/{id}/unblock':
+    summary: 'Unblock a product'
+    role: supervisor
+  'POST /api/products/{id}/discontinue':
+    summary: 'Discontinue a product'
+    description: 'It cannot be undone: a discontinued product is no longer available for operations, and it can be neither blocked nor unblocked.'
+    role: supervisor
+  'POST /api/products/{id}/classification':
+    summary: 'Classify a product by family and turnover'
+    description: 'The turnover class (A, B or C) and the family guide where putaway puts the product.'
+    role: supervisor
+    example: { turnoverClass: 'A', family: 'camisas' }
+  'POST /api/products/{id}/gtins':
+    summary: 'Assign a barcode to a product'
+    description: 'A GTIN-8, 12, 13 or 14 with a correct GS1 check digit. A barcode belongs to one product in the tenant.'
+    role: supervisor
+    example: { gtin: '8412345678905' }
+  'POST /api/products/{id}/packaging-levels':
+    summary: 'Define a packaging level of a product'
+    description: 'How many base units an inner pack or a pallet holds.'
+    role: supervisor
+    example: { type: 'pallet', baseUnits: 480 }
+
+  # ------------------------------------------------------------------ Inventory
+  'GET /api/stock-items':
+    summary: 'List the stock'
+    description: 'One line per product, location, lot and expiry date, with what is on hand and what is reserved.'
+    role: operator
+    query:
+      - { name: productId, description: 'Only the stock of this product.', example: '0192f2b4-7c3e-7a13-8d5b-3c1f0a8e6b24' }
+      - { name: locationId, description: 'Only the stock in this location.', example: '0192f2b4-7c3e-7a12-9d5b-3c1f0a8e6b23' }
+      - { name: warehouseId, description: 'Only the stock in this warehouse.', example: '0192f2b4-7c3e-7a10-9d5b-3c1f0a8e6b21' }
+      - { name: status, description: 'Only the stock in this status.', enum: [available, quarantine, damaged, on_hold] }
+  'GET /api/stock-items/{id}':
+    summary: 'Get a stock line'
+    role: operator
+  'GET /api/stock-movements':
+    summary: 'List the movements of the stock ledger'
+    description: 'Stock changes only through movements, and a movement is never changed or deleted. The latest come first.'
+    role: operator
+    query:
+      - { name: stockItemId, description: 'Only the movements of this stock line.', example: '0192f2b4-7c3e-7a19-8d5b-3c1f0a8e6b29' }
+      - { name: productId, description: 'Only the movements of this product.', example: '0192f2b4-7c3e-7a13-8d5b-3c1f0a8e6b24' }
+      - { name: locationId, description: 'Only the movements in this location.', example: '0192f2b4-7c3e-7a12-9d5b-3c1f0a8e6b23' }
+  'GET /api/products/{productId}/stock':
+    summary: 'Get the stock of a product'
+    description: 'What the product has on hand and how much of it is available, in quarantine, damaged or on hold, in total and by warehouse.'
+    role: operator
+
+  # ------------------------------------------------------------------ Inbound
+  'GET /api/asns':
+    summary: 'List the expected deliveries'
+    role: operator
+    query:
+      - { name: status, description: 'Only the deliveries in this status.', enum: [expected, partially_received, received, closed, cancelled] }
+  'POST /api/asns':
+    summary: 'Register an expected delivery (ASN)'
+    description: 'The reference is unique in the tenant. Each line names a product and the units that are coming, with the lot and the expiry date when the product needs them.'
+    role: supervisor
+    example: { reference: 'ASN-2026-0042', supplier: 'Textiles del Ebro', expectedDate: '2026-10-28T08:00:00+00:00', lines: [{ productId: '0192f2b4-7c3e-7a13-8d5b-3c1f0a8e6b24', units: 240 }] }
+  'GET /api/asns/{id}':
+    summary: 'Get an expected delivery'
+    role: operator
+  'POST /api/asns/{id}/cancel':
+    summary: 'Cancel an expected delivery'
+    description: 'Only a delivery that is still expected, and with no receipt open.'
+    role: supervisor
+  'POST /api/asns/{id}/close':
+    summary: 'Close an expected delivery'
+    description: 'Only once goods have arrived (partially received or received), and with no receipt open. What did not arrive stays as a shortage.'
+    role: supervisor
+  'POST /api/asns/{asnId}/receipts':
+    summary: 'Open a receipt for a delivery'
+    description: 'A receipt counts what arrives at a dock location.'
+    role: operator
+    example: { dockLocationId: '0192f2b4-7c3e-7a12-9d5b-3c1f0a8e6b23' }
+  'GET /api/receipts/{id}':
+    summary: 'Get a receipt'
+    description: 'With what was expected, what has been counted and the discrepancies found.'
+    role: operator
+  'POST /api/receipts/{id}/items':
+    summary: 'Count an item received'
+    description: 'The product is found by its barcode. More units than expected need the approval of a supervisor before the receipt closes.'
+    role: operator
+    example: { gtin: '8412345678905', units: 120, lot: 'L2026-10', condition: 'good' }
+  'POST /api/receipts/{id}/approve-over-receipt':
+    summary: 'Approve a receipt that has more units than expected'
+    role: supervisor
+  'POST /api/receipts/{id}/close':
+    summary: 'Close a receipt'
+    description: 'It books the stock and plans the putaway tasks.'
+    role: operator
+  'GET /api/putaway-tasks':
+    summary: 'List the putaway tasks'
+    role: operator
+    query:
+      - { name: status, description: 'Only the tasks in this status.', enum: [pending, confirmed] }
+      - { name: receiptId, description: 'Only the tasks of this receipt.', example: '0192f2b4-7c3e-7a1a-9d5b-3c1f0a8e6b2a' }
+  'GET /api/putaway-tasks/{id}':
+    summary: 'Get a putaway task'
+    description: 'With the location the system suggests.'
+    role: operator
+  'POST /api/putaway-tasks/{id}/confirm':
+    summary: 'Confirm where the goods were put'
+    description: 'Moves the stock from the dock to the location. Putting it somewhere other than the suggestion needs a reason.'
+    role: operator
+    example: { locationId: '0192f2b4-7c3e-7a12-9d5b-3c1f0a8e6b23', reason: 'La ubicación sugerida estaba ocupada' }
+  'POST /api/putaway-tasks/{id}/split':
+    summary: 'Split a putaway task'
+    description: 'Takes some units out into a new task, for goods that go to two places.'
+    role: operator
+    example: { units: 40 }
+
+  # ------------------------------------------------------------------ Outbound: orders
+  'GET /api/orders':
+    summary: 'List the orders'
+    description: 'The most urgent first, and among them the ones that have to leave first.'
+    role: operator
+    query:
+      - { name: status, description: 'Only the orders in this status.', enum: [registered, partially_allocated, allocated, in_wave, picked, cancelled] }
+  'POST /api/orders':
+    summary: 'Register an order'
+    description: 'The reference is unique in the tenant. Each line names a product that can be ordered and the units. Stock is not reserved yet: use allocate.'
+    role: supervisor
+    example: { reference: 'PED-2026-1187', warehouseId: '0192f2b4-7c3e-7a10-9d5b-3c1f0a8e6b21', customer: 'Marea Moda Zaragoza', shipTo: { street: 'Calle Mayor 12', postalCode: '50001', city: 'Zaragoza', countryCode: 'ES' }, cutOffAt: '2026-10-28T14:00:00+00:00', priority: 'normal', lines: [{ productId: '0192f2b4-7c3e-7a13-8d5b-3c1f0a8e6b24', units: 24 }] }
+  'GET /api/orders/{id}':
+    summary: 'Get an order'
+    description: 'With its lines, what is allocated and picked of each, and the shortage.'
+    role: operator
+  'POST /api/orders/{id}/allocate':
+    summary: 'Reserve stock for an order'
+    description: 'Takes the oldest expiry date first (FEFO) for products with expiry and the oldest receipt first (FIFO) for the rest. What cannot be covered is the shortage, and the order is partially allocated.'
+    role: supervisor
+  'POST /api/orders/{id}/accept-backorder':
+    summary: 'Accept the backorder of an order'
+    description: 'The customer takes what is covered and waits for the rest. A partially allocated order can join a wave only after this.'
+    role: supervisor
+  'POST /api/orders/{id}/cancel':
+    summary: 'Cancel an order'
+    description: 'Releases its reservations. An order in a wave on the floor, or already picked, cannot be cancelled.'
+    role: supervisor
+
+  # ------------------------------------------------------------------ Outbound: waves and picking
+  'GET /api/waves':
+    summary: 'List the waves'
+    role: operator
+    query:
+      - { name: status, description: 'Only the waves in this status.', enum: [planned, released, completed, cancelled] }
+  'POST /api/waves':
+    summary: 'Group orders into a wave'
+    description: 'Every order must be allocated (or partially allocated with the backorder accepted), in no other wave, and served from the same warehouse.'
+    role: supervisor
+    example: { orderIds: ['0192f2b4-7c3e-7a14-8d5b-3c1f0a8e6b2b', '0192f2b4-7c3e-7a1b-9d5b-3c1f0a8e6b2c'] }
+  'GET /api/waves/{id}':
+    summary: 'Get a wave'
+    role: operator
+  'POST /api/waves/{id}/release':
+    summary: 'Send a wave to the floor'
+    description: 'Makes the pick lists, walking the aisles in a serpentine route. The body is optional: `{"pickLists": 2}` shares the wave among two operators, and without a body it is one list.'
+    role: supervisor
+    example: { pickLists: 2 }
+  'POST /api/waves/{id}/cancel':
+    summary: 'Cancel a wave'
+    description: 'Frees its orders and cancels its pick lists. Not once a pick has been confirmed.'
+    role: supervisor
+  'GET /api/pick-lists':
+    summary: 'List the pick lists'
+    role: operator
+    paged: false
+    query:
+      - { name: waveId, description: 'Only the pick lists of this wave.', example: '0192f2b4-7c3e-7a15-9d5b-3c1f0a8e6b2d' }
+  'GET /api/pick-lists/{id}':
+    summary: 'Get a pick list'
+    description: 'The lines come in the order they are walked.'
+    role: operator
+  'POST /api/pick-lists/{id}/assign':
+    summary: 'Assign a pick list to an operator'
+    description: 'Until the list is started. An operator who starts a list nobody was assigned takes it.'
+    role: supervisor
+    example: { operatorId: '0192f2b4-7c3e-7a18-8d5b-3c1f0a8e6b28' }
+  'POST /api/pick-lists/{id}/start':
+    summary: 'Start a pick list'
+    role: operator
+  'POST /api/pick-lists/{id}/lines/{position}/confirm':
+    summary: 'Confirm a pick'
+    description: 'Scan the location, the barcode and the lot (if the line has one). Fewer units than asked is a short pick and needs a reason. The picked units move to staging and stay reserved for the order. Only the operator of the list can confirm.'
+    role: operator
+    example: { location: 'A-03-02', gtin: '8412345678905', units: 24 }
+
+  # ------------------------------------------------------------------ Outbound: packing
+  'GET /api/shipments':
+    summary: 'List the shipments'
+    role: operator
+    query:
+      - { name: status, description: 'Only the shipments in this status.', enum: [packing, packed] }
+  'POST /api/shipments':
+    summary: 'Start packing a picked order'
+    description: 'An order has one shipment. Only a picked order with something picked can start one, and what was short picked is not packed.'
+    role: operator
+    example: { orderId: '0192f2b4-7c3e-7a14-8d5b-3c1f0a8e6b2b' }
+  'GET /api/shipments/{id}':
+    summary: 'Get a shipment'
+    description: 'With what was picked, what is still to pack and the parcels closed.'
+    role: operator
+  'POST /api/shipments/{id}/parcels':
+    summary: 'Close a parcel'
+    description: 'Say what is inside the sealed box and what it weighs, in grams. Closing assigns the SSCC. A parcel holds at least one product and never more units than were picked. The answer is the shipment, whose last parcel is the new one.'
+    role: operator
+    example: { weightGrams: 6500, contents: [{ productId: '0192f2b4-7c3e-7a13-8d5b-3c1f0a8e6b24', units: 24 }] }
+  'POST /api/shipments/{id}/complete':
+    summary: 'Complete the packing'
+    description: 'Every picked unit must be in a parcel. A packed shipment cannot change.'
+    role: operator
+
+  # ------------------------------------------------------------------ Audit
+  'GET /api/audit-log':
+    summary: 'List the audit trail'
+    description: 'Every domain event of the tenant, the latest first, with who caused it, the aggregate it is about and what it carried. Personal data such as email addresses is not kept in it.'
+    role: supervisor
+    query:
+      - { name: eventType, description: 'Only this kind of event.', example: 'outbound.pick_list_started' }
+      - { name: actorId, description: 'Only what this user did.', example: '0192f2b4-7c3e-7a18-8d5b-3c1f0a8e6b28' }
+      - { name: subjectId, description: 'Only the events of this aggregate, such as one order.', example: '0192f2b4-7c3e-7a14-8d5b-3c1f0a8e6b2b' }
+      - { name: from, description: 'From this moment on, included (ISO 8601).', example: '2026-10-24T00:00:00+00:00' }
+      - { name: until, description: 'Until this moment, not included (ISO 8601).', example: '2026-10-25T00:00:00+00:00' }
+
+  # ------------------------------------------------------------------ Labels (not a JSON resource)
+  'GET /api/shipments/{id}/parcels/{sscc}/label.{format}':
+    summary: 'Get the label of a parcel'
+    description: 'The SSCC as a GS1-128 barcode, with the destination, the order, the weight and the date. `pdf` is a 4 by 6 inch page to look at or print anywhere, and `zpl` is the text to send to a Zebra printer at 203 dpi. The words follow `Accept-Language`. It can be printed again at any time.'
+    role: operator

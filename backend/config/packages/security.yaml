@@ -52,6 +52,8 @@ security:
         - { path: '^/api/putaway-tasks/[^/]+/(confirm|split)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/pick-lists/[^/]+/(start|lines/[0-9]+/confirm)$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/shipments(/[^/]+/(parcels|complete))?$', methods: [POST], roles: ROLE_OPERATOR }
+        # The audit trail says who did what, so reading it is for supervisors and admins.
+        - { path: ^/api/audit-log, roles: ROLE_SUPERVISOR }
         - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
         - { path: ^/api, roles: ROLE_SUPERVISOR }
 

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Audit\Domain\AuditEntry" table="audit_entries">
+        <indexes>
+            <index name="idx_audit_entries_tenant_time" columns="tenant_id,occurred_at"/>
+            <index name="idx_audit_entries_tenant_subject" columns="tenant_id,subject_id"/>
+            <index name="idx_audit_entries_tenant_type" columns="tenant_id,event_type"/>
+            <index name="idx_audit_entries_tenant_actor" columns="tenant_id,actor_id"/>
+        </indexes>
+
+        <id name="id" type="audit_entry_id"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="eventType" column="event_type" length="100"/>
+        <field name="occurredAt" column="occurred_at" type="datetime_immutable"/>
+        <field name="recordedAt" column="recorded_at" type="datetime_immutable"/>
+        <field name="actorId" column="actor_id" type="guid" nullable="true"/>
+        <field name="subjectId" column="subject_id" type="guid" nullable="true"/>
+        <field name="data" type="json"/>
+    </entity>
+</doctrine-mapping>

@@ -7,11 +7,13 @@ namespace App\Identity\Domain\Event;
 use App\Identity\Domain\Email;
 use App\Identity\Domain\UserId;
 use App\Shared\Domain\DomainEvent;
+use App\Shared\Domain\Sensitive;
 
 final readonly class UserEnabled implements DomainEvent
 {
     public function __construct(
         public UserId $userId,
+        #[Sensitive]
         public Email $email,
         private \DateTimeImmutable $occurredAt,
     ) {

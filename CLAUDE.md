@@ -34,7 +34,7 @@ Hexagonal architecture with DDD, organized by bounded context under `backend/src
 ```
 src/
 ├── Shared/                  Cross-cutting code (health check, base infrastructure)
-└── <Context>/               Identity, Catalog, Warehouse, Inventory, Inbound, Outbound
+└── <Context>/               Identity, Catalog, Warehouse, Inventory, Inbound, Outbound, Audit
     ├── Domain/              Entities, value objects, domain events, repository interfaces (ports)
     ├── Application/         Use cases: commands, queries and their handlers
     └── Infrastructure/      Adapters: Doctrine repositories, XML mappings, HTTP controllers, API resources
@@ -51,7 +51,9 @@ Both this rule and the context boundaries below are enforced by `backend/tests/A
 - A policy ("whenever X happens, do Y") is an `EventHandler` in `Application/`, invoked with one domain event. A command handler that wants its events handled publishes them with `EventBus::publish(...$aggregate->pullEvents())`. The events leave after the command commits, and each policy runs in its own transaction (ADR 0012).
 - A query that shows data of several contexts reads a projection, never a join across their tables: a table owned by the context that answers, filled by a policy from the other contexts' contracts, written and read with plain SQL in `Infrastructure/Persistence/ReadModel`, and rebuildable from the source (see the stock read model, ADR 0013).
 - An event routed to `async` in `config/packages/messenger.yaml` is handled by the worker, maybe more than once: its policy must be idempotent (record in its own transaction that it ran, and do nothing the second time), have one handler per event, and take everything it needs from the event, since there is no signed-in user and no tenant filter. After changing a policy, `make worker-restart`.
+- The audit trail writes down every domain event that is published, through a decorator of the event bus, in the transaction of the change ([ADR 0018](docs/adr/0018-audit-trail-of-every-domain-event.md)). A field of an event that is personal data carries `#[Sensitive]`. A new event needs nothing else.
 - API resources are DTOs in `Infrastructure/Http/Resource`, never domain entities. Each operation is a state provider (query bus) or processor (command bus) in `Http/State` (ADR 0006, ADR 0009). The tenant comes from `CurrentTenant`, never from the request body.
+- Every API operation has an entry in `backend/config/api/operations.yaml`: a summary, the rules, the role, an example of the body and the filters of a list. The OpenAPI document is completed from that table, and a test fails when an operation has no entry, an example does not fit, or the role it says is not the one the firewall asks for ([ADR 0019](docs/adr/0019-openapi-document-written-by-hand-and-checked.md)).
 - A context may depend on another one only through that context's `Application/Contract` namespace (interfaces, DTOs and integration events). Never on its `Domain`, `Infrastructure` or the rest of its `Application`. Reference other contexts' data by id value, with no foreign keys or joins across contexts (ADR 0003).
 - `Shared` may be used by every context and must not depend on any of them.
 - Every architecture decision gets an ADR in `docs/adr/` (start from `docs/adr/template.md`).
