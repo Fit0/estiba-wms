@@ -19,6 +19,13 @@ final readonly class OpenApiDocumentation
 {
     private const string AUTH_LOGIN = 'POST /api/auth/login';
 
+    private const string AUTH_REFRESH = 'POST /api/auth/refresh';
+
+    private const string AUTH_LOGOUT = 'POST /api/auth/logout';
+
+    /** The operations that need no token: they are how a user gets one, keeps it or gives it up (ADR 0022). */
+    private const array PUBLIC = [self::AUTH_LOGIN, self::AUTH_REFRESH, self::AUTH_LOGOUT];
+
     private const string LABEL = '/api/shipments/{id}/parcels/{sscc}/label.{format}';
 
     /**
@@ -141,7 +148,7 @@ final readonly class OpenApiDocumentation
     {
         $info['description'] = implode("\n\n", [
             'Warehouse management system for a fashion company that receives from suppliers and ships to stores.',
-            '**Sign in** at `POST /api/auth/login` and send the token in every request as `Authorization: Bearer <token>`. A token lasts one hour. The tenant always comes from the signed-in user, and never from the request.',
+            '**Sign in** at `POST /api/auth/login` and send the token in every request as `Authorization: Bearer <token>`. A token lasts one hour; `POST /api/auth/refresh` renews it with the cookie that signing in sets, and `POST /api/auth/logout` ends the session. The tenant always comes from the signed-in user, and never from the request.',
             '**Roles** are `admin`, `supervisor` and `operator`, each including the ones below it. Reading needs any signed-in user. Changing needs a supervisor, except the work of the dock and the floor, which operators do. Every operation says its role.',
             '**Errors** are `application/problem+json` with a stable `code` to switch on. The `detail` is translated to the language of `Accept-Language`: Spanish by default, English on request. A request that is refused changes nothing.',
             '**Lists** that can grow are paged with `page` and `itemsPerPage` (30 by default, 100 at most), and come as a JSON array.',
@@ -264,10 +271,52 @@ final readonly class OpenApiDocumentation
      */
     private function outsideApiPlatform(string $path): array
     {
-        if (self::LABEL !== $path) {
-            return [];
-        }
+        return match ($path) {
+            self::LABEL => $this->label(),
+            '/api/auth/refresh' => $this->refresh(),
+            '/api/auth/logout' => $this->logout(),
+            default => [],
+        };
+    }
 
+    /**
+     * @return array<string, mixed>
+     */
+    private function refresh(): array
+    {
+        return [
+            'operationId' => 'api_auth_refresh_post',
+            'responses' => [
+                '200' => [
+                    'description' => 'A new access token. The cookie is replaced by a new one.',
+                    'headers' => ['Set-Cookie' => ['description' => 'The new refresh token, as an `HttpOnly` cookie.', 'schema' => ['type' => 'string']]],
+                    'content' => ['application/json' => ['schema' => ['type' => 'object', 'required' => ['token'], 'properties' => ['token' => ['type' => 'string']]], 'example' => ['token' => 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.e30.c2lnbmF0dXJl']]],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function logout(): array
+    {
+        return [
+            'operationId' => 'api_auth_logout_post',
+            'responses' => [
+                '204' => [
+                    'description' => 'The session is over and the cookie is cleared.',
+                    'headers' => ['Set-Cookie' => ['description' => 'Clears the refresh token cookie.', 'schema' => ['type' => 'string']]],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function label(): array
+    {
         return [
             'operationId' => 'api_shipments_parcels_label_get',
             'parameters' => [
@@ -297,14 +346,15 @@ final readonly class OpenApiDocumentation
     private function operation(string $key, string $path, string $method, array $operation, array $documentation): array
     {
         $isLogin = self::AUTH_LOGIN === $key;
-        $role = $isLogin ? null : (\is_string($documentation['role'] ?? null) ? $documentation['role'] : 'operator');
+        $isPublic = \in_array($key, self::PUBLIC, true);
+        $role = $isPublic ? null : (\is_string($documentation['role'] ?? null) ? $documentation['role'] : 'operator');
 
         $operation['tags'] = [self::tagOf($path)];
         $operation['summary'] = \is_string($documentation['summary'] ?? null) ? $documentation['summary'] : ($operation['summary'] ?? '');
         $operation['description'] = $this->description($documentation, $role);
         $operation['parameters'] = $this->parameters($operation['parameters'] ?? null, $documentation, $method, $path);
-        $operation['responses'] = $this->responses($operation['responses'] ?? null, $path, $method, $role, $isLogin, $documentation);
-        if ($isLogin) {
+        $operation['responses'] = $this->responses($operation['responses'] ?? null, $path, $method, $role, $isLogin, $isPublic, $documentation);
+        if ($isPublic) {
             $operation['security'] = [];
         }
         if (\array_key_exists('example', $documentation)) {
@@ -347,7 +397,7 @@ final readonly class OpenApiDocumentation
             $parts[] = $documentation['description'];
         }
         $parts[] = match ($role) {
-            null => '**Role:** none, it is how you sign in.',
+            null => '**Role:** none, it needs no token.',
             'operator' => '**Role:** any signed-in user.',
             'supervisor' => '**Role:** supervisor or admin.',
             default => '**Role:** '.$role.'.',
@@ -443,7 +493,7 @@ final readonly class OpenApiDocumentation
      *
      * @return array<int|string, mixed>
      */
-    private function responses(mixed $existing, string $path, string $method, ?string $role, bool $isLogin, array $documentation): array
+    private function responses(mixed $existing, string $path, string $method, ?string $role, bool $isLogin, bool $isPublic, array $documentation): array
     {
         $responses = [];
         foreach (self::map($existing) as $status => $response) {
@@ -452,13 +502,15 @@ final readonly class OpenApiDocumentation
             }
         }
 
-        $changes = \in_array($method, ['post', 'patch'], true) && !$isLogin;
+        $changes = \in_array($method, ['post', 'patch'], true) && !$isPublic;
         $byId = str_contains($path, '{');
 
         if (\array_key_exists('example', $documentation) || $byId || $isLogin || \array_key_exists('query', $documentation)) {
             $responses['400'] = ['$ref' => '#/components/responses/BadRequest'];
         }
-        $responses['401'] = ['$ref' => '#/components/responses/Unauthorized'];
+        if (false !== ($documentation['unauthorized'] ?? true)) {
+            $responses['401'] = ['$ref' => '#/components/responses/Unauthorized'];
+        }
         if (null !== $role && 'operator' !== $role) {
             $responses['403'] = ['$ref' => '#/components/responses/Forbidden'];
         }

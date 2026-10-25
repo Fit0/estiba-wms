@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Identity\Application;
 
+use App\Identity\Application\RefreshSecretGenerator;
 use App\Identity\Domain\Email;
 use App\Identity\Domain\PasswordHash;
 use App\Identity\Domain\PasswordHasher;
 use App\Identity\Domain\PlainPassword;
+use App\Identity\Domain\RefreshToken;
+use App\Identity\Domain\RefreshTokenRepository;
 use App\Identity\Domain\Tenant;
 use App\Identity\Domain\TenantRepository;
 use App\Identity\Domain\User;
@@ -29,10 +32,29 @@ final readonly class IdentityFakes
 
     public InMemoryTenants $tenants;
 
+    public InMemoryRefreshTokens $refreshTokens;
+
     public function __construct()
     {
         $this->users = new InMemoryUsers();
         $this->tenants = new InMemoryTenants();
+        $this->refreshTokens = new InMemoryRefreshTokens();
+    }
+
+    /**
+     * Secrets that are different every time, and that a test can predict.
+     */
+    public static function secrets(): RefreshSecretGenerator
+    {
+        return new class implements RefreshSecretGenerator {
+            private int $counter = 0;
+
+            #[\Override]
+            public function next(): string
+            {
+                return 'secret-'.++$this->counter;
+            }
+        };
     }
 
     public static function hasher(): PasswordHasher
@@ -130,5 +152,51 @@ final class InMemoryTenants implements TenantRepository
     public function save(Tenant $tenant): void
     {
         $this->saved[$tenant->id()->value] = $tenant;
+    }
+}
+
+/**
+ * A clock that a test moves forward.
+ */
+final class MovableClock implements Clock
+{
+    public function __construct(public \DateTimeImmutable $now)
+    {
+    }
+
+    #[\Override]
+    public function now(): \DateTimeImmutable
+    {
+        return $this->now;
+    }
+}
+
+final class InMemoryRefreshTokens implements RefreshTokenRepository
+{
+    /** @var list<RefreshToken> */
+    public array $saved = [];
+
+    #[\Override]
+    public function findBySecretHash(string $secretHash): ?RefreshToken
+    {
+        foreach ($this->saved as $token) {
+            if ($token->hasSecretHash($secretHash)) {
+                return $token;
+            }
+        }
+
+        return null;
+    }
+
+    #[\Override]
+    public function findLiveInFamily(string $familyId): array
+    {
+        return array_values(array_filter($this->saved, static fn (RefreshToken $token): bool => $token->familyId() === $familyId && !$token->isRevoked()));
+    }
+
+    #[\Override]
+    public function save(RefreshToken $token): void
+    {
+        $this->saved[] = $token;
     }
 }

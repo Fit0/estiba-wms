@@ -7,6 +7,7 @@ namespace App\Tests\Functional\Demo;
 use App\Demo\Fashion\FashionDemoLoader;
 use App\Identity\Infrastructure\Console\PasswordPrompt;
 use App\Tests\Functional\Support\ApiTestCase;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -102,6 +103,11 @@ final class FashionDemoTest extends ApiTestCase
         $application = new Application(self::$kernel ?? throw new \LogicException('The kernel is not booted.'));
         $tester = new CommandTester($application->find('app:demo:load'));
         $tester->execute([], ['interactive' => false]);
+
+        // The loader builds through the domain and leaves the events of what it made on the objects it
+        // still holds. In the same process, the next command (signing in starts a session) would find
+        // them, which does not happen in a real run: the console command ends there.
+        self::getContainer()->get(EntityManagerInterface::class)->clear();
 
         return $tester;
     }

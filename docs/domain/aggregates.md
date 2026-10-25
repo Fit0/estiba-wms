@@ -27,6 +27,16 @@ Identity: `UserId`. Holds the tenant, the email address, the password hash, the 
 | IDN-05 | A user belongs to one tenant for its whole life: nothing can move it. |
 | IDN-06 | A disabled user cannot sign in, and a token it already holds stops working at once, because the user is loaded on every request. Enforced by the security layer's user checker. |
 
+### RefreshToken
+
+Identity: a UUID. Holds the user, the family it belongs to, the hash of its secret (the secret itself is never kept), when it was issued, when it expires, when its session ends, and when it was spent or revoked. Signing in starts a family with `RefreshToken::start()`, and every renewal spends a token and creates its successor with `rotate()` (ADR 0022).
+
+| ID | Invariant |
+|---|---|
+| IDN-08 | A refresh token works once: using it spends it and gives a successor of the same family. Only the hash of the secret is stored. |
+| IDN-09 | A spent token that shows up again, after a few seconds of grace for two requests sent at once, means a copy exists: the whole family is revoked. |
+| IDN-10 | A session ends at a fixed moment, 30 days after signing in, however often it is renewed. No token of the family outlives it. |
+
 ## Catalog
 
 ### Product

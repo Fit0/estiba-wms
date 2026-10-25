@@ -52,7 +52,7 @@ Three questions follow. How does a caller prove who it is? Where does the tenant
 
 These are deliberate and recorded so they are not mistaken for oversights.
 
-- **No refresh token.** After an hour the client signs in again. A refresh flow comes with the frontend (E05).
+- **No refresh token.** After an hour the client signs in again. *Superseded: sessions renew with a rotating refresh token in a cookie ([ADR 0022](0022-sessions-with-a-rotating-refresh-token-in-a-cookie.md)).*
 - **No sign-in throttling and no lockout.** Rate limiting is part of the security work in E10.
 - **No user management API.** Users are created from the console. An admin screen comes later.
 - **No second factor.**

@@ -27,7 +27,7 @@ The app talks to the API through the same address: the development server forwar
 
 ```
 frontend/
-├── src/                     The app (main.tsx, App.tsx and what comes next)
+├── src/                     The app: main.tsx, routes.tsx, auth/ (session, guards), pages/, layouts/, i18n/
 ├── vite.config.ts           Vite, the proxy to the API and Vitest
 ├── eslint.config.js         ESLint: strict TypeScript, React hooks and accessibility
 ├── tsconfig.*.json          TypeScript: strict, one config for the app and one for the tools
@@ -38,5 +38,6 @@ frontend/
 ## Rules
 
 - No `any` and no `!`: ESLint fails them. Use `unknown` and narrow it.
+- The session (`src/auth/`) keeps the access token in memory and renews it with the cookie of the refresh token (ADR 0022). Routes are in `src/routes.tsx`: sign-in is the only public one, and `RequireRole` guards by role (what to show; the API is what refuses).
 - Server data goes through TanStack Query, and the types of the API are generated from its OpenAPI document (E05-04).
 - Target WCAG 2.2 AA: semantic HTML, a label on every input, visible focus, contrast of at least 4.5:1.

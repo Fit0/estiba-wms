@@ -7,7 +7,7 @@ lexik_jwt_authentication:
     pass_phrase: '%env(JWT_PASSPHRASE)%'
 
     # One hour. A token cannot be revoked on its own, but the user is loaded from the database on
-    # every request, so a disabled user stops at once. A refresh token arrives with the frontend.
+    # every request, so a disabled user stops at once. The client renews it with the refresh token (ADR 0022).
     token_ttl: 3600
 
     # Documents the login route in the OpenAPI description.

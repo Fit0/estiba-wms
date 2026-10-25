@@ -20,8 +20,10 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
 
+        # Signing in, renewing the session and signing out do not need a token: they are how you get
+        # one (ADR 0022). A stale Authorization header sent along is ignored.
         login:
-            pattern: ^/api/auth/login
+            pattern: ^/api/auth/(login|refresh|logout)
             stateless: true
             provider: users
             user_checker: App\Identity\Infrastructure\Security\UserChecker
@@ -45,7 +47,7 @@ security:
     # work of the dock: opening a receipt, counting what arrives, closing it, and putting the goods
     # away, walking a pick list, and packing parcels. Approving an over-receipt stays with supervisors (INB-08).
     access_control:
-        - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/(login|refresh|logout), roles: PUBLIC_ACCESS }
         - { path: ^/api/docs, roles: PUBLIC_ACCESS }
         - { path: '^/api/asns/[^/]+/receipts$', methods: [POST], roles: ROLE_OPERATOR }
         - { path: '^/api/receipts/[^/]+/(items|close)$', methods: [POST], roles: ROLE_OPERATOR }
