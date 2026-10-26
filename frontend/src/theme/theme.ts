@@ -43,4 +43,37 @@ export function saveTheme(theme: Theme): void {
  */
 export function applyTheme(theme: Theme, root: HTMLElement = document.documentElement): void {
   root.dataset.theme = theme;
+  for (const listener of listeners) {
+    listener();
+  }
+}
+
+const listeners = new Set<() => void>();
+
+/**
+ * The theme that is on the page now. A page that nobody has themed yet is dark, as the CSS is.
+ */
+export function currentTheme(root: HTMLElement = document.documentElement): Theme {
+  const theme = root.dataset.theme;
+
+  return isTheme(theme) ? theme : 'dark';
+}
+
+/**
+ * For React's `useSyncExternalStore`: the screens that show the theme follow it wherever it changes.
+ */
+export function subscribeTheme(listener: () => void): () => void {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/**
+ * The visitor's choice: it goes on the page now and is kept for the next visit.
+ */
+export function chooseTheme(theme: Theme): void {
+  applyTheme(theme);
+  saveTheme(theme);
 }

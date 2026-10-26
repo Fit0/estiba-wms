@@ -27,7 +27,7 @@ The app talks to the API through the same address: the development server forwar
 
 ```
 frontend/
-├── src/                     The app: main.tsx, routes.tsx, auth/ (session, guards), pages/, layouts/, i18n/, theme/
+├── src/                     The app: main.tsx, routes.tsx, auth/ (session, guards), pages/, layouts/ (sidebar and top bar), components/ (button, field, page title), i18n/, theme/
 │   ├── index.css            Tailwind and the theme of the design
 │   └── styles/tokens.css    The design tokens, in the dark and the light theme
 ├── vite.config.ts           Vite, the proxy to the API and Vitest

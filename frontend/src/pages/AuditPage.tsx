@@ -1,3 +1,4 @@
+import { PageHeader } from '../components/PageHeader';
 import { useTranslation } from '../i18n';
 
 /**
@@ -7,10 +8,5 @@ import { useTranslation } from '../i18n';
 export function AuditPage() {
   const { t } = useTranslation();
 
-  return (
-    <section>
-      <h1>{t('audit.title')}</h1>
-      <p>{t('audit.intro')}</p>
-    </section>
-  );
+  return <PageHeader title={t('audit.title')}>{t('audit.intro')}</PageHeader>;
 }

@@ -1,12 +1,8 @@
+import { PageHeader } from '../components/PageHeader';
 import { useTranslation } from '../i18n';
 
 export function ForbiddenPage() {
   const { t } = useTranslation();
 
-  return (
-    <section>
-      <h1>{t('forbidden.title')}</h1>
-      <p>{t('forbidden.body')}</p>
-    </section>
-  );
+  return <PageHeader title={t('forbidden.title')}>{t('forbidden.body')}</PageHeader>;
 }

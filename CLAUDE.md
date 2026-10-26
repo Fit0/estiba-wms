@@ -22,8 +22,8 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Translations | Symfony Translation (ICU format) on the backend, `react-i18next` on the frontend. Spanish (default) and English. | Backend in use. Frontend: a small catalog with the shape of `t` until `react-i18next` replaces it (E05-06) |
 | Frontend | React 19, TypeScript (strict), Vite, in Docker behind a proxy to the API ([ADR 0021](docs/adr/0021-the-frontend-project-in-docker-behind-a-proxy.md)) | In use (E05-02) |
 | Frontend libraries | React Router | In use (E05-03) |
-| Design system | Tailwind CSS 4, semantic design tokens with a dark and a light theme, fonts from `@fontsource-variable` ([ADR 0023](docs/adr/0023-design-tokens-and-two-themes.md), [docs/design/](docs/design/README.md)) | In use (UI-01) |
-| | TanStack Query, React Hook Form + Zod, shadcn/ui, `lucide-react` icons | Planned (E05-04 to E05-07, UI-02) |
+| Design system | Tailwind CSS 4, semantic design tokens with a dark and a light theme, fonts from `@fontsource-variable`, `lucide-react` icons ([ADR 0023](docs/adr/0023-design-tokens-and-two-themes.md), [docs/design/](docs/design/README.md)) | In use (UI-01) |
+| | TanStack Query, React Hook Form + Zod, shadcn/ui | Planned (E05-04 to E05-07) |
 | Frontend quality | ESLint 9 (`typescript-eslint` strict, `react-hooks`, `jsx-a11y`), Prettier, Testing Library | In use (E05-02) |
 | Frontend testing | Vitest (in use since E05-02), MSW, Playwright | MSW and Playwright planned (E06) |
 | Real time | Mercure | Planned (E07) |
@@ -107,7 +107,8 @@ The look is the system in [docs/design/](docs/design/README.md), as [ADR 0023](d
 - **Colors, sizes, radii and shadows only through the tokens** of `frontend/src/styles/tokens.css`, by their Tailwind names (`bg-surface-1`, `text-fg-secondary`, `rounded-panel`, `text-body-md`). No hex, `rgb()` or `hsl()` in a component, and no `dark:` variant: the theme changes the value of a token, not the class. `rules.test.ts` fails both.
 - **Both themes must work.** A new token has a value in each theme, and `tokens.test.ts` measures the contrast of every pair that is used together (4.5:1 for text, 3:1 for the edge of a control and the focus ring). If a pair is new, add it to that test.
 - Numbers, quantities and SKUs use `tnum`. Row and control heights come from `h-control` and `min-h-row`, so the touch density of the PWA applies by itself.
-- Icons are `lucide-react`. No second icon set.
+- Icons are `lucide-react`, imported one by one and marked `aria-hidden` next to a text, or with an `aria-label` when they are alone. No second icon set.
+- The shell is `layouts/` (sidebar, top bar), and what a screen adds to the menu is one line in `layouts/navigation.ts`. Buttons, fields and page titles are `components/` (`Button`, `TextField`, `PageHeader`): use them before writing a new one.
 
 ### Tests
 
