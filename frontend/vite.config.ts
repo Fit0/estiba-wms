@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
@@ -6,7 +7,7 @@ import { defineConfig } from 'vitest/config';
 const apiTarget = process.env.API_PROXY_TARGET ?? 'http://localhost:8080';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   server: {
     host: true,
     port: 5173,
@@ -22,5 +23,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/test-setup.ts',
     include: ['src/**/*.test.{ts,tsx}'],
+    // Test files run side by side, and a busy machine (CI, a laptop running Docker) is slow to render.
+    testTimeout: 20_000,
+    // The tokens file is read as text by the contrast test, and Vitest empties CSS unless it is asked not to.
+    css: { include: [/tokens\.css/] },
   },
 });

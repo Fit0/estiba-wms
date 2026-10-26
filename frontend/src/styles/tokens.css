@@ -1,0 +1,118 @@
+/*
+ * Design tokens of "Logistics Industrial Precision" (docs/design/DESIGN.md, ADR 0023).
+ *
+ * Components never use a color, a size or a shadow of their own: they use these names, through
+ * Tailwind (`bg-surface-1`, `text-fg-secondary`, `rounded-panel`...). A name means the same in the
+ * two themes, and only its value changes. Dark is the default. `tokens.test.ts` reads this file and
+ * checks the contrast of every pair that is used together.
+ *
+ * The dark values are the palette of the example screens. The light ones are the "light mode" tones
+ * of DESIGN.md. Where DESIGN.md does not reach WCAG 2.2 AA (4.5:1 for text, 3:1 for the edge of a
+ * control), the value here is a shade that does, and ADR 0023 says which.
+ */
+
+:root,
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  /* Layers: canvas, then the surface of tables and cards, then raised cards, then overlays. */
+  --canvas: #081425;
+  --surface-1: #111c2d;
+  --surface-2: #1f2a3c;
+  --surface-3: #2a3548;
+
+  /* Edges. `--line` only separates; `--input-border` is the edge of a control and must be seen. */
+  --line: #2a3548;
+  --line-strong: #434655;
+  --input-border: #8d90a0;
+
+  --fg: #d8e3fb;
+  --fg-secondary: #c3c6d7;
+  --fg-muted: #8d90a0;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --on-primary: #ffffff;
+  /* The color of a link, of the current page in a menu, of any text that is "the primary color". */
+  --accent: #b4c5ff;
+  --ring: #3b82f6;
+  --selected: rgb(180 197 255 / 0.08);
+
+  /* Status: the text, a tint for the fill and a tint for the border. */
+  --ok: #10b981;
+  --ok-fill: rgb(16 185 129 / 0.12);
+  --ok-line: rgb(16 185 129 / 0.25);
+  --warn: #f59e0b;
+  --warn-fill: rgb(245 158 11 / 0.12);
+  --warn-line: rgb(245 158 11 / 0.25);
+  --bad: #f87171;
+  --bad-fill: rgb(239 68 68 / 0.12);
+  --bad-line: rgb(239 68 68 / 0.25);
+  --info: #60a5fa;
+  --info-fill: rgb(59 130 246 / 0.12);
+  --info-line: rgb(59 130 246 / 0.25);
+
+  --elevation-popover: 0 4px 16px -2px rgb(0 0 0 / 0.35);
+  --elevation-overlay: 0 12px 32px -4px rgb(0 0 0 / 0.45);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --canvas: #f8fafc;
+  --surface-1: #ffffff;
+  --surface-2: #f1f5f9;
+  --surface-3: #ffffff;
+
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --input-border: #64748b;
+
+  --fg: #0f172a;
+  --fg-secondary: #526077;
+  --fg-muted: #526077;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-active: #1e40af;
+  --on-primary: #ffffff;
+  --accent: #1d4ed8;
+  --ring: #3b82f6;
+  --selected: rgb(37 99 235 / 0.08);
+
+  --ok: #047857;
+  --ok-fill: rgb(16 185 129 / 0.12);
+  --ok-line: rgb(16 185 129 / 0.25);
+  --warn: #92400e;
+  --warn-fill: rgb(245 158 11 / 0.12);
+  --warn-line: rgb(245 158 11 / 0.25);
+  --bad: #b91c1c;
+  --bad-fill: rgb(239 68 68 / 0.12);
+  --bad-line: rgb(239 68 68 / 0.25);
+  --info: #1d4ed8;
+  --info-fill: rgb(59 130 246 / 0.12);
+  --info-line: rgb(59 130 246 / 0.25);
+
+  --elevation-popover: 0 4px 16px -2px rgb(15 23 42 / 0.08);
+  --elevation-overlay: 0 16px 36px -4px rgb(15 23 42 / 0.16);
+}
+
+/*
+ * Density: how tall a control and a table row are. The back office is compact, and the picking PWA
+ * is used with gloves, so it asks for `touch` on the root element (UI-04).
+ */
+:root {
+  --control-height: 2rem;
+  --row-height: 2.25rem;
+}
+
+:root[data-density='comfortable'] {
+  --control-height: 2.25rem;
+  --row-height: 2.75rem;
+}
+
+:root[data-density='touch'] {
+  --control-height: 3rem;
+  --row-height: 3.5rem;
+}

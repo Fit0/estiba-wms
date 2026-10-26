@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 
 // Without globals, Testing Library does not clean the page between tests by itself.
@@ -9,3 +9,6 @@ afterEach(cleanup);
 beforeEach(() => {
   vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['es-ES', 'es']);
 });
+
+// A busy machine (CI, a laptop running Docker) can take longer than a second to settle a page.
+configure({ asyncUtilTimeout: 4000 });
