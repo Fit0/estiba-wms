@@ -17,4 +17,10 @@ Where the example and the project rules differ, the rules win:
 - **Contrast and text size**: text of 11 and 12 px must still reach 4.5:1 (WCAG 2.2 AA). A test checks it.
 - **Only what the system does**: no figure, partner or sign-in method that does not exist.
 
+## In the code
+
+The design is built in `frontend/` and is decided in [ADR 0023](../adr/0023-design-tokens-and-two-themes.md): the values are semantic tokens in `frontend/src/styles/tokens.css`, a dark theme by default and a light one, and the contrast of every pair is tested. The ADR lists the six values that differ from `DESIGN.md` to reach WCAG 2.2 AA.
+
+The screens that follow the system, in order: tokens and themes (UI-01), the login and the shell (UI-02), the data components (UI-03), the touch density and the accessibility audit (UI-04).
+
 The screenshots that Stitch exports (`screen.png`) did not download, so the HTML is the only picture of the screens.
