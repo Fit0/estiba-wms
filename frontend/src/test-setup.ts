@@ -12,3 +12,13 @@ beforeEach(() => {
 
 // A busy machine (CI, a laptop running Docker) can take longer than a second to settle a page.
 configure({ asyncUtilTimeout: 4000 });
+
+// jsdom has no matchMedia. A narrow screen is the default, so the sidebar starts as a rail.
+beforeEach(() => {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: false,
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
+});

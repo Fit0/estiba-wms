@@ -1,47 +1,37 @@
-import { NavLink, Outlet } from 'react-router';
-import { highestRole, hasRole } from '../auth/roles';
+import { Outlet } from 'react-router';
 import { useAuth } from '../auth/useAuth';
 import { useTranslation } from '../i18n';
+import { Sidebar } from './Sidebar';
+import { TopBar } from './TopBar';
+import { useSidebar } from './useSidebar';
 
 /**
- * The frame of the signed-in app: who is signed in, where to go, and the page itself.
+ * The frame of the signed-in app: the side navigation, the top bar and the page itself.
  */
 export function AppLayout() {
-  const { session, client } = useAuth();
+  const { session } = useAuth();
   const { t } = useTranslation();
+  const sidebar = useSidebar();
 
   if (session.status !== 'signedIn') {
     return null;
   }
-  const { user } = session;
-  const role = highestRole(user.roles);
 
   return (
-    <>
-      <a className="skip-link" href="#content">
+    <div className="flex min-h-screen">
+      <a
+        href="#content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-20 focus:rounded-control focus:bg-surface-3 focus:p-2"
+      >
         {t('app.skipToContent')}
       </a>
-      <header className="app-header">
-        <strong>{t('app.name')}</strong>
-        <nav aria-label={t('nav.main')}>
-          <NavLink to="/" end>
-            {t('nav.home')}
-          </NavLink>
-          {hasRole(user.roles, 'supervisor') && <NavLink to="/audit">{t('nav.audit')}</NavLink>}
-        </nav>
-        <div className="user">
-          <span>
-            {t('session.signedInAs', { email: user.email })}
-            {role !== null && ` (${t(`role.${role}`)})`}
-          </span>
-          <button type="button" onClick={() => void client.signOut()}>
-            {t('session.signOut')}
-          </button>
-        </div>
-      </header>
-      <main id="content" tabIndex={-1}>
-        <Outlet />
-      </main>
-    </>
+      <Sidebar collapsed={sidebar.collapsed} roles={session.user.roles} />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <TopBar collapsed={sidebar.collapsed} onToggle={sidebar.toggle} />
+        <main id="content" tabIndex={-1} className="flex-1 p-margin lg:p-margin-lg">
+          <Outlet />
+        </main>
+      </div>
+    </div>
   );
 }

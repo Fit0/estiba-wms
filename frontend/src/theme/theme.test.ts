@@ -1,5 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { THEME_KEY, applyTheme, isTheme, readStoredTheme, resolveTheme, saveTheme } from './theme';
+import {
+  THEME_KEY,
+  applyTheme,
+  chooseTheme,
+  currentTheme,
+  isTheme,
+  readStoredTheme,
+  resolveTheme,
+  saveTheme,
+  subscribeTheme,
+} from './theme';
 
 describe('theme', () => {
   afterEach(() => {
@@ -51,5 +61,25 @@ describe('theme', () => {
     applyTheme('light');
 
     expect(document.documentElement.dataset.theme).toBe('light');
+  });
+
+  it('says which theme is on the page, dark when none is', () => {
+    expect(currentTheme()).toBe('dark');
+
+    applyTheme('light');
+
+    expect(currentTheme()).toBe('light');
+  });
+
+  it('keeps the choice and tells whoever shows the theme', () => {
+    const listener = vi.fn();
+    const unsubscribe = subscribeTheme(listener);
+
+    chooseTheme('light');
+    unsubscribe();
+    chooseTheme('dark');
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem(THEME_KEY)).toBe('dark');
   });
 });

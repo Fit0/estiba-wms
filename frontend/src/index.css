@@ -103,6 +103,10 @@
   height: var(--control-height);
 }
 
+@utility w-control {
+  width: var(--control-height);
+}
+
 @utility min-h-row {
   min-height: var(--row-height);
 }
@@ -138,115 +142,5 @@
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
-  }
-
-  a {
-    color: var(--accent);
-  }
-}
-
-/*
- * The screens that exist until UI-02 and UI-03 replace them, dressed with the tokens so the app
- * is coherent in both themes in the meantime.
- */
-@layer components {
-  main {
-    padding: var(--spacing-margin);
-  }
-
-  main.narrow {
-    max-width: 24rem;
-    margin: 0 auto;
-  }
-
-  button,
-  input {
-    min-height: var(--control-height);
-    padding: 0 0.75rem;
-    border-radius: var(--radius-control);
-    font: inherit;
-  }
-
-  input {
-    border: 1px solid var(--input-border);
-    background-color: var(--surface-1);
-    color: var(--fg);
-  }
-
-  button {
-    border: 1px solid var(--line-strong);
-    background-color: var(--surface-2);
-    color: var(--fg);
-    cursor: pointer;
-  }
-
-  button[type='submit'] {
-    border-color: transparent;
-    background-color: var(--primary);
-    color: var(--on-primary);
-    font-weight: 600;
-  }
-
-  button[type='submit']:hover:not(:disabled) {
-    background-color: var(--primary-hover);
-  }
-
-  button[type='submit']:active:not(:disabled) {
-    background-color: var(--primary-active);
-  }
-
-  button:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  .field {
-    display: grid;
-    gap: 0.25rem;
-    margin-bottom: 1rem;
-  }
-
-  [role='alert'] {
-    color: var(--bad);
-  }
-
-  .app-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.5rem 1rem;
-    border-bottom: 1px solid var(--line);
-    background-color: var(--surface-1);
-  }
-
-  .app-header nav {
-    display: flex;
-    gap: 1rem;
-  }
-
-  .app-header nav a {
-    display: inline-flex;
-    align-items: center;
-    min-height: var(--control-height);
-  }
-
-  .app-header .user {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-left: auto;
-  }
-
-  .skip-link {
-    position: absolute;
-    left: -999px;
-  }
-
-  .skip-link:focus {
-    left: 0.5rem;
-    top: 0.5rem;
-    padding: 0.5rem;
-    background-color: var(--surface-3);
   }
 }

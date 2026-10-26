@@ -13,7 +13,11 @@ export function RequireAuth() {
   const { t } = useTranslation();
 
   if (session.status === 'restoring') {
-    return <p role="status">{t('session.restoring')}</p>;
+    return (
+      <p role="status" className="p-margin text-fg-secondary">
+        {t('session.restoring')}
+      </p>
+    );
   }
 
   if (session.status === 'signedOut') {

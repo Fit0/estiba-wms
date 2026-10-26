@@ -183,15 +183,21 @@ export class AuthClient {
   };
 
   private async restoreOnce(): Promise<void> {
+    let found: SessionState;
     try {
       const token = await this.renew();
-      this.set(
+      found =
         token === null
           ? { status: 'signedOut', reason: 'none' }
-          : { status: 'signedIn', user: await this.loadMe() },
-      );
+          : { status: 'signedIn', user: await this.loadMe() };
     } catch {
-      this.set({ status: 'signedOut', reason: 'none' });
+      found = { status: 'signedOut', reason: 'none' };
+    }
+
+    // Whoever signs in while the old session is still being looked for has the last word: the answer
+    // of the search must not sign them out again.
+    if (this.state.status === 'restoring') {
+      this.set(found);
     }
   }
 

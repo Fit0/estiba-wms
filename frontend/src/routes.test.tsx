@@ -1,50 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 import { App } from './App';
 import { AuthClient } from './auth/AuthClient';
-import type { Role } from './auth/roles';
-import { fakeApi, json, me, problem, type Handler } from './testing/fakeApi';
 import { routes } from './routes';
-
-/**
- * The API of a user who is signed in or can sign in with `secret`, with these roles.
- */
-function apiOf(roles: readonly Role[], extra: Record<string, Handler> = {}) {
-  return fakeApi({
-    'POST /api/auth/login': ({ body }) =>
-      body !== null && typeof body === 'object' && 'password' in body && body.password === 'secret'
-        ? json({ token: 'token-1' })
-        : problem(401, 'identity.credentials_invalid'),
-    'GET /api/me': () => json(me(roles)),
-    'POST /api/auth/logout': () => new Response(null, { status: 204 }),
-    ...extra,
-  });
-}
-
-function open(path: string, api: ReturnType<typeof fakeApi>) {
-  const client = new AuthClient(api.send);
-  const router = createMemoryRouter(routes, { initialEntries: [path] });
-  render(<App client={client} router={router} />);
-
-  return { client, router };
-}
-
-const noSession: Record<string, Handler> = {
-  'POST /api/auth/refresh': () => problem(401, 'identity.refresh_token_invalid'),
-};
-
-const withSession = (roles: readonly Role[]): Record<string, Handler> => ({
-  'POST /api/auth/refresh': () => json({ token: 'token-0' }),
-  'GET /api/me': () => json(me(roles)),
-});
-
-async function signIn(user: ReturnType<typeof userEvent.setup>) {
-  await user.type(await screen.findByLabelText('Correo electrónico'), 'ana@marea-moda.example');
-  await user.type(screen.getByLabelText('Contraseña'), 'secret');
-  await user.click(screen.getByRole('button', { name: 'Entrar' }));
-}
+import { apiOf, noSession, open, signIn, withSession } from './testing/renderApp';
 
 describe('routes and authentication', () => {
   it('says the session is being recovered before it knows whether there is one', async () => {
@@ -132,9 +93,12 @@ describe('routes and authentication', () => {
   it('says who is signed in, with their highest role', async () => {
     open('/', apiOf(['operator', 'admin'], withSession(['operator', 'admin'])));
 
-    expect(
-      await screen.findByText(/Sesión iniciada como ana@marea-moda.example \(Administrador\)/),
-    ).toBeInTheDocument();
+    const account = await screen.findByRole('group', {
+      name: 'Sesión iniciada como ana@marea-moda.example',
+    });
+
+    expect(within(account).getByText('ana@marea-moda.example')).toBeInTheDocument();
+    expect(within(account).getByText('Administrador')).toBeInTheDocument();
   });
 
   it('answers a page that does not exist', async () => {
@@ -170,5 +134,29 @@ describe('routes and authentication', () => {
       'href',
       '#content',
     );
+  });
+
+  it('says what the system is for, and nothing it does not do', async () => {
+    open('/login', apiOf(['operator'], noSession));
+
+    expect(await screen.findByText(/El almacén bajo control/)).toBeInTheDocument();
+    expect(screen.getByText(/Picking y etiquetas SSCC/)).toBeInTheDocument();
+    expect(screen.queryByText(/SSO|RFID|SAP/)).not.toBeInTheDocument();
+  });
+
+  it('shows the password when asked, and hides it again', async () => {
+    const user = userEvent.setup();
+    open('/login', apiOf(['operator'], noSession));
+    const password = await screen.findByLabelText('Contraseña');
+
+    expect(password).toHaveAttribute('type', 'password');
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar la contraseña' }));
+
+    expect(password).toHaveAttribute('type', 'text');
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar la contraseña' }));
+
+    expect(password).toHaveAttribute('type', 'password');
   });
 });

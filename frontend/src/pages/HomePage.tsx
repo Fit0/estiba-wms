@@ -1,4 +1,5 @@
 import { useAuth } from '../auth/useAuth';
+import { PageHeader } from '../components/PageHeader';
 import { useTranslation } from '../i18n';
 
 export function HomePage() {
@@ -6,11 +7,8 @@ export function HomePage() {
   const { t } = useTranslation();
 
   return (
-    <section>
-      <h1>{t('home.title')}</h1>
-      {session.status === 'signedIn' && (
-        <p>{t('home.welcome', { tenant: session.user.tenant.name })}</p>
-      )}
-    </section>
+    <PageHeader title={t('home.title')}>
+      {session.status === 'signedIn' && t('home.welcome', { tenant: session.user.tenant.name })}
+    </PageHeader>
   );
 }
