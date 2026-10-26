@@ -121,6 +121,23 @@ describe('AuthClient', () => {
     expect(client.getState().status).toBe('signedIn');
   });
 
+  // The sign-in page is shown while the cookie is still being tried, and a person can be quicker.
+  it('is not signed out by the end of a search that started before the sign-in', async () => {
+    const api = fakeApi({
+      'POST /api/auth/refresh': () => problem(401, 'identity.refresh_token_invalid'),
+      'POST /api/auth/login': () => json({ token: 'token-1' }),
+      'GET /api/me': () => json(me(['operator'])),
+    });
+    const client = new AuthClient(api.send);
+
+    const restoring = client.restore();
+    await client.signIn('ana@marea-moda.example', 'right');
+    await vi.runAllTimersAsync();
+    await restoring;
+
+    expect(client.getState().status).toBe('signedIn');
+  });
+
   it('renews the session and repeats the request when the token has expired', async () => {
     let token = 'old';
     const api = fakeApi({
