@@ -29,13 +29,17 @@ async function setup(extra: Record<string, Handler>) {
 describe('the stock hooks', () => {
   it('load the lines that match the search', async () => {
     const { api, wrapper } = await setup({
-      'GET /api/stock-items?status=quarantine': () => json([line]),
+      'GET /api/stock-items?status=quarantine': () =>
+        new Response(JSON.stringify([line]), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', 'X-Total-Count': '41' },
+        }),
     });
 
     const { result } = renderHook(() => useStockItems({ status: 'quarantine' }), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.data).toEqual([line]);
+      expect(result.current.data).toEqual({ items: [line], total: 41 });
     });
     expect(api.calls.at(-1)).toBe('GET /api/stock-items?status=quarantine');
   });
@@ -72,7 +76,7 @@ describe('the stock hooks', () => {
       wrapper,
     });
     await waitFor(() => {
-      expect(result.current.stock.data).toEqual([line]);
+      expect(result.current.stock.data).toEqual({ items: [line], total: 1 });
     });
     expect(result.current.cache.getQueryCache().getAll()).toHaveLength(1);
 

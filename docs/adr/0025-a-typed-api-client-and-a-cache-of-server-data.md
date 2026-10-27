@@ -33,8 +33,7 @@ ADR 0019 decided that the OpenAPI document is the documentation of the API and t
 ## Consequences
 
 - A screen that reads stock writes `useStockItems({ status: 'quarantine' })` and gets `data`, `isPending`, `error` (an `ApiError`) and a refetch, typed from the API.
-- **Every field of a generated type is optional**, because the OpenAPI document of the API marks none as required. The app reads a schema through `Schema<'StockItem'>`, which makes them required, and that is a promise the backend keeps in practice but the document does not state. The right fix is in the backend: mark the fields of a resource as required in the document (a change for ADR 0019's decorator).
-- **A list has no total.** The providers build a `TraversablePaginator`, but the JSON format sends the array alone, so the app knows the page it asked for and not how many pages exist. The paging bar of UI-03 needs a total. A header such as `X-Total-Count` on paged lists is the smallest fix and is needed before E06-01.
+- At the time of writing, every field of a generated type was optional and the lists had no total. Both are solved in [ADR 0026](0026-the-total-of-a-list-in-a-header-and-required-fields.md): the document marks the fields an answer always has as required, and the paged lists send `X-Total-Count`, which `unwrapPage` reads.
 - The types can drift from the API if someone changes it and forgets to run `make front-api-types`. Nothing in CI checks it yet, since that needs a running API in the frontend job. A job that starts the stack, regenerates the file and fails on a difference is the follow-up.
 - The tests use the fake API of `testing/fakeApi.ts` as they always did. MSW comes with E06-05 and will replace it for the screens.
 - The access token never reaches TanStack Query or its devtools: queries receive the client, not the token.

@@ -26,6 +26,9 @@ final readonly class OpenApiDocumentation
     /** The operations that need no token: they are how a user gets one, keeps it or gives it up (ADR 0022). */
     private const array PUBLIC = [self::AUTH_LOGIN, self::AUTH_REFRESH, self::AUTH_LOGOUT];
 
+    /** Schemas that are not resources of the API: the error shapes API Platform writes. */
+    private const array NOT_RESOURCES = ['Error', 'ConstraintViolation'];
+
     private const string LABEL = '/api/shipments/{id}/parcels/{sscc}/label.{format}';
 
     /**
@@ -151,7 +154,8 @@ final readonly class OpenApiDocumentation
             '**Sign in** at `POST /api/auth/login` and send the token in every request as `Authorization: Bearer <token>`. A token lasts one hour; `POST /api/auth/refresh` renews it with the cookie that signing in sets, and `POST /api/auth/logout` ends the session. The tenant always comes from the signed-in user, and never from the request.',
             '**Roles** are `admin`, `supervisor` and `operator`, each including the ones below it. Reading needs any signed-in user. Changing needs a supervisor, except the work of the dock and the floor, which operators do. Every operation says its role.',
             '**Errors** are `application/problem+json` with a stable `code` to switch on. The `detail` is translated to the language of `Accept-Language`: Spanish by default, English on request. A request that is refused changes nothing.',
-            '**Lists** that can grow are paged with `page` and `itemsPerPage` (30 by default, 100 at most), and come as a JSON array.',
+            '**Lists** that can grow are paged with `page` and `itemsPerPage` (30 by default, 100 at most), and come as a JSON array. The header `X-Total-Count` says how many items match in all the pages.',
+            '**Fields** that are not null are always in the answer. A field that is null is left out, so the ones the schema allows to be null (`null` in their type) may be missing.',
             '**Ids** are UUIDs. **Dates** are ISO 8601 with time zone.',
         ]);
 
@@ -188,7 +192,7 @@ final readonly class OpenApiDocumentation
                 'schema' => ['type' => 'string', 'enum' => ['es', 'en'], 'default' => 'es'],
             ],
         ];
-        $components['schemas'] = [...self::map($components['schemas'] ?? null), 'Problem' => $this->problemSchema()];
+        $components['schemas'] = [...$this->withRequiredFields(self::map($components['schemas'] ?? null)), 'Problem' => $this->problemSchema()];
         $components['responses'] = [
             'BadRequest' => $this->problem('The request cannot be read: malformed JSON, a value of the wrong type, an id that is not a UUID or a filter with a value it does not know.', 400, 'Bad request', 'shared.identifier_invalid', 'Identifier "123" is not a valid UUID.', ['value' => '123']),
             'Unauthorized' => $this->problem('Not signed in: no token, a bad or an expired one, or wrong credentials.', 401, 'Unauthorized', 'shared.token_expired', 'The token has expired. Sign in again.', []),
@@ -199,6 +203,51 @@ final readonly class OpenApiDocumentation
         ];
 
         return $components;
+    }
+
+    /**
+     * Marks as required the fields an answer always has. API Platform lists the properties of a
+     * resource and none as required, so a client cannot tell a field that may be missing from one
+     * that never is. The API leaves out what is null, and sends everything else: a field is
+     * required unless its type allows `null`. The schemas of a request body are left as they are,
+     * since what a body must have is a matter of validation and not of the shape of the answer.
+     *
+     * @param array<string, mixed> $schemas
+     *
+     * @return array<string, mixed>
+     */
+    private function withRequiredFields(array $schemas): array
+    {
+        foreach ($schemas as $name => $schema) {
+            if (str_contains($name, 'Input') || str_contains($name, 'jsonMergePatch') || \in_array($name, self::NOT_RESOURCES, true)) {
+                continue;
+            }
+
+            $schema = self::map($schema);
+            $required = [];
+            foreach (self::map($schema['properties'] ?? null) as $property => $definition) {
+                if (!$this->allowsNull(self::map($definition))) {
+                    $required[] = $property;
+                }
+            }
+
+            if ([] !== $required) {
+                $schema['required'] = $required;
+                $schemas[$name] = $schema;
+            }
+        }
+
+        return $schemas;
+    }
+
+    /**
+     * @param array<string, mixed> $definition
+     */
+    private function allowsNull(array $definition): bool
+    {
+        $type = $definition['type'] ?? null;
+
+        return 'null' === $type || (\is_array($type) && \in_array('null', $type, true));
     }
 
     /**
@@ -353,7 +402,8 @@ final readonly class OpenApiDocumentation
         $operation['summary'] = \is_string($documentation['summary'] ?? null) ? $documentation['summary'] : ($operation['summary'] ?? '');
         $operation['description'] = $this->description($documentation, $role);
         $operation['parameters'] = $this->parameters($operation['parameters'] ?? null, $documentation, $method, $path);
-        $operation['responses'] = $this->responses($operation['responses'] ?? null, $path, $method, $role, $isLogin, $isPublic, $documentation);
+        $responses = $this->responses($operation['responses'] ?? null, $path, $method, $role, $isLogin, $isPublic, $documentation);
+        $operation['responses'] = $this->isCollection($this->maps($operation['parameters'])) ? $this->withTotalCount($responses) : $responses;
         if ($isPublic) {
             $operation['security'] = [];
         }
@@ -451,6 +501,35 @@ final readonly class OpenApiDocumentation
             'schema' => array_filter(['type' => 'string', 'enum' => $enum], $keep),
             'example' => $filter['example'] ?? ($enum[0] ?? null),
         ], $keep);
+    }
+
+    /**
+     * The `X-Total-Count` header on the answer of a paged list: how many items match in all pages.
+     *
+     * @param array<int|string, mixed> $responses
+     *
+     * @return array<int|string, mixed>
+     */
+    private function withTotalCount(array $responses): array
+    {
+        foreach ($responses as $status => $response) {
+            if (200 !== (int) $status) {
+                continue;
+            }
+
+            $response = self::map($response);
+            $response['headers'] = [
+                ...self::map($response['headers'] ?? null),
+                'X-Total-Count' => [
+                    'description' => 'How many items match the filters, in all the pages.',
+                    'schema' => ['type' => 'integer', 'minimum' => 0],
+                    'example' => 125,
+                ],
+            ];
+            $responses[$status] = $response;
+        }
+
+        return $responses;
     }
 
     /**

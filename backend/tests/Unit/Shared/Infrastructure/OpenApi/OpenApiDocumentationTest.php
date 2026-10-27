@@ -110,6 +110,32 @@ final class OpenApiDocumentationTest extends TestCase
         self::assertSame(['type' => 'object'], $this->find('components', 'schemas', 'Wave'), 'What API Platform wrote is kept.');
     }
 
+    public function testAFieldThatIsNeverNullIsRequiredAndOneThatMayBeNullIsNot(): void
+    {
+        self::assertSame(['id', 'onHand', 'owner'], $this->find('components', 'schemas', 'Stock', 'required'));
+    }
+
+    public function testTheSchemaOfARequestBodyKeepsWhatApiPlatformWrote(): void
+    {
+        self::assertArrayNotHasKey('required', $this->mapAt('components', 'schemas', 'Stock.OpenStockInput'));
+        self::assertArrayNotHasKey('required', $this->mapAt('components', 'schemas', 'Error'));
+    }
+
+    public function testAPagedListSaysThatItAnswersTheTotal(): void
+    {
+        self::assertSame(
+            ['description' => 'How many items match the filters, in all the pages.', 'schema' => ['type' => 'integer', 'minimum' => 0], 'example' => 125],
+            $this->find('paths', '/api/waves', 'get', 'responses', '200', 'headers', 'X-Total-Count'),
+        );
+        self::assertSame(['description' => 'Wave collection'], array_diff_key($this->mapAt('paths', '/api/waves', 'get', 'responses', '200'), ['headers' => true]));
+    }
+
+    public function testAListThatIsNotPagedOrOneItemHasNoTotal(): void
+    {
+        self::assertArrayNotHasKey('headers', $this->mapAt('paths', '/api/pick-lists', 'get', 'responses', '200'));
+        self::assertArrayNotHasKey('headers', $this->mapAt('paths', '/api/waves/{id}', 'get', 'responses', '200'));
+    }
+
     public function testAnOperationNobodyWroteDownIsLeftAsApiPlatformMadeIt(): void
     {
         self::assertSame('Retrieves something.', $this->find('paths', '/api/other', 'get', 'summary'));
@@ -251,7 +277,17 @@ final class OpenApiDocumentationTest extends TestCase
                 '/api/pick-lists' => ['get' => ['summary' => 'Retrieves the collection of PickList resources.', 'parameters' => $paging, 'responses' => ['200' => ['description' => 'PickList collection']]]],
                 '/api/other' => ['get' => ['summary' => 'Retrieves something.', 'responses' => ['200' => ['description' => 'Something']]]],
             ],
-            'components' => ['schemas' => ['Wave' => ['type' => 'object']]],
+            'components' => ['schemas' => [
+                'Wave' => ['type' => 'object'],
+                'Stock' => ['type' => 'object', 'properties' => [
+                    'id' => ['type' => 'string'],
+                    'lot' => ['type' => ['string', 'null']],
+                    'onHand' => ['type' => 'integer'],
+                    'owner' => ['$ref' => '#/components/schemas/Owner'],
+                ]],
+                'Stock.OpenStockInput' => ['type' => 'object', 'properties' => ['productId' => ['type' => 'string']]],
+                'Error' => ['type' => 'object', 'properties' => ['title' => ['type' => ['string', 'null']], 'status' => ['type' => 'integer']]],
+            ]],
         ];
     }
 }
