@@ -56,7 +56,7 @@ final class TotalCountListenerTest extends TestCase
         $request->attributes->set('data', $data);
         $response = new Response('[]', $status);
 
-        (new TotalCountListener())(new ResponseEvent($this->createStub(HttpKernelInterface::class), $request, $type, $response));
+        (new TotalCountListener())(new ResponseEvent(self::createStub(HttpKernelInterface::class), $request, $type, $response));
 
         return $response;
     }

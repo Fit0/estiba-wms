@@ -66,6 +66,7 @@ final class StockApiTest extends InboundApiTestCase
     {
         $this->closedReceipt();
         $listed = $this->request('GET', '/api/stock-items', null, null, ['productId' => $this->shirtId])[0];
+        self::assertIsArray($listed);
 
         $this->request('GET', '/api/stock-items/'.$this->id($listed));
 
@@ -76,6 +77,7 @@ final class StockApiTest extends InboundApiTestCase
     {
         $this->closedReceipt();
         $line = $this->request('GET', '/api/stock-items', null, null, ['productId' => $this->shirtId])[0];
+        self::assertIsArray($line);
         $required = $this->openApiRequired('StockItem');
 
         self::assertContains('id', $required);
@@ -326,6 +328,12 @@ final class StockApiTest extends InboundApiTestCase
         $required = $definition['required'] ?? null;
         self::assertIsArray($required);
 
-        return array_values(array_map(strval(...), $required));
+        $fields = [];
+        foreach ($required as $field) {
+            self::assertIsString($field);
+            $fields[] = $field;
+        }
+
+        return $fields;
     }
 }
