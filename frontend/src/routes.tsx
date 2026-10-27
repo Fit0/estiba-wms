@@ -8,6 +8,21 @@ import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 /**
+ * The component gallery exists only while developing (UI-03): it is not in the build and not in the
+ * navigation, and you reach it by its address, `/design`.
+ */
+const designRoutes: RouteObject[] = import.meta.env.DEV
+  ? [
+      {
+        path: 'design',
+        lazy: async () => ({
+          Component: (await import('./pages/DesignGalleryPage')).DesignGalleryPage,
+        }),
+      },
+    ]
+  : [];
+
+/**
  * Every route of the app. Signing in is the only public one. The rest sit inside `RequireAuth`, and the
  * ones that need more than any user sit inside `RequireRole` as well.
  */
@@ -24,6 +39,7 @@ export const routes: RouteObject[] = [
             element: <RequireRole minimum="supervisor" />,
             children: [{ path: 'audit', element: <AuditPage /> }],
           },
+          ...designRoutes,
           { path: '*', element: <NotFoundPage /> },
         ],
       },

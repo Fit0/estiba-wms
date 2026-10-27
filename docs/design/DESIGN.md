@@ -214,7 +214,7 @@ The design system enforces a precise, soft geometry (`roundedness: 1`) to preser
 
 ### Status Badges & Inventory Health Chips
 - **Design:** Compact height (20px to 22px), font size 11px, weight 600, border radius `0.25rem`.
-- **In Stock:** Emerald tint fill (`rgba(16, 185, 129, 0.12)`), text `#10B981` (dark) / `#047857` (light), bordered with `rgba(16, 185, 129, 0.25)`.
+- **In Stock:** Emerald tint fill (`rgba(16, 185, 129, 0.12)`), text `#10B981` (dark) / `#046A4D` (light), bordered with `rgba(16, 185, 129, 0.25)`.
 - **Low Stock:** Amber tint fill (`rgba(245, 158, 11, 0.12)`), text `#F59E0B` (dark) / `#B45309` (light), bordered with `rgba(245, 158, 11, 0.25)`.
 - **Out of Stock:** Crimson tint fill (`rgba(239, 68, 68, 0.12)`), text `#EF4444` (dark) / `#B91C1C` (light), bordered with `rgba(239, 68, 68, 0.25)`.
 - **Receiving / In-Staging:** Logistics blue tint fill (`rgba(59, 130, 246, 0.12)`), text `#3B82F6` (dark) / `#1D4ED8` (light). Includes pulsating 6px status dot for live inbound dock processing.
