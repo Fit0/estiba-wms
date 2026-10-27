@@ -107,6 +107,10 @@
   width: var(--control-height);
 }
 
+@utility h-row {
+  height: var(--row-height);
+}
+
 @utility min-h-row {
   min-height: var(--row-height);
 }

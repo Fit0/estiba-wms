@@ -10,8 +10,14 @@ const inputClass =
 export function TextField({
   label,
   action,
+  inputClassName = '',
   ...props
-}: Omit<ComponentProps<'input'>, 'id'> & { label: string; action?: ReactNode }) {
+}: Omit<ComponentProps<'input'>, 'id'> & {
+  label: string;
+  action?: ReactNode;
+  /** More classes for the input itself, such as the ring that shows a barcode was read. */
+  inputClassName?: string;
+}) {
   const id = useId();
 
   return (
@@ -22,7 +28,7 @@ export function TextField({
       <div className="relative">
         <input
           id={id}
-          className={`${inputClass} ${action === undefined ? '' : 'pr-11'}`}
+          className={`${inputClass} ${action === undefined ? '' : 'pr-11'} ${inputClassName}`}
           {...props}
         />
         {action !== undefined && (

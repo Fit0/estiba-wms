@@ -159,4 +159,19 @@ describe('routes and authentication', () => {
 
     expect(password).toHaveAttribute('type', 'password');
   });
+
+  it('shows the design system to anyone, without signing in', async () => {
+    const user = userEvent.setup();
+    open('/design', apiOf(['operator'], noSession));
+
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Sistema de diseño' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Existencias de ejemplo' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /Agotado/ }));
+
+    expect(screen.getByRole('cell', { name: 'MM-3310' })).toBeInTheDocument();
+    expect(screen.queryByRole('cell', { name: 'MM-1001' })).not.toBeInTheDocument();
+  });
 });

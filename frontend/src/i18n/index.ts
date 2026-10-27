@@ -32,8 +32,9 @@ export function translate(
 
 export function useTranslation(): {
   t: (key: MessageKey, values?: Readonly<Record<string, string>>) => string;
+  language: Language;
 } {
   const language = detectLanguage(navigator.languages);
 
-  return { t: (key, values) => translate(language, key, values) };
+  return { t: (key, values) => translate(language, key, values), language };
 }

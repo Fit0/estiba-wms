@@ -108,7 +108,8 @@ The look is the system in [docs/design/](docs/design/README.md), as [ADR 0023](d
 - **Both themes must work.** A new token has a value in each theme, and `tokens.test.ts` measures the contrast of every pair that is used together (4.5:1 for text, 3:1 for the edge of a control and the focus ring). If a pair is new, add it to that test.
 - Numbers, quantities and SKUs use `tnum`. Row and control heights come from `h-control` and `min-h-row`, so the touch density of the PWA applies by itself.
 - Icons are `lucide-react`, imported one by one and marked `aria-hidden` next to a text, or with an `aria-label` when they are alone. No second icon set.
-- The shell is `layouts/` (sidebar, top bar), and what a screen adds to the menu is one line in `layouts/navigation.ts`. Buttons, fields and page titles are `components/` (`Button`, `TextField`, `PageHeader`): use them before writing a new one.
+- The shell is `layouts/` (sidebar, top bar), and what a screen adds to the menu is one line in `layouts/navigation.ts`. Buttons, fields, page titles and the data components are `components/` (`Button`, `TextField`, `PageHeader`, `DataTable`, `StatusBadge`, `KpiCard`, `FilterTabs`, `ScannerInput`, `DensityToggle`): use them before writing a new one. `/design` shows all of them in both themes and is where a new one is shown.
+- **A table is `DataTable`**: it shows the rows it is given and says how they are sorted, and it is the screen that sorts and filters (on the server, for a list that can grow). A state is `StatusBadge` with words, never a color alone. A field that a barcode scanner types into is `ScannerInput`.
 
 ### Tests
 

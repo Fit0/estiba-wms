@@ -21,7 +21,19 @@ Where the example and the project rules differ, the rules win:
 
 The design is built in `frontend/` and is decided in [ADR 0023](../adr/0023-design-tokens-and-two-themes.md): the values are semantic tokens in `frontend/src/styles/tokens.css`, a dark theme by default and a light one, and the contrast of every pair is tested. The ADR lists the six values that differ from `DESIGN.md` to reach WCAG 2.2 AA.
 
-The screens that follow the system, in order: tokens and themes (UI-01), the login and the shell (UI-02, done), the data components (UI-03), the touch density and the accessibility audit (UI-04).
+The screens that follow the system, in order: tokens and themes (UI-01), the login and the shell (UI-02), the data components (UI-03), the touch density and the accessibility audit (UI-04).
+
+`/design` in the app shows every component in both themes, with working filters, sorting, selection and a scanner field, and it needs no sign-in. The components are in `frontend/src/components/`:
+
+| Component | What it is for |
+|---|---|
+| `DataTable` | The grid: a header that stays, rows as tall as the density asks, figures right aligned with tabular numbers, sorting that it reports and selection of rows |
+| `StatusBadge` | A short state in words (in stock, low, out, receiving), with a dot that pulses for what is live |
+| `KpiCard` | A figure of the operation, with what it measures and how it changed |
+| `FilterTabs` | The filters over a list, with how many rows each one has |
+| `ScannerInput` | A field for a barcode scanner: takes the code on Enter, flashes a green ring and says the code to a screen reader |
+| `DensityToggle` | Compact or comfortable rows, kept for the next visit |
+| `Button`, `TextField`, `PageHeader` | The basics |
 
 The top bar of the example has a warehouse selector, a search box, a sync indicator and notifications. The shell has none of them yet, because the data they show does not exist: the selector comes with the warehouse screens (E05-07), the search with the command palette (E05-05) and the notices with the real-time ones (E07-06). What the bar has now is what the system can already tell: the connection, the theme and who is signed in.
 

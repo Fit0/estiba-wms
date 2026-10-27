@@ -8,6 +8,7 @@ import { AuthClient } from './auth/AuthClient';
 import { detectLanguage } from './i18n';
 import './index.css';
 import { routes } from './routes';
+import { applyDensity, readStoredDensity } from './theme/density';
 import { applyTheme, readStoredTheme, resolveTheme } from './theme/theme';
 
 const root = document.getElementById('root');
@@ -20,6 +21,8 @@ document.documentElement.lang = detectLanguage(navigator.languages);
 applyTheme(
   resolveTheme(readStoredTheme(), window.matchMedia('(prefers-color-scheme: light)').matches),
 );
+
+applyDensity(readStoredDensity() ?? 'compact');
 
 createRoot(root).render(
   <StrictMode>

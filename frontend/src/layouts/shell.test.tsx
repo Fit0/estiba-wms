@@ -1,6 +1,5 @@
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { act } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { THEME_KEY } from '../theme/theme';
 import { apiOf, noSession, open, withSession } from '../testing/renderApp';
