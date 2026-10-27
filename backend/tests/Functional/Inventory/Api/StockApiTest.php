@@ -39,6 +39,50 @@ final class StockApiTest extends InboundApiTestCase
         self::assertSame([], array_column($stock, 'lot'), 'With no lot, the field is left out, like every null.');
     }
 
+    public function testAPageOfTheListSaysHowManyLinesThereAreInAllThePages(): void
+    {
+        $this->closedReceipt();
+
+        $firstPage = $this->request('GET', '/api/stock-items', null, null, ['locationId' => $this->dockId, 'itemsPerPage' => 2, 'page' => 1]);
+        $totalOfFirstPage = $this->client->getResponse()->headers->get('X-Total-Count');
+        $secondPage = $this->request('GET', '/api/stock-items', null, null, ['locationId' => $this->dockId, 'itemsPerPage' => 2, 'page' => 2]);
+
+        self::assertCount(2, $firstPage);
+        self::assertCount(1, $secondPage);
+        self::assertSame('3', $totalOfFirstPage);
+        self::assertSame('3', $this->client->getResponse()->headers->get('X-Total-Count'));
+    }
+
+    public function testTheTotalFollowsTheFilters(): void
+    {
+        $this->closedReceipt();
+
+        $this->request('GET', '/api/stock-items', null, null, ['status' => 'quarantine']);
+
+        self::assertSame('1', $this->client->getResponse()->headers->get('X-Total-Count'));
+    }
+
+    public function testOneStockLineHasNoTotal(): void
+    {
+        $this->closedReceipt();
+        $listed = $this->request('GET', '/api/stock-items', null, null, ['productId' => $this->shirtId])[0];
+
+        $this->request('GET', '/api/stock-items/'.$this->id($listed));
+
+        self::assertFalse($this->client->getResponse()->headers->has('X-Total-Count'));
+    }
+
+    public function testEveryFieldThatTheDocumentRequiresIsInTheAnswer(): void
+    {
+        $this->closedReceipt();
+        $line = $this->request('GET', '/api/stock-items', null, null, ['productId' => $this->shirtId])[0];
+        $required = $this->openApiRequired('StockItem');
+
+        self::assertContains('id', $required);
+        self::assertNotContains('lot', $required, 'A field that may be null is not required.');
+        self::assertSame([], array_values(array_diff($required, array_keys($line))));
+    }
+
     public function testFiltersTheStockByProductWarehouseAndStatus(): void
     {
         $this->closedReceipt();
@@ -259,5 +303,29 @@ final class StockApiTest extends InboundApiTestCase
     private function entityManager(): EntityManagerInterface
     {
         return self::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    /**
+     * The fields that the published OpenAPI document says a schema always has.
+     *
+     * @return list<string>
+     */
+    private function openApiRequired(string $schema): array
+    {
+        $this->client->request('GET', '/api/docs.jsonopenapi');
+        $this->assertStatus(200);
+
+        $document = json_decode((string) $this->client->getResponse()->getContent(), true, 512, \JSON_THROW_ON_ERROR);
+        self::assertIsArray($document);
+        $components = $document['components'] ?? null;
+        self::assertIsArray($components);
+        $schemas = $components['schemas'] ?? null;
+        self::assertIsArray($schemas);
+        $definition = $schemas[$schema] ?? null;
+        self::assertIsArray($definition);
+        $required = $definition['required'] ?? null;
+        self::assertIsArray($required);
+
+        return array_values(array_map(strval(...), $required));
     }
 }

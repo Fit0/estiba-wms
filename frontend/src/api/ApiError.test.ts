@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ApiError, toApiError, unwrap, UNEXPECTED_CODE } from './ApiError';
+import { ApiError, toApiError, unwrap, unwrapPage, UNEXPECTED_CODE } from './ApiError';
 
 describe('toApiError', () => {
   it('reads the code, the detail and the parameters of a problem', () => {
@@ -44,5 +44,29 @@ describe('unwrap', () => {
     const failure = () => unwrap({ response: new Response(null, { status: 204 }) });
 
     expect(failure).toThrow(ApiError);
+  });
+});
+
+describe('unwrapPage', () => {
+  it('gives the items and the total of the header', () => {
+    const response = new Response(null, { status: 200, headers: { 'X-Total-Count': '125' } });
+
+    expect(unwrapPage({ data: ['a', 'b'], response })).toEqual({ items: ['a', 'b'], total: 125 });
+  });
+
+  it.each([undefined, 'many', '-1', '2.5'])(
+    'counts the items shown when the header is %j',
+    (value) => {
+      const headers = value === undefined ? {} : { 'X-Total-Count': value };
+      const response = new Response(null, { status: 200, headers });
+
+      expect(unwrapPage({ data: ['a', 'b'], response }).total).toBe(2);
+    },
+  );
+
+  it('throws the problem of a bad answer', () => {
+    const response = new Response(null, { status: 403 });
+
+    expect(() => unwrapPage({ error: { code: 'shared.forbidden' }, response })).toThrow(ApiError);
   });
 });

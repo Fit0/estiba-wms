@@ -6,13 +6,10 @@ import type { components, paths } from './schema';
 export type ApiClient = Client<paths>;
 
 /**
- * The API documents its answers without marking any field as required, so every property of a
- * generated type is optional. The API always sends them, so a screen reads a schema through this
- * type. Making them required in the OpenAPI document itself is a change for the backend.
+ * A schema of the API as a screen reads it. The OpenAPI document marks as required the fields that
+ * an answer always has, and leaves optional the ones that may be missing because they are null.
  */
-export type Schema<Name extends keyof components['schemas']> = Required<
-  components['schemas'][Name]
->;
+export type Schema<Name extends keyof components['schemas']> = components['schemas'][Name];
 
 /**
  * Sends a request of the typed client through the session: with the access token, renewed once when

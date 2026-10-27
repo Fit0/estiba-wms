@@ -1,5 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { unwrap } from './ApiError';
+import { unwrap, unwrapPage, type Page } from './ApiError';
 import { useApi } from './ApiProvider';
 import type { Schema } from './client';
 import type { paths } from './schema';
@@ -16,18 +16,16 @@ export const stockKeys = {
 };
 
 /**
- * The stock lines of a page (E03-06). While the next page loads, the one on the screen stays, so the
- * table does not flash empty between pages.
+ * The stock lines of a page and how many there are in all (E03-06). While the next page loads, the
+ * one on the screen stays, so the table does not flash empty between pages.
  */
 export function useStockItems(search: StockSearch = {}) {
   const api = useApi();
 
   return useQuery({
     queryKey: stockKeys.list(search),
-    queryFn: async ({ signal }): Promise<StockItem[]> =>
-      unwrap(
-        await api.GET('/api/stock-items', { params: { query: search }, signal }),
-      ) as StockItem[],
+    queryFn: async ({ signal }): Promise<Page<StockItem>> =>
+      unwrapPage(await api.GET('/api/stock-items', { params: { query: search }, signal })),
     placeholderData: keepPreviousData,
   });
 }
@@ -38,8 +36,6 @@ export function useStockItem(id: string) {
   return useQuery({
     queryKey: stockKeys.item(id),
     queryFn: async ({ signal }): Promise<StockItem> =>
-      unwrap(
-        await api.GET('/api/stock-items/{id}', { params: { path: { id } }, signal }),
-      ) as StockItem,
+      unwrap(await api.GET('/api/stock-items/{id}', { params: { path: { id } }, signal })),
   });
 }

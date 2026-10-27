@@ -51,3 +51,25 @@ export function unwrap<Data>(result: { data?: Data; error?: unknown; response: R
 
   return result.data;
 }
+
+export interface Page<Item> {
+  readonly items: readonly Item[];
+  /** How many items match in all the pages, from the `X-Total-Count` header. */
+  readonly total: number;
+}
+
+/**
+ * The items of a paged list and how many there are in all. An answer without the header (a list
+ * that is not paged) has as many as it shows.
+ */
+export function unwrapPage<Item>(result: {
+  data?: Item[];
+  error?: unknown;
+  response: Response;
+}): Page<Item> {
+  const items = unwrap(result);
+  const header = result.response.headers.get('X-Total-Count');
+  const total = header === null ? Number.NaN : Number(header);
+
+  return { items, total: Number.isInteger(total) && total >= 0 ? total : items.length };
+}

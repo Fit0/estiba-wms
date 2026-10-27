@@ -1321,14 +1321,14 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         Asn: {
-            id?: string;
-            reference?: string;
-            supplier?: string;
-            expectedDate?: string;
+            id: string;
+            reference: string;
+            supplier: string;
+            expectedDate: string;
             /** @enum {string} */
-            status?: "expected" | "partially_received" | "received" | "closed" | "cancelled";
+            status: "expected" | "partially_received" | "received" | "closed" | "cancelled";
             openReceiptId?: string | null;
-            lines?: unknown[];
+            lines: unknown[];
         };
         "Asn.RegisterAsnInput": {
             reference?: string;
@@ -1338,13 +1338,13 @@ export interface components {
             lines?: unknown[];
         };
         AuditEntry: {
-            id?: string;
-            eventType?: string;
-            occurredAt?: string;
-            recordedAt?: string;
+            id: string;
+            eventType: string;
+            occurredAt: string;
+            recordedAt: string;
             actorId?: string | null;
             subjectId?: string | null;
-            data?: unknown[];
+            data: unknown[];
         };
         /** @description Unprocessable entity */
         ConstraintViolation: {
@@ -1386,15 +1386,15 @@ export interface components {
             readonly type?: string;
         };
         Location: {
-            id?: string;
-            warehouseId?: string;
-            zoneId?: string;
-            code?: string;
+            id: string;
+            warehouseId: string;
+            zoneId: string;
+            code: string;
             /** @enum {string} */
-            type?: "reserve" | "pick_face" | "dock" | "staging" | "packing" | "quarantine";
-            pickSequence?: number;
+            type: "reserve" | "pick_face" | "dock" | "staging" | "packing" | "quarantine";
+            pickSequence: number;
             /** @enum {string} */
-            status?: "active" | "blocked";
+            status: "active" | "blocked";
             blockReason?: string | null;
             maxWeightKg?: number | null;
             maxVolumeLitres?: number | null;
@@ -1414,27 +1414,27 @@ export interface components {
             maxPalletPositions?: number | null;
         };
         Me: {
-            id?: string;
-            email?: string;
-            roles?: unknown[];
-            tenant?: components["schemas"]["TenantSummary"];
+            id: string;
+            email: string;
+            roles: unknown[];
+            tenant: components["schemas"]["TenantSummary"];
         };
         Order: {
-            id?: string;
-            reference?: string;
-            warehouseId?: string;
-            customer?: string;
-            shipTo?: components["schemas"]["ShipToResource"];
+            id: string;
+            reference: string;
+            warehouseId: string;
+            customer: string;
+            shipTo: components["schemas"]["ShipToResource"];
             /** @enum {string} */
-            priority?: "low" | "normal" | "high" | "urgent";
-            cutOffAt?: string;
-            registeredAt?: string;
+            priority: "low" | "normal" | "high" | "urgent";
+            cutOffAt: string;
+            registeredAt: string;
             /** @enum {string} */
-            status?: "registered" | "partially_allocated" | "allocated" | "in_wave" | "picked" | "shipped" | "cancelled";
-            shortageUnits?: number;
-            backorderAccepted?: boolean;
+            status: "registered" | "partially_allocated" | "allocated" | "in_wave" | "picked" | "shipped" | "cancelled";
+            shortageUnits: number;
+            backorderAccepted: boolean;
             waveId?: string | null;
-            lines?: unknown[];
+            lines: unknown[];
         };
         "Order.RegisterOrderInput": {
             reference?: string;
@@ -1448,15 +1448,15 @@ export interface components {
             lines?: unknown[];
         };
         PickList: {
-            id?: string;
-            waveId?: string;
+            id: string;
+            waveId: string;
             /** @enum {string} */
-            status?: "generated" | "in_progress" | "completed" | "cancelled";
+            status: "generated" | "in_progress" | "completed" | "cancelled";
             operatorId?: string | null;
-            unitsToPick?: number;
-            unitsPicked?: number;
-            lines?: unknown[];
-            createdAt?: string;
+            unitsToPick: number;
+            unitsPicked: number;
+            lines: unknown[];
+            createdAt: string;
             startedAt?: string | null;
             completedAt?: string | null;
         };
@@ -1471,28 +1471,28 @@ export interface components {
             reason?: string | null;
         };
         Product: {
-            id?: string;
-            sku?: string;
-            name?: string;
+            id: string;
+            sku: string;
+            name: string;
             /** @enum {string} */
-            baseUnit?: "each" | "pair" | "set" | "kilogram" | "litre" | "metre";
+            baseUnit: "each" | "pair" | "set" | "kilogram" | "litre" | "metre";
             /** @enum {string} */
-            storageClass?: "ambient" | "chilled" | "frozen" | "hazmat";
+            storageClass: "ambient" | "chilled" | "frozen" | "hazmat";
             /** @enum {string} */
-            status?: "active" | "blocked" | "discontinued";
-            lengthMm?: number;
-            widthMm?: number;
-            heightMm?: number;
-            weightGrams?: number;
-            trackedByLot?: boolean;
-            trackedByExpiry?: boolean;
+            status: "active" | "blocked" | "discontinued";
+            lengthMm: number;
+            widthMm: number;
+            heightMm: number;
+            weightGrams: number;
+            trackedByLot: boolean;
+            trackedByExpiry: boolean;
             minShelfLifeAtReceiptDays?: number | null;
             minShelfLifeAtShipmentDays?: number | null;
             family?: string | null;
             /** @enum {string} */
-            turnoverClass?: "A" | "B" | "C";
-            gtins?: unknown[];
-            packagingLevels?: unknown[];
+            turnoverClass: "A" | "B" | "C";
+            gtins: unknown[];
+            packagingLevels: unknown[];
         };
         "Product.AssignGtinInput": {
             gtin?: string;
@@ -1534,34 +1534,34 @@ export interface components {
             weightGrams?: number | null;
         };
         ProductStock: {
-            productId?: string;
-            sku?: string;
-            name?: string;
-            onHand?: number;
-            available?: number;
-            quarantine?: number;
-            damaged?: number;
-            onHold?: number;
-            warehouses?: unknown[];
+            productId: string;
+            sku: string;
+            name: string;
+            onHand: number;
+            available: number;
+            quarantine: number;
+            damaged: number;
+            onHold: number;
+            warehouses: unknown[];
         };
         PutawayTask: {
-            id?: string;
-            receiptId?: string;
-            reference?: string;
-            productId?: string;
-            units?: number;
+            id: string;
+            receiptId: string;
+            reference: string;
+            productId: string;
+            units: number;
             lot?: string | null;
             expiryDate?: string | null;
-            quarantine?: boolean;
-            sourceLocationId?: string;
+            quarantine: boolean;
+            sourceLocationId: string;
             suggestedLocationId?: string | null;
             /** @enum {string} */
-            status?: "pending" | "confirmed";
+            status: "pending" | "confirmed";
             confirmedLocationId?: string | null;
             overrideReason?: string | null;
-            createdAt?: string;
+            createdAt: string;
             confirmedAt?: string | null;
-            stockMoved?: boolean;
+            stockMoved: boolean;
         };
         "PutawayTask.ConfirmPutawayInput": {
             locationId?: string;
@@ -1571,19 +1571,19 @@ export interface components {
             units?: number;
         };
         Receipt: {
-            id?: string;
-            asnId?: string;
-            dockLocationId?: string;
+            id: string;
+            asnId: string;
+            dockLocationId: string;
             /** @enum {string} */
-            status?: "open" | "closed";
-            overReceivedUnits?: number;
-            overReceiptApproved?: boolean;
-            openedAt?: string;
+            status: "open" | "closed";
+            overReceivedUnits: number;
+            overReceiptApproved: boolean;
+            openedAt: string;
             closedAt?: string | null;
-            stockBooked?: boolean;
-            expected?: unknown[];
-            lines?: unknown[];
-            discrepancies?: unknown[];
+            stockBooked: boolean;
+            expected: unknown[];
+            lines: unknown[];
+            discrepancies: unknown[];
         };
         "Receipt.OpenReceiptInput": {
             dockLocationId?: string;
@@ -1604,21 +1604,21 @@ export interface components {
             countryCode?: string;
         };
         ShipToResource: {
-            street?: string;
-            postalCode?: string;
-            city?: string;
-            countryCode?: string;
+            street: string;
+            postalCode: string;
+            city: string;
+            countryCode: string;
         };
         Shipment: {
-            id?: string;
-            orderId?: string;
-            warehouseId?: string;
+            id: string;
+            orderId: string;
+            warehouseId: string;
             /** @enum {string} */
-            status?: "packing" | "packed" | "dispatched";
-            picked?: unknown[];
-            unitsToPack?: number;
-            parcels?: unknown[];
-            startedAt?: string;
+            status: "packing" | "packed" | "dispatched";
+            picked: unknown[];
+            unitsToPack: number;
+            parcels: unknown[];
+            startedAt: string;
             packedAt?: string | null;
             carrier?: string | null;
             trackingNumber?: string | null;
@@ -1636,63 +1636,63 @@ export interface components {
             orderId?: string;
         };
         StockItem: {
-            id?: string;
-            productId?: string;
-            sku?: string;
-            productName?: string;
-            warehouseId?: string;
-            warehouseCode?: string;
-            locationId?: string;
-            locationCode?: string;
+            id: string;
+            productId: string;
+            sku: string;
+            productName: string;
+            warehouseId: string;
+            warehouseCode: string;
+            locationId: string;
+            locationCode: string;
             lot?: string | null;
             expiryDate?: string | null;
             /** @enum {string} */
-            status?: "available" | "quarantine" | "damaged" | "on_hold";
-            onHand?: number;
+            status: "available" | "quarantine" | "damaged" | "on_hold";
+            onHand: number;
         };
         StockMovement: {
-            id?: string;
-            stockItemId?: string;
-            productId?: string;
-            sku?: string;
-            locationId?: string;
-            locationCode?: string;
+            id: string;
+            stockItemId: string;
+            productId: string;
+            sku: string;
+            locationId: string;
+            locationCode: string;
             lot?: string | null;
             expiryDate?: string | null;
             /** @enum {string} */
-            status?: "available" | "quarantine" | "damaged" | "on_hold";
+            status: "available" | "quarantine" | "damaged" | "on_hold";
             /** @enum {string} */
-            type?: "receipt" | "issue" | "transfer_out" | "transfer_in" | "adjustment";
-            change?: number;
-            balanceAfter?: number;
+            type: "receipt" | "issue" | "transfer_out" | "transfer_in" | "adjustment";
+            change: number;
+            balanceAfter: number;
             reference?: string | null;
             reason?: string | null;
-            authorId?: string;
-            occurredAt?: string;
+            authorId: string;
+            occurredAt: string;
         };
         TenantSummary: {
-            id?: string;
-            name?: string;
-            defaultLanguage?: string;
+            id: string;
+            name: string;
+            defaultLanguage: string;
         };
         Warehouse: {
-            id?: string;
-            code?: string;
-            name?: string;
-            zones?: unknown[];
+            id: string;
+            code: string;
+            name: string;
+            zones: unknown[];
         };
         "Warehouse.CreateWarehouseInput": {
             code?: string;
             name?: string;
         };
         Wave: {
-            id?: string;
-            warehouseId?: string;
+            id: string;
+            warehouseId: string;
             /** @enum {string} */
-            status?: "planned" | "released" | "completed" | "cancelled";
-            orderIds?: unknown[];
-            pickListIds?: unknown[];
-            createdAt?: string;
+            status: "planned" | "released" | "completed" | "cancelled";
+            orderIds: unknown[];
+            pickListIds: unknown[];
+            createdAt: string;
             releasedAt?: string | null;
             completedAt?: string | null;
         };
@@ -1700,14 +1700,14 @@ export interface components {
             orderIds?: unknown[];
         };
         Zone: {
-            id?: string;
-            warehouseId?: string;
-            code?: string;
-            name?: string;
+            id: string;
+            warehouseId: string;
+            code: string;
+            name: string;
             /** @enum {string} */
-            storageClass?: "ambient" | "chilled" | "frozen" | "hazmat";
-            pickSequence?: number;
-            families?: unknown[];
+            storageClass: "ambient" | "chilled" | "frozen" | "hazmat";
+            pickSequence: number;
+            families: unknown[];
         };
         "Zone.AssignZoneFamiliesInput": {
             families?: unknown[];
@@ -1911,6 +1911,11 @@ export interface operations {
             /** @description Asn collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -2105,6 +2110,11 @@ export interface operations {
             /** @description AuditEntry collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -2252,6 +2262,11 @@ export interface operations {
             /** @description Location collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -2397,6 +2412,11 @@ export interface operations {
             /** @description Order collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -2794,6 +2814,11 @@ export interface operations {
             /** @description Product collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3208,6 +3233,11 @@ export interface operations {
             /** @description PutawayTask collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3532,6 +3562,11 @@ export interface operations {
             /** @description Shipment collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3769,6 +3804,11 @@ export interface operations {
             /** @description StockItem collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3843,6 +3883,11 @@ export interface operations {
             /** @description StockMovement collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
@@ -3970,6 +4015,11 @@ export interface operations {
             /** @description Wave collection */
             200: {
                 headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
                     [name: string]: unknown;
                 };
                 content: {
