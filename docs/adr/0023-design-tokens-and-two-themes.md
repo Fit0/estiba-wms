@@ -31,6 +31,7 @@ The frontend gets a new look: the **Logistics Industrial Precision** system in [
   |---|---|---|---|
   | Secondary text, light | `#64748B` | `#526077` | 4.3:1 on a secondary card |
   | Warning text, light | `#B45309` | `#92400E` | 4.2:1 over its own tint on a card |
+  | Success text, light | `#047857` | `#046A4D` | 4.4:1 over its own tint in a selected row (found by UI-03) |
   | Error text, dark | `#EF4444` | `#F87171` | 4.1:1 over its own tint |
   | Info text, dark | `#3B82F6` | `#60A5FA` | 4.0:1 over its own tint |
   | Edge of a control, light | `#E2E8F0` | `#64748B` | an edge that must be seen needs 3:1; `--line` stays for what only separates |
@@ -46,6 +47,6 @@ The frontend gets a new look: the **Logistics Industrial Precision** system in [
 - A new screen is correct in both themes without thinking about it, and a change of palette is a change of one file.
 - The contrast of the design is tested and not remembered. Changing a token to a color that fails breaks the build, and the failure names the pair.
 - A color that is not in the tokens (a chart series, a status that does not exist yet) has to be added to them, with its pair and its test. The charts of E07 will need a few.
-- The values differ from `DESIGN.md` in the six places above. A person who compares the two will find them here and not by surprise.
+- The values differ from `DESIGN.md` in the seven places above. A person who compares the two will find them here and not by surprise.
 - The theme is applied when the page script runs, so a visitor who prefers light may see a flash of dark. An inline script in `index.html` would remove it, and the content security policy of E10 would then need a hash for it. Until then it stays as it is.
 - The fonts add about 270 kB of files, of which a visitor loads only the ones for their alphabet (Latin: about 75 kB).

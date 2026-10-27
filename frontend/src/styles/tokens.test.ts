@@ -59,6 +59,19 @@ describe.each(Object.entries(themes))('the %s theme', (name, selector) => {
     },
   );
 
+  // The trend of a KPI card is status text straight on the card, with no tint under it.
+  it.each(statuses)('reads the %s status text straight on a card', (status) => {
+    expect(ratio(color(status), color('surface-1'))).toBeGreaterThanOrEqual(TEXT);
+  });
+
+  // A badge in a selected row sits on its tint, on the selection, on the card.
+  it.each(statuses)('reads the %s status badge in a selected row', (status) => {
+    const row = over(color('selected'), color('surface-1'));
+    const tinted = over(color(`${status}-fill`), row);
+
+    expect(ratio(color(status), tinted)).toBeGreaterThanOrEqual(TEXT);
+  });
+
   it.each(statuses)('reads the %s status text straight on the canvas', (status) => {
     expect(ratio(color(status), color('canvas'))).toBeGreaterThanOrEqual(TEXT);
   });

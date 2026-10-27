@@ -15,6 +15,14 @@ describe('routes and authentication', () => {
     expect(await screen.findByRole('heading', { name: 'Inicio' })).toBeInTheDocument();
   });
 
+  it('serves the component gallery to a signed-in user while developing', async () => {
+    open('/design', apiOf(['operator'], withSession(['operator'])));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Galería de componentes' }),
+    ).toBeInTheDocument();
+  });
+
   it('sends someone without a session to sign in', async () => {
     open('/', apiOf(['operator'], noSession));
 
