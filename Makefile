@@ -5,7 +5,7 @@ PHP := $(DC) exec -T php
 FRONT := $(DC) exec -T frontend
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-qa
+.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -109,6 +109,9 @@ front-test: ## Run the frontend tests (Vitest)
 
 front-build: ## Build the frontend for production
 	$(FRONT) npm run build
+
+front-api-types: ## Generate the TypeScript types of the API from its running OpenAPI document (ADR 0025). Commit src/api/schema.d.ts.
+	$(FRONT) npm run api:types
 
 front-qa: ## Run every frontend check (the ones the Frontend job of CI runs)
 	$(FRONT) npm run lint
