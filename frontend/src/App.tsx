@@ -1,5 +1,6 @@
 import { RouterProvider, type DataRouter } from 'react-router';
 import type { AuthClient } from './auth/AuthClient';
+import { ApiProvider } from './api/ApiProvider';
 import { AuthProvider } from './auth/AuthContext';
 
 /**
@@ -8,7 +9,9 @@ import { AuthProvider } from './auth/AuthContext';
 export function App({ client, router }: { client: AuthClient; router: DataRouter }) {
   return (
     <AuthProvider client={client}>
-      <RouterProvider router={router} />
+      <ApiProvider session={client}>
+        <RouterProvider router={router} />
+      </ApiProvider>
     </AuthProvider>
   );
 }
