@@ -17,6 +17,7 @@ import { toast } from '../components/ui/Toaster';
 import { Tooltip } from '../components/ui/Tooltip';
 import type { Tone } from '../components/tone';
 import { useTranslation, type MessageKey } from '../i18n';
+import { formatNumber } from '../i18n/format';
 
 type StockStatus = 'available' | 'quarantine' | 'blocked' | 'inTransit' | 'draft';
 
@@ -111,7 +112,7 @@ export function DesignGalleryPage() {
       header: t('design.column.quantity'),
       kind: 'number',
       sortable: true,
-      cell: (row) => new Intl.NumberFormat(language).format(row.quantity),
+      cell: (row) => formatNumber(language, row.quantity),
     },
   ];
 
@@ -126,7 +127,7 @@ export function DesignGalleryPage() {
         <div className="grid gap-gutter sm:grid-cols-2 xl:grid-cols-4">
           <KpiCard
             label={t('design.kpi.units')}
-            value={new Intl.NumberFormat(language).format(12480)}
+            value={formatNumber(language, 12480)}
             trend={{ direction: 'up', label: t('design.kpi.units.trend'), tone: 'ok' }}
           />
           <KpiCard

@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
 import type { AuthClient } from '../auth/AuthClient';
-import { detectLanguage } from '../i18n';
+import { i18n, isLanguage } from '../i18n';
 import { createApiClient, type ApiClient } from './client';
 import { createQueryClient } from './queryClient';
 
@@ -12,7 +12,9 @@ const ApiContext = createContext<ApiClient | null>(null);
  * emptied: what one user loaded must not be on the screen of the next one who signs in.
  */
 export function ApiProvider({ session, children }: { session: AuthClient; children: ReactNode }) {
-  const [api] = useState(() => createApiClient(session, detectLanguage(navigator.languages)));
+  const [api] = useState(() =>
+    createApiClient(session, () => (isLanguage(i18n.language) ? i18n.language : 'es')),
+  );
   const [queries] = useState(createQueryClient);
 
   useEffect(

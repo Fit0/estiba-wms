@@ -17,13 +17,19 @@ export type Schema<Name extends keyof components['schemas']> = components['schem
  * the options of `fetch`, so the request is taken apart here. The address is a path because the
  * browser talks to one origin only (ADR 0021).
  */
-async function throughSession(session: AuthClient, request: Request): Promise<Response> {
+async function throughSession(
+  session: AuthClient,
+  language: Language,
+  request: Request,
+): Promise<Response> {
   const url = new URL(request.url);
   const body = request.body === null ? undefined : await request.text();
+  const headers = new Headers(request.headers);
+  headers.set('Accept-Language', language);
 
   return session.authorizedFetch(`${url.pathname}${url.search}`, {
     method: request.method,
-    headers: request.headers,
+    headers,
     ...(body === undefined ? {} : { body }),
     signal: request.signal,
   });
@@ -34,10 +40,9 @@ async function throughSession(session: AuthClient, request: Request): Promise<Re
  * generated from the OpenAPI document (`npm run api:types`), so a call to a path that does not exist
  * or with a wrong parameter does not compile.
  */
-export function createApiClient(session: AuthClient, language: Language): ApiClient {
+export function createApiClient(session: AuthClient, getLanguage: () => Language): ApiClient {
   return createClient<paths>({
     baseUrl: globalThis.location.origin,
-    headers: { 'Accept-Language': language },
-    fetch: (request) => throughSession(session, request),
+    fetch: (request) => throughSession(session, getLanguage(), request),
   });
 }

@@ -5,6 +5,7 @@ import { SignInError } from '../auth/AuthClient';
 import { useAuth } from '../auth/useAuth';
 import { BrandMark } from '../components/BrandMark';
 import { Button } from '../components/Button';
+import { LanguageToggle } from '../components/LanguageToggle';
 import { TextField } from '../components/TextField';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useTranslation, type MessageKey } from '../i18n';
@@ -89,6 +90,7 @@ export function LoginPage() {
             <BrandMark />
           </span>
           <span className="ml-auto">
+            <LanguageToggle />
             <ThemeToggle />
           </span>
         </div>

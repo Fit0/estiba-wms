@@ -1,13 +1,17 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
+import { i18n, LANGUAGE_KEY } from './i18n';
 
 // Without globals, Testing Library does not clean the page between tests by itself.
 afterEach(cleanup);
 
 // The interface is Spanish unless the browser asks for English (ADR 0004), and jsdom asks for English.
-beforeEach(() => {
+// The language lives in one instance for the whole run, so each test starts from Spanish again.
+beforeEach(async () => {
   vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['es-ES', 'es']);
+  window.localStorage.removeItem(LANGUAGE_KEY);
+  await i18n.changeLanguage('es');
 });
 
 // A busy machine (CI, a laptop running Docker) can take longer than a second to settle a page.

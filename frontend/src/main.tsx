@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 import { App } from './App';
 import { AuthClient } from './auth/AuthClient';
-import { detectLanguage } from './i18n';
+import './i18n';
 import './index.css';
 import { routes } from './routes';
 import { applyTheme, readStoredTheme, resolveTheme } from './theme/theme';
@@ -16,7 +16,6 @@ if (root === null) {
   throw new Error('index.html has no #root element.');
 }
 
-document.documentElement.lang = detectLanguage(navigator.languages);
 applyTheme(
   resolveTheme(readStoredTheme(), window.matchMedia('(prefers-color-scheme: light)').matches),
 );

@@ -21,7 +21,7 @@ describe('the typed client', () => {
       'GET /api/stock-items?status=available&page=2': () => json([]),
     });
 
-    const result = await createApiClient(session, 'en').GET('/api/stock-items', {
+    const result = await createApiClient(session, () => 'en').GET('/api/stock-items', {
       params: { query: { status: 'available', page: 2 } },
     });
 
@@ -36,7 +36,7 @@ describe('the typed client', () => {
       'GET /api/stock-items/abc': () => json({ id: 'abc' }),
     });
 
-    await createApiClient(session, 'es').GET('/api/stock-items/{id}', {
+    await createApiClient(session, () => 'es').GET('/api/stock-items/{id}', {
       params: { path: { id: 'abc' } },
     });
 
@@ -56,7 +56,7 @@ describe('the typed client', () => {
       },
     });
 
-    const result = await createApiClient(session, 'es').GET('/api/stock-items');
+    const result = await createApiClient(session, () => 'es').GET('/api/stock-items');
 
     expect(result.data).toEqual([{ id: 'a' }]);
     expect(attempts).toBe(2);
@@ -73,7 +73,7 @@ describe('the typed client', () => {
       },
     });
 
-    await createApiClient(session, 'es').POST('/api/warehouses', {
+    await createApiClient(session, () => 'es').POST('/api/warehouses', {
       body: { code: 'ZGZ', name: 'Zaragoza' },
     });
 
@@ -85,7 +85,7 @@ describe('the typed client', () => {
       'GET /api/stock-items': () => problem(403, 'shared.forbidden'),
     });
 
-    const result = await createApiClient(session, 'es').GET('/api/stock-items');
+    const result = await createApiClient(session, () => 'es').GET('/api/stock-items');
 
     expect(result.response.status).toBe(403);
     expect(result.error).toMatchObject({ code: 'shared.forbidden' });
