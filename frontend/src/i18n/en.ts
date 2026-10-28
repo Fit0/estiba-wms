@@ -111,4 +111,6 @@ export const en: Record<keyof typeof es, string> = {
   'design.toast.success': 'Location blocked',
   'design.toast.error': 'The location could not be blocked',
   'design.toast.show': 'Show notices',
+  'language.toEnglish': 'Switch to English',
+  'language.toSpanish': 'Switch to Spanish',
 };

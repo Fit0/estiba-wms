@@ -1,11 +1,11 @@
 import { Command } from 'cmdk';
-import { LogOut, Moon, Sun } from 'lucide-react';
+import { Languages, LogOut, Moon, Sun } from 'lucide-react';
 import { Dialog as DialogPrimitive, VisuallyHidden } from 'radix-ui';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import type { Role } from '../../auth/roles';
 import { useAuth } from '../../auth/useAuth';
-import { useTranslation } from '../../i18n';
+import { chooseLanguage, useTranslation } from '../../i18n';
 import { visibleNavigation } from '../../layouts/navigation';
 import { useTheme } from '../../theme/useTheme';
 
@@ -46,7 +46,7 @@ export function CommandPalette({
   onOpenChange: (open: boolean) => void;
   roles: readonly Role[];
 }) {
-  const { t } = useTranslation();
+  const { language, t } = useTranslation();
   const navigate = useNavigate();
   const { client } = useAuth();
   const { theme, toggle } = useTheme();
@@ -103,6 +103,16 @@ export function CommandPalette({
           >
             <ThemeIcon aria-hidden="true" className="size-4" />
             {theme === 'dark' ? t('theme.toLight') : t('theme.toDark')}
+          </Command.Item>
+          <Command.Item
+            value={language === 'es' ? t('language.toEnglish') : t('language.toSpanish')}
+            onSelect={() => {
+              run(() => void chooseLanguage(language === 'es' ? 'en' : 'es'));
+            }}
+            className={itemClass}
+          >
+            <Languages aria-hidden="true" className="size-4" />
+            {language === 'es' ? t('language.toEnglish') : t('language.toSpanish')}
           </Command.Item>
           <Command.Item
             value={t('session.signOut')}

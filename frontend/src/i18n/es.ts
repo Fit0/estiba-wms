@@ -110,4 +110,6 @@ export const es = {
   'design.toast.success': 'Ubicación bloqueada',
   'design.toast.error': 'No se ha podido bloquear la ubicación',
   'design.toast.show': 'Mostrar avisos',
+  'language.toEnglish': 'Cambiar a inglés',
+  'language.toSpanish': 'Cambiar a español',
 } as const;

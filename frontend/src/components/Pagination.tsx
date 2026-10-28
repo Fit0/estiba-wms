@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useId } from 'react';
+import { formatNumber } from '../i18n/format';
 import { useTranslation } from '../i18n';
 import { Button } from './Button';
 
@@ -46,7 +47,6 @@ export function Pagination({
 }) {
   const { t, language } = useTranslation();
   const selectId = useId();
-  const number = new Intl.NumberFormat(language);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const current = Math.min(Math.max(page, 1), pageCount);
   const from = total === 0 ? 0 : (current - 1) * pageSize + 1;
@@ -61,9 +61,9 @@ export function Pagination({
         {total === 0
           ? t('pagination.none')
           : t('pagination.summary', {
-              from: number.format(from),
-              to: number.format(to),
-              total: number.format(total),
+              from: formatNumber(language, from),
+              to: formatNumber(language, to),
+              total: formatNumber(language, total),
             })}
       </p>
 
