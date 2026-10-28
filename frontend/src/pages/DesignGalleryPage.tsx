@@ -249,7 +249,7 @@ export function DesignGalleryPage() {
           ))}
         </div>
         <DataTable
-          caption={t('design.table')}
+          caption={t('design.table.caption')}
           columns={columns}
           rows={visible}
           rowKey={(row) => row.id}

@@ -28,7 +28,7 @@ The app talks to the API through the same address: the development server forwar
 
 ```
 frontend/
-├── src/                     The app: main.tsx, routes.tsx, auth/ (session, guards), api/ (typed client, cache, hooks), components/ui/ (dialog, menu, select, tooltip, notices, command palette), pages/, warehouse/ (forms and the active warehouse), layouts/ (sidebar and top bar), components/ (button, field, page title, data table, status badge, KPI card), i18n/ (react-i18next, es/en catalogs, `Intl` formats), theme/
+├── src/                     The app: main.tsx, routes.tsx, auth/ (session, guards), api/ (typed client, cache, hooks), components/ui/ (dialog, menu, select, tooltip, notices, command palette), pages/, warehouse/ (forms and the active warehouse), layouts/ (sidebar and top bar), components/ (button, field, page title, data table, status badge, KPI card), i18n/ (react-i18next, es/en catalogs, `Intl` formats), theme/ (theme and density)
 │   ├── index.css            Tailwind and the theme of the design
 │   └── styles/tokens.css    The design tokens, in the dark and the light theme
 ├── vite.config.ts           Vite, the proxy to the API and Vitest

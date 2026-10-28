@@ -258,7 +258,7 @@ function BackLink() {
   return (
     <Link
       to="/warehouses"
-      className="mb-gutter inline-flex items-center gap-1 text-body-md text-accent hover:underline"
+      className="mb-gutter inline-flex min-h-control items-center gap-1 text-body-md text-accent hover:underline"
     >
       <ArrowLeft aria-hidden="true" className="size-4" />
       {t('warehouse.back')}

@@ -29,7 +29,7 @@ export function WarehousesPage() {
         <Link
           to={`/warehouses/${warehouse.id}`}
           aria-label={t('warehouses.open', { name: warehouse.name })}
-          className="text-accent underline-offset-2 hover:underline"
+          className="inline-flex min-h-control items-center text-accent underline-offset-2 hover:underline"
         >
           {warehouse.code}
         </Link>

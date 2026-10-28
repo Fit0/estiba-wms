@@ -33,7 +33,7 @@ export function DialogContent({
         {...(description === undefined ? { 'aria-describedby': undefined } : {})}
         {...props}
       >
-        <div className="grid gap-1 pr-8">
+        <div className="grid gap-1 pr-12">
           <DialogPrimitive.Title className="font-display text-headline-md">
             {title}
           </DialogPrimitive.Title>
@@ -46,7 +46,7 @@ export function DialogContent({
         {children}
         <DialogPrimitive.Close
           aria-label={t('ui.close')}
-          className="absolute top-3 right-3 inline-flex size-8 items-center justify-center rounded-control text-fg-secondary hover:bg-surface-3 hover:text-fg"
+          className="absolute top-3 right-3 inline-flex size-control items-center justify-center rounded-control text-fg-secondary hover:bg-surface-3 hover:text-fg"
         >
           <X aria-hidden="true" className="size-4" />
         </DialogPrimitive.Close>

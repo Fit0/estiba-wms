@@ -2,6 +2,7 @@ import { LogOut, PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
 import { highestRole } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
+import { DensityToggle } from '../components/DensityToggle';
 import { LanguageToggle } from '../components/LanguageToggle';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { Tooltip } from '../components/ui/Tooltip';
@@ -52,6 +53,7 @@ export function TopBar({
           </Button>
         </Tooltip>
         <OnlineStatus />
+        <DensityToggle />
         <LanguageToggle />
         <ThemeToggle />
         <div

@@ -1,0 +1,117 @@
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, expect, it } from 'vitest';
+import { TooltipProvider } from './components/ui/Tooltip';
+import { DesignGalleryPage } from './pages/DesignGalleryPage';
+import { expectNoViolations } from './testing/axe';
+import { json } from './testing/fakeApi';
+import { apiOf, noSession, open, withSession } from './testing/renderApp';
+
+/**
+ * The accessibility audit of UI-04: axe over every screen that exists, in both languages and with
+ * the dialogs open. What jsdom cannot judge (contrast, size of targets) is covered elsewhere; see
+ * `testing/axe.ts`.
+ */
+const zone = {
+  id: 'z-a',
+  warehouseId: 'w-1',
+  code: 'A',
+  name: 'Moda mujer',
+  storageClass: 'ambient',
+  pickSequence: 10,
+  families: [],
+};
+const warehouse = { id: 'w-1', code: 'ZGZ1', name: 'Zaragoza', zones: [zone] };
+const location = {
+  id: 'l-1',
+  warehouseId: 'w-1',
+  zoneId: 'z-a',
+  code: 'A-01-01',
+  type: 'reserve',
+  pickSequence: 10,
+  status: 'active',
+};
+
+const supervisor = apiOf(['supervisor'], {
+  ...withSession(['supervisor']),
+  'GET /api/warehouses': () => json([warehouse]),
+  'GET /api/warehouses/w-1': () => json(warehouse),
+  'GET /api/warehouses/w-1/locations?page=1&itemsPerPage=30': () =>
+    new Response(JSON.stringify([location]), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json', 'X-Total-Count': '1' },
+    }),
+});
+
+describe('accessibility (axe)', () => {
+  it('the sign-in page, in Spanish and in English', async () => {
+    const user = userEvent.setup();
+    open('/login', apiOf(['operator'], noSession));
+    await screen.findByRole('heading', { name: 'Iniciar sesión' });
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a inglés' }));
+    await screen.findByRole('heading', { name: 'Sign in' });
+    await expectNoViolations();
+  });
+
+  it('the home page of the shell, with the sidebar open and in the touch density', async () => {
+    const user = userEvent.setup();
+    open('/', supervisor);
+    await screen.findByRole('navigation', { name: 'Navegación principal' });
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: /Densidad compacta/ }));
+    await user.click(screen.getByRole('button', { name: /Densidad cómoda/ }));
+    await expectNoViolations();
+  });
+
+  it('the list of warehouses and its form', async () => {
+    const user = userEvent.setup();
+    open('/warehouses', supervisor);
+    await screen.findByRole('link', { name: 'Abrir Zaragoza' });
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Nuevo almacén' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Nuevo almacén' });
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar' }));
+    await within(dialog).findAllByText('Escribe un valor.');
+    await expectNoViolations();
+  });
+
+  it('one warehouse, with its zones, its locations and the dialog to block one', async () => {
+    const user = userEvent.setup();
+    open('/warehouses/w-1', supervisor);
+    await screen.findByText('A-01-01');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Bloquear A-01-01' }));
+    await screen.findByRole('dialog', { name: 'Bloquear la ubicación A-01-01' });
+    await expectNoViolations();
+  });
+
+  it('the command palette', async () => {
+    const user = userEvent.setup();
+    open('/', apiOf(['operator'], withSession(['operator'])));
+    await user.click(await screen.findByRole('button', { name: 'Abrir la paleta de comandos' }));
+    await screen.findByRole('dialog', { name: 'Paleta de comandos' });
+    await expectNoViolations();
+  });
+
+  it('the component gallery', async () => {
+    render(
+      <TooltipProvider>
+        <DesignGalleryPage />
+      </TooltipProvider>,
+    );
+    await expectNoViolations();
+  });
+});
+
+describe('the audit itself', () => {
+  it('fails on a page that is not accessible', async () => {
+    render(<input type="text" />);
+
+    await expect(expectNoViolations()).rejects.toThrow(/label/);
+  });
+});

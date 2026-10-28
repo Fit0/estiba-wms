@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { i18n, LANGUAGE_KEY } from './i18n';
+import { DENSITY_KEY } from './theme/density';
 
 // Without globals, Testing Library does not clean the page between tests by itself.
 afterEach(cleanup);
@@ -11,6 +12,8 @@ afterEach(cleanup);
 beforeEach(async () => {
   vi.spyOn(navigator, 'languages', 'get').mockReturnValue(['es-ES', 'es']);
   window.localStorage.removeItem(LANGUAGE_KEY);
+  window.localStorage.removeItem(DENSITY_KEY);
+  delete document.documentElement.dataset.density;
   await i18n.changeLanguage('es');
 });
 

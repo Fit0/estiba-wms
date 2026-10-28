@@ -62,16 +62,18 @@ function SelectBox({
   }, [indeterminate]);
 
   return (
-    <input
-      ref={ref}
-      type="checkbox"
-      aria-label={label}
-      checked={checked}
-      onChange={(event) => {
-        onChange(event.target.checked);
-      }}
-      className="size-4 accent-primary"
-    />
+    <label className="flex min-h-control min-w-control items-center justify-center">
+      <input
+        ref={ref}
+        type="checkbox"
+        aria-label={label}
+        checked={checked}
+        onChange={(event) => {
+          onChange(event.target.checked);
+        }}
+        className="size-4 accent-primary"
+      />
+    </label>
   );
 }
 
@@ -176,7 +178,7 @@ export function DataTable<Row>({
           <thead className="sticky top-0 z-10 bg-surface-2 text-label-md text-fg-secondary">
             <tr>
               {selection !== undefined && (
-                <th scope="col" className="h-row w-10 border-b border-line-strong px-3">
+                <th scope="col" className="h-row w-control border-b border-line-strong px-1">
                   <SelectBox
                     label={t('table.selectAll')}
                     checked={rows.length > 0 && chosen === rows.length}
@@ -264,7 +266,7 @@ export function DataTable<Row>({
                     className={`border-b border-line last:border-b-0 hover:bg-surface-2 ${isSelected ? 'bg-selected' : ''}`}
                   >
                     {selection !== undefined && (
-                      <td className="h-row w-10 px-3">
+                      <td className="h-row w-control px-1">
                         <SelectBox
                           label={t('table.selectRow', { row: selection.rowLabel(row) })}
                           checked={isSelected}
