@@ -1,8 +1,9 @@
-import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { LogOut, PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
 import { highestRole } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { Tooltip } from '../components/ui/Tooltip';
 import { useTranslation } from '../i18n';
 import { OnlineStatus } from './OnlineStatus';
 
@@ -10,7 +11,15 @@ import { OnlineStatus } from './OnlineStatus';
  * The bar over every page of the app: the switch of the sidebar, the connection, the theme and who is
  * signed in. The warehouse, the search and the notices come with the screens that have their data.
  */
-export function TopBar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+export function TopBar({
+  collapsed,
+  onToggle,
+  onOpenPalette,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+  onOpenPalette: () => void;
+}) {
   const { session, client } = useAuth();
   const { t } = useTranslation();
 
@@ -34,6 +43,11 @@ export function TopBar({ collapsed, onToggle }: { collapsed: boolean; onToggle: 
         <SidebarIcon aria-hidden="true" className="size-4" />
       </Button>
       <div className="ml-auto flex items-center gap-2">
+        <Tooltip content="Ctrl K">
+          <Button variant="ghost" icon onClick={onOpenPalette} aria-label={t('palette.open')}>
+            <Search aria-hidden="true" className="size-4" />
+          </Button>
+        </Tooltip>
         <OnlineStatus />
         <ThemeToggle />
         <div

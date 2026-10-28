@@ -1,11 +1,20 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { TooltipProvider } from '../components/ui/Tooltip';
 import { DesignGalleryPage } from './DesignGalleryPage';
+
+function renderGallery() {
+  return render(
+    <TooltipProvider>
+      <DesignGalleryPage />
+    </TooltipProvider>,
+  );
+}
 
 describe('DesignGalleryPage', () => {
   it('shows the cards, the badges and the first page of the table', () => {
-    render(<DesignGalleryPage />);
+    renderGallery();
 
     expect(screen.getByRole('heading', { name: 'Galería de componentes' })).toBeInTheDocument();
     expect(screen.getAllByRole('article')).toHaveLength(4);
@@ -15,7 +24,7 @@ describe('DesignGalleryPage', () => {
 
   it('sorts the table and goes back to the first page', async () => {
     const user = userEvent.setup();
-    render(<DesignGalleryPage />);
+    renderGallery();
 
     await user.click(screen.getByRole('button', { name: 'Página 2' }));
     await user.click(screen.getByRole('button', { name: 'Ordenar por Cantidad' }));
@@ -30,7 +39,7 @@ describe('DesignGalleryPage', () => {
 
   it('selects rows', async () => {
     const user = userEvent.setup();
-    render(<DesignGalleryPage />);
+    renderGallery();
 
     const first = screen.getByRole('row', { name: /SKU-1000/ });
     await user.click(within(first).getByRole('checkbox'));
@@ -40,7 +49,7 @@ describe('DesignGalleryPage', () => {
 
   it('switches between the states of the table', async () => {
     const user = userEvent.setup();
-    render(<DesignGalleryPage />);
+    renderGallery();
 
     await user.click(screen.getByRole('button', { name: 'Con error' }));
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -51,5 +60,15 @@ describe('DesignGalleryPage', () => {
     await user.click(screen.getByRole('button', { name: 'Vacía' }));
     expect(screen.getByText('No hay nada que mostrar.')).toBeInTheDocument();
     expect(screen.getByText('Sin resultados')).toBeInTheDocument();
+  });
+
+  it('shows the interface primitives, and the dialog opens', async () => {
+    const user = userEvent.setup();
+    renderGallery();
+
+    expect(screen.getByRole('combobox', { name: 'Estado del stock' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Abrir un diálogo' }));
+
+    expect(screen.getByRole('dialog', { name: 'Bloquear la ubicación' })).toBeInTheDocument();
   });
 });

@@ -1,9 +1,20 @@
+import { Copy, MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../components/Button';
 import { DataTable, type Column, type Sort } from '../components/DataTable';
 import { KpiCard } from '../components/KpiCard';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from '../components/ui/Dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/DropdownMenu';
+import { Select } from '../components/ui/Select';
+import { toast } from '../components/ui/Toaster';
+import { Tooltip } from '../components/ui/Tooltip';
 import type { Tone } from '../components/tone';
 import { useTranslation, type MessageKey } from '../i18n';
 
@@ -54,6 +65,7 @@ export function DesignGalleryPage() {
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [stockStatus, setStockStatus] = useState<string | undefined>(undefined);
 
   const collator = new Intl.Collator(language, { numeric: true });
   const sorted = [...sampleRows];
@@ -141,6 +153,78 @@ export function DesignGalleryPage() {
               {t(statuses[status].label)}
             </StatusBadge>
           ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="design-primitives" className="grid gap-gutter">
+        <h2 id="design-primitives" className="text-headline-md">
+          {t('design.primitives')}
+        </h2>
+        <div className="flex flex-wrap items-end gap-gutter">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>{t('design.dialog.open')}</Button>
+            </DialogTrigger>
+            <DialogContent
+              title={t('design.dialog.title')}
+              description={t('design.dialog.description')}
+            >
+              <div className="flex justify-end gap-2">
+                <DialogClose asChild>
+                  <Button>{t('ui.close')}</Button>
+                </DialogClose>
+                <DialogClose asChild>
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      toast.success(t('design.toast.success'));
+                    }}
+                  >
+                    {t('design.dialog.confirm')}
+                  </Button>
+                </DialogClose>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button>
+                <MoreHorizontal aria-hidden="true" className="size-4" />
+                {t('design.menu.open')}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem>{t('design.menu.edit')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('design.menu.duplicate')}</DropdownMenuItem>
+              <DropdownMenuItem>{t('design.menu.delete')}</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Select
+            label={t('design.select.label')}
+            placeholder={t('design.select.placeholder')}
+            value={stockStatus}
+            onValueChange={setStockStatus}
+            options={statusOrder.map((status) => ({
+              value: status,
+              label: t(statuses[status].label),
+            }))}
+          />
+
+          <Tooltip content={t('design.tooltip.text')}>
+            <Button variant="ghost" icon aria-label={t('design.tooltip.button')}>
+              <Copy aria-hidden="true" className="size-4" />
+            </Button>
+          </Tooltip>
+
+          <Button
+            onClick={() => {
+              toast.error(t('design.toast.error'));
+            }}
+          >
+            {t('design.toast.show')}
+          </Button>
         </div>
       </section>
 
