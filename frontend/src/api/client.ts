@@ -11,19 +11,26 @@ export type ApiClient = Client<paths>;
  */
 export type Schema<Name extends keyof components['schemas']> = components['schemas'][Name];
 
+function hasNoBody(method: string): boolean {
+  return method === 'GET' || method === 'HEAD';
+}
+
 /**
  * Sends a request of the typed client through the session: with the access token, renewed once when
  * the API says it has expired. The client hands over a `Request`, and the session takes a path and
  * the options of `fetch`, so the request is taken apart here. The address is a path because the
  * browser talks to one origin only (ADR 0021).
  */
-async function throughSession(
+export async function throughSession(
   session: AuthClient,
   language: Language,
   request: Request,
 ): Promise<Response> {
   const url = new URL(request.url);
-  const body = request.body === null ? undefined : await request.text();
+  // A GET or a HEAD has no body, and Firefox refuses to send one (even an empty one) that the
+  // `Request` of the client may carry: only the other methods hand theirs over.
+  const body =
+    hasNoBody(request.method) || request.body === null ? undefined : await request.text();
   const headers = new Headers(request.headers);
   headers.set('Accept-Language', language);
 

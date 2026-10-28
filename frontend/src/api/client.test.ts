@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { AuthClient } from '../auth/AuthClient';
 import { fakeApi, json, me, problem } from '../testing/fakeApi';
-import { createApiClient } from './client';
+import { createApiClient, throughSession } from './client';
 
 async function signedIn(extra: Parameters<typeof fakeApi>[0]) {
   const api = fakeApi({
@@ -89,5 +89,28 @@ describe('the typed client', () => {
 
     expect(result.response.status).toBe(403);
     expect(result.error).toMatchObject({ code: 'shared.forbidden' });
+  });
+
+  it('never hands a body to a GET, which Firefox refuses even when it is empty', async () => {
+    const seen: (RequestInit | undefined)[] = [];
+    const session = new AuthClient((_input, init) => {
+      seen.push(init);
+
+      return Promise.resolve(json([]));
+    });
+    // What Firefox builds for a GET of the client: a request whose `body` is a stream, not null.
+    const request = {
+      url: 'http://localhost:5173/api/warehouses',
+      method: 'GET',
+      headers: new Headers(),
+      body: new ReadableStream(),
+      text: () => Promise.resolve(''),
+      signal: new AbortController().signal,
+    } as unknown as Request;
+
+    await throughSession(session, 'en', request);
+
+    expect(seen.at(-1)).toBeDefined();
+    expect(seen.at(-1)).not.toHaveProperty('body');
   });
 });

@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { describeError } from '../api/describeError';
 import { useWarehouses, type Warehouse } from '../api/warehouses';
 import { hasRole } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
@@ -67,6 +68,7 @@ export function WarehousesPage() {
         rowKey={(warehouse) => warehouse.id}
         status={warehouses.isPending ? 'loading' : warehouses.isError ? 'error' : 'ready'}
         empty={t('warehouses.empty')}
+        errorMessage={`${t('table.error')} (${describeError(warehouses.error)})`}
         onRetry={() => void warehouses.refetch()}
       />
       <WarehouseDialog open={creating} onOpenChange={setCreating} />
