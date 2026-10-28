@@ -7,10 +7,11 @@ import { ThemeToggle } from '../components/ThemeToggle';
 import { Tooltip } from '../components/ui/Tooltip';
 import { useTranslation } from '../i18n';
 import { OnlineStatus } from './OnlineStatus';
+import { WarehouseSelect } from './WarehouseSelect';
 
 /**
  * The bar over every page of the app: the switch of the sidebar, the connection, the theme and who is
- * signed in. The warehouse, the search and the notices come with the screens that have their data.
+ * signed in. The warehouse the screens work on is chosen here.
  */
 export function TopBar({
   collapsed,
@@ -43,6 +44,7 @@ export function TopBar({
       >
         <SidebarIcon aria-hidden="true" className="size-4" />
       </Button>
+      <WarehouseSelect />
       <div className="ml-auto flex items-center gap-2">
         <Tooltip content="Ctrl K">
           <Button variant="ghost" icon onClick={onOpenPalette} aria-label={t('palette.open')}>

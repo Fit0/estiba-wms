@@ -6,6 +6,8 @@ import { AuditPage } from './pages/AuditPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { WarehousePage } from './pages/WarehousePage';
+import { WarehousesPage } from './pages/WarehousesPage';
 
 /**
  * The component gallery exists only while developing (UI-03): it is not in the build and not in the
@@ -35,6 +37,8 @@ export const routes: RouteObject[] = [
         element: <AppLayout />,
         children: [
           { index: true, element: <HomePage /> },
+          { path: 'warehouses', element: <WarehousesPage /> },
+          { path: 'warehouses/:id', element: <WarehousePage /> },
           {
             element: <RequireRole minimum="supervisor" />,
             children: [{ path: 'audit', element: <AuditPage /> }],

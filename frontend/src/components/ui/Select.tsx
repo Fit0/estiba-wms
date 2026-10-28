@@ -17,18 +17,23 @@ export function Select({
   onValueChange,
   options,
   placeholder,
+  hideLabel = false,
+  error,
 }: {
   label: string;
   value: string | undefined;
   onValueChange: (value: string) => void;
   options: readonly SelectOption[];
   placeholder?: string;
+  /** The label stays for assistive technology and is not drawn (a select in a bar). */
+  hideLabel?: boolean;
+  error?: string | undefined;
 }) {
   const id = useId();
 
   return (
     <div className="grid gap-1">
-      <label htmlFor={id} className="text-label-md text-fg-secondary">
+      <label htmlFor={id} className={hideLabel ? 'sr-only' : 'text-label-md text-fg-secondary'}>
         {label}
       </label>
       <SelectPrimitive.Root
@@ -37,7 +42,8 @@ export function Select({
       >
         <SelectPrimitive.Trigger
           id={id}
-          className="inline-flex h-control min-w-44 items-center justify-between gap-2 rounded-control border border-input-border bg-surface-1 px-3 text-body-md text-fg data-[placeholder]:text-fg-secondary"
+          aria-invalid={error === undefined ? undefined : true}
+          className={`${error === undefined ? 'border-input-border' : 'border-bad'} inline-flex h-control min-w-44 items-center justify-between gap-2 rounded-control border bg-surface-1 px-3 text-body-md text-fg data-[placeholder]:text-fg-secondary`}
         >
           <SelectPrimitive.Value {...(placeholder === undefined ? {} : { placeholder })} />
           <SelectPrimitive.Icon>
@@ -67,6 +73,7 @@ export function Select({
           </SelectPrimitive.Content>
         </SelectPrimitive.Portal>
       </SelectPrimitive.Root>
+      {error !== undefined && <p className="text-label-md text-bad">{error}</p>}
     </div>
   );
 }
