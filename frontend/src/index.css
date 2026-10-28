@@ -103,6 +103,19 @@
   height: var(--control-height);
 }
 
+@utility min-h-control {
+  min-height: var(--control-height);
+}
+
+@utility min-w-control {
+  min-width: var(--control-height);
+}
+
+@utility size-control {
+  width: var(--control-height);
+  height: var(--control-height);
+}
+
 @utility w-control {
   width: var(--control-height);
 }

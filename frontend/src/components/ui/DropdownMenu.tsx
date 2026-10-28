@@ -27,7 +27,7 @@ export function DropdownMenuItem({
 }: ComponentProps<typeof MenuPrimitive.Item>) {
   return (
     <MenuPrimitive.Item
-      className={`flex min-h-8 cursor-default items-center gap-2 rounded-control px-2 text-body-md outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-3 ${className}`}
+      className={`flex min-h-control cursor-default items-center gap-2 rounded-control px-2 text-body-md outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-surface-3 ${className}`}
       {...props}
     />
   );

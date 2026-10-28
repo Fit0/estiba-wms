@@ -1,5 +1,5 @@
 import { Command } from 'cmdk';
-import { Languages, LogOut, Moon, Sun } from 'lucide-react';
+import { Languages, LogOut, Moon, Rows3, Sun } from 'lucide-react';
 import { Dialog as DialogPrimitive, VisuallyHidden } from 'radix-ui';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
@@ -7,6 +7,7 @@ import type { Role } from '../../auth/roles';
 import { useAuth } from '../../auth/useAuth';
 import { chooseLanguage, useTranslation } from '../../i18n';
 import { visibleNavigation } from '../../layouts/navigation';
+import { useDensity } from '../../theme/density';
 import { useTheme } from '../../theme/useTheme';
 
 /** Ctrl+K (Cmd+K on a Mac) opens the palette from anywhere in the app. */
@@ -28,7 +29,7 @@ export function useCommandPaletteShortcut(onToggle: () => void): void {
 }
 
 const itemClass =
-  'flex min-h-9 cursor-default items-center gap-2 rounded-control px-2 text-body-md select-none data-[selected=true]:bg-surface-3';
+  'flex min-h-control cursor-default items-center gap-2 rounded-control px-2 text-body-md select-none data-[selected=true]:bg-surface-3';
 const groupClass =
   '[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-label-sm [&_[cmdk-group-heading]]:text-fg-secondary [&_[cmdk-group-heading]]:uppercase';
 
@@ -50,6 +51,7 @@ export function CommandPalette({
   const navigate = useNavigate();
   const { client } = useAuth();
   const { theme, toggle } = useTheme();
+  const { next: nextDensity, cycle: cycleDensity } = useDensity();
   const ThemeIcon = theme === 'dark' ? Sun : Moon;
 
   function run(action: () => void): void {
@@ -113,6 +115,16 @@ export function CommandPalette({
           >
             <Languages aria-hidden="true" className="size-4" />
             {language === 'es' ? t('language.toEnglish') : t('language.toSpanish')}
+          </Command.Item>
+          <Command.Item
+            value={t('palette.density', { next: t(`density.${nextDensity}`) })}
+            onSelect={() => {
+              run(cycleDensity);
+            }}
+            className={itemClass}
+          >
+            <Rows3 aria-hidden="true" className="size-4" />
+            {t('palette.density', { next: t(`density.${nextDensity}`) })}
           </Command.Item>
           <Command.Item
             value={t('session.signOut')}

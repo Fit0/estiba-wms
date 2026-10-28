@@ -6,6 +6,7 @@ The visual design of the app is the **Logistics Industrial Precision** system. I
 |---|---|
 | [DESIGN.md](DESIGN.md) | The design system as Stitch wrote it: colors, typography, spacing, radii, elevation and components, in dark and light |
 | [reference/login.html](reference/login.html) | Example of the sign-in screen: two panels, role picker, language and theme switches |
+| [usage.md](usage.md) | How to build a screen with the system: tokens, sizes of what is pressed, names, forms and density |
 | [reference/inventory.html](reference/inventory.html) | Example of the app shell with the inventory screen: collapsible side navigation, top bar, KPI cards, filters and a dense data table |
 
 The two HTML files are **references to look at, not code to run or to copy**. They load Tailwind and the fonts from a CDN, keep all their text in Spanish and invent data (figures, partner logos, SSO and RFID sign-in, an ERP sync) that Estiba does not have. What is taken from them is the look and the layout.
@@ -21,7 +22,7 @@ Where the example and the project rules differ, the rules win:
 
 The design is built in `frontend/` and is decided in [ADR 0023](../adr/0023-design-tokens-and-two-themes.md): the values are semantic tokens in `frontend/src/styles/tokens.css`, a dark theme by default and a light one, and the contrast of every pair is tested. The ADR lists the seven values that differ from `DESIGN.md` to reach WCAG 2.2 AA.
 
-The screens that follow the system, in order: tokens and themes (UI-01), the login and the shell (UI-02, done), the data components (UI-03, done), the touch density and the accessibility audit (UI-04).
+The screens that follow the system, in order: tokens and themes (UI-01), the login and the shell (UI-02, done), the data components (UI-03, done), the touch density and the accessibility audit (UI-04, done).
 
 The top bar of the example has a warehouse selector, a search box, a sync indicator and notifications. The shell has none of them yet, because the data they show does not exist: the selector comes with the warehouse screens (E05-07), the search with the command palette (E05-05) and the notices with the real-time ones (E07-06). What the bar has now is what the system can already tell: the connection, the theme and who is signed in.
 

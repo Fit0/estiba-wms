@@ -8,6 +8,7 @@ import { AuthClient } from './auth/AuthClient';
 import './i18n';
 import './index.css';
 import { routes } from './routes';
+import { applyDensity, readStoredDensity, resolveDensity } from './theme/density';
 import { applyTheme, readStoredTheme, resolveTheme } from './theme/theme';
 
 const root = document.getElementById('root');
@@ -19,6 +20,8 @@ if (root === null) {
 applyTheme(
   resolveTheme(readStoredTheme(), window.matchMedia('(prefers-color-scheme: light)').matches),
 );
+
+applyDensity(resolveDensity(readStoredDensity(), window.matchMedia('(pointer: coarse)').matches));
 
 createRoot(root).render(
   <StrictMode>
