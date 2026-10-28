@@ -2,6 +2,7 @@ import { ArrowLeft, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { toast } from '../components/ui/Toaster';
+import { describeError } from '../api/describeError';
 import {
   useLocations,
   useSetLocationBlocked,
@@ -222,6 +223,7 @@ export function WarehousePage() {
           rowKey={(location) => location.id}
           status={locations.isPending ? 'loading' : locations.isError ? 'error' : 'ready'}
           empty={t('location.empty')}
+          errorMessage={`${t('table.error')} (${describeError(locations.error)})`}
           onRetry={() => void locations.refetch()}
           pagination={{
             page,

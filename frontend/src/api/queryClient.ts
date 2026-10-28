@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryCache, QueryClient } from '@tanstack/react-query';
 import { ApiError } from './ApiError';
 
 /** Another try cannot change a "no" that depends on the request or on who asks. */
@@ -16,6 +16,14 @@ function shouldRetry(failures: number, error: unknown): boolean {
  */
 export function createQueryClient(): QueryClient {
   return new QueryClient({
+    // While developing, a failed request leaves its error in the console, with its key.
+    queryCache: new QueryCache({
+      onError: (error, query) => {
+        if (import.meta.env.DEV) {
+          console.error('Query failed', query.queryKey, error);
+        }
+      },
+    }),
     defaultOptions: {
       queries: { staleTime: 30_000, retry: shouldRetry, refetchOnWindowFocus: false },
     },

@@ -106,6 +106,8 @@ describe('the warehouses', () => {
       }),
     );
 
-    expect(await screen.findByText('No se han podido cargar los datos.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('No se han podido cargar los datos. (500 shared.internal_error)'),
+    ).toBeInTheDocument();
   });
 });
