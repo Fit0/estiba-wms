@@ -23,11 +23,12 @@ interface ProductRepository extends SkuRegistry, GtinRegistry
 
     /**
      * The tenant's products, ordered by SKU, optionally narrowed to SKUs that start with a
-     * text (case does not matter) and to one status.
+     * text, to one status and to those whose SKU or name contains a text. Case does not
+     * matter and `%` or `_` in a text are plain characters.
      *
      * @return Page<Product>
      */
-    public function search(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, PageRequest $page): Page;
+    public function search(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, ?string $text, PageRequest $page): Page;
 
     public function save(Product $product): void;
 }

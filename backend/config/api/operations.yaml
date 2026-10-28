@@ -101,7 +101,8 @@ operations:
     role: operator
     query:
       - { name: status, description: 'Only the products in this status.', enum: [active, blocked, discontinued] }
-      - { name: sku, description: 'Only the product with this SKU.', example: 'CAM-LIN-BL-M' }
+      - { name: sku, description: 'Only the products whose SKU starts with this text, whatever the case.', example: 'CAM-LIN' }
+      - { name: q, description: 'Only the products whose SKU or name contains this text, whatever the case.', example: 'lino' }
   'POST /api/products':
     summary: 'Register a product'
     description: 'The SKU is unique in the tenant. A product tracked by lot needs the lot on every receipt and every pick, and one tracked by expiry date needs the date. Dimensions are in millimetres and the weight in grams.'

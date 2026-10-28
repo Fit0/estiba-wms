@@ -2797,10 +2797,15 @@ export interface operations {
                  */
                 status?: "active" | "blocked" | "discontinued";
                 /**
-                 * @description Only the product with this SKU.
-                 * @example CAM-LIN-BL-M
+                 * @description Only the products whose SKU starts with this text, whatever the case.
+                 * @example CAM-LIN
                  */
                 sku?: string;
+                /**
+                 * @description Only the products whose SKU or name contains this text, whatever the case.
+                 * @example lino
+                 */
+                q?: string;
             };
             header?: {
                 /** @description The language of the texts in the answer: `es` (default) or `en`. */

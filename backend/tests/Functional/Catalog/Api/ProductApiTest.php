@@ -123,6 +123,45 @@ final class ProductApiTest extends ApiTestCase
         self::assertSame([], $result);
     }
 
+    public function testSearchesProductsBySkuOrNameContainingATextWhateverTheCase(): void
+    {
+        $this->register('CAM-LIN-BL-M', ['name' => 'Camisa de lino blanca']);
+        $this->register('PAN-LIN-AZ-L', ['name' => 'Pantalón azul']);
+        $this->register('ZAP-01', ['name' => 'Zapato de cuero']);
+        $this->register('LIN-OTRO', ['name' => 'Camisa de lino'], Ids::next());
+
+        $linen = $this->request('GET', '/api/products', null, null, ['q' => 'LiN']);
+        $inName = $this->request('GET', '/api/products', null, null, ['q' => 'LiNo']);
+        $byName = $this->request('GET', '/api/products', null, null, ['q' => 'cuero']);
+        $bySkuPart = $this->request('GET', '/api/products', null, null, ['q' => 'az-l']);
+        $blank = $this->request('GET', '/api/products', null, null, ['q' => '  ']);
+
+        self::assertSame(['CAM-LIN-BL-M', 'PAN-LIN-AZ-L'], array_column($linen, 'sku'));
+        self::assertSame(['CAM-LIN-BL-M'], array_column($inName, 'sku'));
+        self::assertSame(['ZAP-01'], array_column($byName, 'sku'));
+        self::assertSame(['PAN-LIN-AZ-L'], array_column($bySkuPart, 'sku'));
+        self::assertCount(3, $blank);
+    }
+
+    public function testCombinesTheTextSearchWithTheStatusFilter(): void
+    {
+        $this->register('CAM-1', ['name' => 'Camisa']);
+        $blocked = $this->register('CAM-2', ['name' => 'Camisa']);
+        $this->request('POST', '/api/products/'.$this->id($blocked).'/block');
+
+        $result = $this->request('GET', '/api/products', null, null, ['q' => 'camisa', 'status' => 'blocked']);
+
+        self::assertSame(['CAM-2'], array_column($result, 'sku'));
+    }
+
+    public function testTreatsWildcardsInTheTextSearchAsText(): void
+    {
+        $this->register('AGUA-500');
+
+        self::assertSame([], $this->request('GET', '/api/products', null, null, ['q' => '%']));
+        self::assertSame([], $this->request('GET', '/api/products', null, null, ['q' => 'a_ua']));
+    }
+
     public function testRejectsAnUnknownStatusFilter(): void
     {
         $this->request('GET', '/api/products', null, null, ['status' => 'lost']);

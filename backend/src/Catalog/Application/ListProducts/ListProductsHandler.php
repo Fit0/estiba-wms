@@ -23,6 +23,6 @@ final readonly class ListProductsHandler implements QueryHandler
      */
     public function __invoke(ListProducts $query): Page
     {
-        return $this->products->search($this->tenant->id(), $query->skuPrefix, $query->status, $query->page);
+        return $this->products->search($this->tenant->id(), $query->skuPrefix, $query->status, $query->text, $query->page);
     }
 }
