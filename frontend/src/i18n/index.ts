@@ -7,6 +7,10 @@ export type Language = 'es' | 'en';
 
 export type MessageKey = keyof typeof es;
 
+export function isMessageKey(value: unknown): value is MessageKey {
+  return typeof value === 'string' && Object.hasOwn(es, value);
+}
+
 export const LANGUAGES: readonly Language[] = ['es', 'en'];
 
 export const LANGUAGE_KEY = 'estiba-language';
