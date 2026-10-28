@@ -46,15 +46,15 @@ final readonly class DoctrineProductRepository implements ProductRepository
     }
 
     #[\Override]
-    public function search(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, PageRequest $page): Page
+    public function search(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, ?string $text, PageRequest $page): Page
     {
-        $total = $this->filtered($tenantId, $skuPrefix, $status)
+        $total = $this->filtered($tenantId, $skuPrefix, $status, $text)
             ->select('COUNT(p.id)')
             ->getQuery()
             ->getSingleScalarResult();
 
         /** @var list<Product> $items */
-        $items = $this->filtered($tenantId, $skuPrefix, $status)
+        $items = $this->filtered($tenantId, $skuPrefix, $status, $text)
             ->select('p')
             ->orderBy('p.sku')
             ->setFirstResult($page->offset())
@@ -119,7 +119,7 @@ final readonly class DoctrineProductRepository implements ProductRepository
         ));
     }
 
-    private function filtered(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status): QueryBuilder
+    private function filtered(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, ?string $text): QueryBuilder
     {
         $query = $this->entityManager->createQueryBuilder()
             ->from(Product::class, 'p')
@@ -133,6 +133,12 @@ final readonly class DoctrineProductRepository implements ProductRepository
 
         if ($status instanceof ProductStatus) {
             $query->andWhere('p.status = :status')->setParameter('status', $status);
+        }
+
+        if (null !== $text && '' !== trim($text)) {
+            $contains = '%'.addcslashes(mb_strtolower(trim($text)), '%_\\').'%';
+            $query->andWhere($query->expr()->orX('LOWER(p.sku) LIKE :text', 'LOWER(p.name) LIKE :text'))
+                ->setParameter('text', $contains);
         }
 
         return $query;

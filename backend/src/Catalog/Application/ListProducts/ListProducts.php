@@ -19,6 +19,7 @@ final readonly class ListProducts implements Query
         public PageRequest $page,
         public ?string $skuPrefix = null,
         public ?ProductStatus $status = null,
+        public ?string $text = null,
     ) {
     }
 }

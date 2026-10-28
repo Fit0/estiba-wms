@@ -19,7 +19,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
- * Lists the tenant's products, paged, with the optional filters `sku` (starts with) and `status`.
+ * Lists the tenant's products, paged, with the optional filters `sku` (starts with), `status` and `q` (SKU or name contains).
  *
  * @implements ProviderInterface<ProductResource>
  */
@@ -47,6 +47,7 @@ final readonly class ProductProvider implements ProviderInterface
             PageRequest::of($request->query->getInt('page', 1), $request->query->getInt('itemsPerPage', PageRequest::DEFAULT_ITEMS_PER_PAGE)),
             $request->query->has('sku') ? $request->query->getString('sku') : null,
             $this->statusFilter($request),
+            $request->query->has('q') ? $request->query->getString('q') : null,
         ));
 
         return new TraversablePaginator(

@@ -7,10 +7,13 @@ namespace App\Tests\Functional\Catalog\Persistence;
 use App\Catalog\Domain\Gtin;
 use App\Catalog\Domain\PackagingLevel;
 use App\Catalog\Domain\PackagingType;
+use App\Catalog\Domain\Product;
+use App\Catalog\Domain\ProductName;
 use App\Catalog\Domain\ProductStatus;
 use App\Catalog\Domain\Sku;
 use App\Catalog\Domain\TrackingPolicy;
 use App\Catalog\Infrastructure\Persistence\Doctrine\DoctrineProductRepository;
+use App\Shared\Domain\PageRequest;
 use App\Tests\Functional\Warehouse\Persistence\PersistenceTestCase;
 use App\Tests\Unit\Catalog\Domain\InMemoryProductRegistry;
 use App\Tests\Unit\Catalog\Domain\ProductMother;
@@ -90,6 +93,28 @@ final class DoctrineProductRepositoryTest extends PersistenceTestCase
         self::assertNotNull($reloaded);
         self::assertSame(ProductStatus::Discontinued, $reloaded->status());
         self::assertCount(1, $reloaded->gtins());
+    }
+
+    public function testSearchesByTextInTheSkuOrTheNameOfTheTenantOnly(): void
+    {
+        $shirt = ProductMother::product(null, 'CAM-LIN');
+        $shirt->rename(ProductName::fromString('Camisa de Lino'));
+        $other = ProductMother::product($shirt->tenantId(), 'AGUA-500');
+        $foreign = ProductMother::product(null, 'CAM-LIN');
+        $foreign->rename(ProductName::fromString('Camisa de lino'));
+        foreach ([$shirt, $other, $foreign] as $product) {
+            $this->repository->save($product);
+        }
+        $this->flushAndForget();
+        $tenant = $shirt->tenantId();
+
+        $byName = $this->repository->search($tenant, null, null, 'LINO', PageRequest::of());
+        $bySku = $this->repository->search($tenant, null, null, 'agua', PageRequest::of());
+        $wildcard = $this->repository->search($tenant, null, null, '%', PageRequest::of());
+
+        self::assertSame(['CAM-LIN'], array_map(static fn (Product $p): string => $p->sku()->value, $byName->items));
+        self::assertSame(['AGUA-500'], array_map(static fn (Product $p): string => $p->sku()->value, $bySku->items));
+        self::assertSame(0, $wildcard->total);
     }
 
     public function testReportsASkuAsTakenOnlyWithinTheSameTenant(): void
