@@ -22,3 +22,19 @@ beforeEach(() => {
     removeEventListener: () => undefined,
   }));
 });
+
+// jsdom lacks what Radix and cmdk ask of a browser: observing sizes, scrolling an item into view and
+// the pointer capture of a select.
+beforeEach(() => {
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      observe = () => undefined;
+      unobserve = () => undefined;
+      disconnect = () => undefined;
+    },
+  );
+  Element.prototype.scrollIntoView = () => undefined;
+  Element.prototype.hasPointerCapture = () => false;
+  Element.prototype.releasePointerCapture = () => undefined;
+});
