@@ -5,6 +5,7 @@ import { TooltipProvider } from './components/ui/Tooltip';
 import { DesignGalleryPage } from './pages/DesignGalleryPage';
 import { expectNoViolations } from './testing/axe';
 import { json } from './testing/fakeApi';
+import { paged } from './testing/paged';
 import { apiOf, noSession, open, withSession } from './testing/renderApp';
 
 /**
@@ -87,6 +88,56 @@ describe('accessibility (axe)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Bloquear A-01-01' }));
     await screen.findByRole('dialog', { name: 'Bloquear la ubicación A-01-01' });
+    await expectNoViolations();
+  });
+
+  it('the catalogue and one product, with the dialog to discontinue it', async () => {
+    const user = userEvent.setup();
+    const product = {
+      id: 'p-1',
+      sku: 'LAC-01',
+      name: 'Yogur natural',
+      baseUnit: 'each',
+      storageClass: 'chilled',
+      status: 'active',
+      lengthMm: 120,
+      widthMm: 80,
+      heightMm: 60,
+      weightGrams: 450,
+      trackedByLot: true,
+      trackedByExpiry: true,
+      minShelfLifeAtReceiptDays: 60,
+      minShelfLifeAtShipmentDays: 20,
+      turnoverClass: 'A',
+      gtins: ['8412345678905'],
+      packagingLevels: [{ type: 'case', baseUnits: 12 }],
+    };
+    const catalogue = apiOf(['supervisor'], {
+      ...withSession(['supervisor']),
+      'GET /api/products?page=1&itemsPerPage=30': () => paged([product]),
+      'GET /api/products/p-1': () => json(product),
+      'GET /api/products/p-1/stock': () =>
+        json({
+          productId: 'p-1',
+          sku: 'LAC-01',
+          name: 'Yogur natural',
+          onHand: 0,
+          available: 0,
+          quarantine: 0,
+          damaged: 0,
+          onHold: 0,
+          warehouses: [],
+        }),
+      'GET /api/stock-items?productId=p-1&page=1&itemsPerPage=30': () => paged([]),
+    });
+    open('/products', catalogue);
+    await user.click(await screen.findByRole('link', { name: 'Abrir LAC-01' }));
+    await screen.findByRole('heading', { name: 'LAC-01 · Yogur natural' });
+    await screen.findAllByText('Este producto no tiene stock.');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Descatalogar' }));
+    await screen.findByRole('dialog', { name: 'Descatalogar LAC-01' });
     await expectNoViolations();
   });
 

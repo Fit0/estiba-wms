@@ -1,4 +1,4 @@
-import { ClipboardList, LayoutDashboard, Warehouse, type LucideIcon } from 'lucide-react';
+import { ClipboardList, LayoutDashboard, Package, Warehouse, type LucideIcon } from 'lucide-react';
 import { hasRole, type Role } from '../auth/roles';
 import type { MessageKey } from '../i18n';
 
@@ -26,6 +26,7 @@ export const navigation: readonly NavGroup[] = [
     items: [
       { to: '/', label: 'nav.home', icon: LayoutDashboard, end: true },
       { to: '/warehouses', label: 'nav.warehouses', icon: Warehouse },
+      { to: '/products', label: 'nav.products', icon: Package },
     ],
   },
   {

@@ -6,6 +6,8 @@ import { AuditPage } from './pages/AuditPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { ProductPage } from './pages/ProductPage';
+import { ProductsPage } from './pages/ProductsPage';
 import { WarehousePage } from './pages/WarehousePage';
 import { WarehousesPage } from './pages/WarehousesPage';
 
@@ -39,6 +41,8 @@ export const routes: RouteObject[] = [
           { index: true, element: <HomePage /> },
           { path: 'warehouses', element: <WarehousesPage /> },
           { path: 'warehouses/:id', element: <WarehousePage /> },
+          { path: 'products', element: <ProductsPage /> },
+          { path: 'products/:id', element: <ProductPage /> },
           {
             element: <RequireRole minimum="supervisor" />,
             children: [{ path: 'audit', element: <AuditPage /> }],
