@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { unwrap, unwrapPage, type Page } from './ApiError';
 import { useApi } from './ApiProvider';
 import type { Schema } from './client';
@@ -87,4 +93,30 @@ export function useChangeOrder(id: string) {
         return unwrap(await api.POST('/api/orders/{id}/cancel', params));
     }
   });
+}
+
+/**
+ * The orders behind a list of ids, by id (the API has no call for several at once, so each id is its
+ * own query and the ones already in the cache cost nothing).
+ */
+export function useOrdersById(ids: readonly string[]): ReadonlyMap<string, Order> {
+  const api = useApi();
+  const unique = [...new Set(ids)];
+  const results = useQueries({
+    queries: unique.map((id) => ({
+      queryKey: orderKeys.detail(id),
+      queryFn: async ({ signal }: { signal: AbortSignal }): Promise<Order> =>
+        unwrap(await api.GET('/api/orders/{id}', { params: { path: { id } }, signal })),
+    })),
+  });
+
+  const found = new Map<string, Order>();
+  results.forEach((result, index) => {
+    const id = unique[index];
+    if (id !== undefined && result.data !== undefined) {
+      found.set(id, result.data);
+    }
+  });
+
+  return found;
 }

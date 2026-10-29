@@ -6,6 +6,7 @@ import {
   PackageCheck,
   Truck,
   Warehouse,
+  Waves,
   type LucideIcon,
 } from 'lucide-react';
 import { hasRole, type Role } from '../auth/roles';
@@ -38,6 +39,7 @@ export const navigation: readonly NavGroup[] = [
       { to: '/products', label: 'nav.products', icon: Package },
       { to: '/inbound', label: 'nav.inbound', icon: Truck },
       { to: '/orders', label: 'nav.orders', icon: PackageCheck },
+      { to: '/waves', label: 'nav.waves', icon: Waves },
       { to: '/stock', label: 'nav.stock', icon: Boxes },
     ],
   },

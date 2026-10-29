@@ -237,6 +237,78 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('the waves, the form to make one, and one wave on the floor with the dialog to cancel it', async () => {
+    const user = userEvent.setup();
+    const wave = {
+      id: 'wave-0001-aaaa',
+      warehouseId: 'w-1',
+      status: 'released',
+      orderIds: ['o-1'],
+      pickListIds: ['pl-1'],
+      createdAt: '2026-10-29T09:00:00+00:00',
+      releasedAt: '2026-10-29T09:05:00+00:00',
+      completedAt: null,
+    };
+    const ready = {
+      id: 'o-1',
+      reference: 'PED-1',
+      warehouseId: 'w-1',
+      customer: 'Marea Moda',
+      shipTo: { street: 'Calle 1', postalCode: '50001', city: 'Zaragoza', countryCode: 'ES' },
+      priority: 'normal',
+      cutOffAt: '2026-10-30T14:00:00+00:00',
+      registeredAt: '2026-10-29T08:00:00+00:00',
+      status: 'allocated',
+      shortageUnits: 0,
+      backorderAccepted: false,
+      waveId: null,
+      lines: [],
+    };
+    const waves = apiOf(['supervisor'], {
+      ...withSession(['supervisor']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/waves?page=1&itemsPerPage=30': () => paged([wave]),
+      'GET /api/waves/wave-0001-aaaa': () => json(wave),
+      'GET /api/pick-lists?waveId=wave-0001-aaaa': () =>
+        json([
+          {
+            id: 'pl-0001-xxxx',
+            waveId: 'wave-0001-aaaa',
+            status: 'in_progress',
+            operatorId: null,
+            unitsToPick: 100,
+            unitsPicked: 40,
+            lines: [],
+            createdAt: '2026-10-29T09:10:00+00:00',
+          },
+        ]),
+      'GET /api/orders?page=1&itemsPerPage=100&status=allocated': () => paged([ready]),
+      'GET /api/orders?page=1&itemsPerPage=100&status=partially_allocated': () => paged([]),
+      'GET /api/orders/o-1': () => json({ ...ready, status: 'in_wave', waveId: wave.id }),
+    });
+    open('/waves', waves);
+    await screen.findByText('wave-000');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Nueva ola' }));
+    const form = await screen.findByRole('dialog', { name: 'Nueva ola' });
+    await within(form).findByRole('checkbox', { name: /PED-1/ });
+    await user.click(within(form).getByRole('button', { name: 'Guardar' }));
+    await within(form).findByText('Marca al menos un pedido.');
+    await expectNoViolations();
+    await user.click(within(form).getByRole('button', { name: 'Cancelar' }));
+
+    await user.click(await screen.findByRole('link', { name: 'Abrir la ola wave-000' }));
+    await screen.findByRole('heading', { name: 'Ola wave-000' });
+    await screen.findByText('40 de 100');
+    await screen.findByText('Marea Moda');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar ola' }));
+    await screen.findByRole('dialog', { name: 'Cancelar la ola wave-000' });
+    await expectNoViolations();
+  });
+
   it('the deliveries, one delivery with the dialog to open a receipt, and the receipt', async () => {
     const user = userEvent.setup();
     const delivery = inboundFixtures.asn();
