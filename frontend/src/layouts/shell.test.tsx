@@ -117,6 +117,7 @@ describe('the side navigation', () => {
       'nav.warehouses',
       'nav.products',
       'nav.inbound',
+      'nav.orders',
       'nav.stock',
     ]);
     expect(visibleNavigation(['operator'])).toHaveLength(1);
@@ -132,6 +133,7 @@ describe('the side navigation', () => {
       'nav.warehouses',
       'nav.products',
       'nav.inbound',
+      'nav.orders',
       'nav.stock',
       'nav.audit',
     ]);
