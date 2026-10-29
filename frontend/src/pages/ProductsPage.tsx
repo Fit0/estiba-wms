@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Plus } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { describeError } from '../api/describeError';
 import { useProducts, type Product, type ProductSearch } from '../api/products';
+import { hasRole } from '../auth/roles';
+import { useAuth } from '../auth/useAuth';
+import { ProductDialog } from '../catalog/ProductDialogs';
 import { productTone } from '../catalog/status';
+import { Button } from '../components/Button';
 import { DataTable, type Column } from '../components/DataTable';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
@@ -27,6 +32,10 @@ function positiveInt(value: string | null, fallback: number): number {
  */
 export function ProductsPage() {
   const { t } = useTranslation();
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const canCreate = session.status === 'signedIn' && hasRole(session.user.roles, 'supervisor');
+  const [creating, setCreating] = useState(false);
   const [params, setParams] = useSearchParams();
 
   const text = params.get('q') ?? '';
@@ -123,6 +132,20 @@ export function ProductsPage() {
     <>
       <PageHeader title={t('products.title')}>{t('products.intro')}</PageHeader>
 
+      {canCreate && (
+        <div className="mb-gutter flex justify-end">
+          <Button
+            variant="primary"
+            onClick={() => {
+              setCreating(true);
+            }}
+          >
+            <Plus aria-hidden="true" className="size-4" />
+            {t('products.new')}
+          </Button>
+        </div>
+      )}
+
       <div className="mb-gutter flex flex-wrap items-end gap-2">
         <div className="min-w-64 flex-1">
           <TextField
@@ -171,6 +194,18 @@ export function ProductsPage() {
           pageSizes,
         }}
       />
+
+      {creating && (
+        <ProductDialog
+          onClose={() => {
+            setCreating(false);
+          }}
+          onCreated={(product) => {
+            setCreating(false);
+            void navigate(`/products/${product.id}`);
+          }}
+        />
+      )}
     </>
   );
 }

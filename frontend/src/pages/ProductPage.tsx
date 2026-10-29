@@ -13,6 +13,12 @@ import { hasRole } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
 import { Fact, Facts } from '../catalog/Facts';
 import {
+  ClassifyDialog,
+  EditProductDialog,
+  GtinDialog,
+  PackagingDialog,
+} from '../catalog/ProductDialogs';
+import {
   parseGtins,
   parsePackagingLevels,
   parseWarehouseStock,
@@ -49,6 +55,7 @@ export function ProductPage() {
   const lines = useStockItems({ productId: id, page, itemsPerPage: pageSize });
   const change = useChangeProductStatus(id);
   const [confirming, setConfirming] = useState<'block' | 'discontinue' | null>(null);
+  const [form, setForm] = useState<'edit' | 'gtin' | 'packaging' | 'classify' | null>(null);
 
   const gtins = useMemo(
     () => (product.data === undefined ? [] : parseGtins(product.data.gtins)),
@@ -74,6 +81,10 @@ export function ProductPage() {
 
   const data = product.data;
   const number = (value: number): string => formatNumber(language, value);
+
+  function closeForm(): void {
+    setForm(null);
+  }
 
   function run(action: ProductAction): void {
     change.mutate(action, {
@@ -156,6 +167,34 @@ export function ProductPage() {
 
       {canEdit && data !== undefined && data.status !== 'discontinued' && (
         <div className="mb-gutter flex flex-wrap justify-end gap-2">
+          <Button
+            onClick={() => {
+              setForm('edit');
+            }}
+          >
+            {t('product.edit')}
+          </Button>
+          <Button
+            onClick={() => {
+              setForm('gtin');
+            }}
+          >
+            {t('product.gtin.add')}
+          </Button>
+          <Button
+            onClick={() => {
+              setForm('packaging');
+            }}
+          >
+            {t('product.packaging.add')}
+          </Button>
+          <Button
+            onClick={() => {
+              setForm('classify');
+            }}
+          >
+            {t('product.classify')}
+          </Button>
           {data.status === 'active' ? (
             <Button
               onClick={() => {
@@ -346,6 +385,17 @@ export function ProductPage() {
           }}
         />
       </section>
+
+      {data !== undefined && form === 'edit' && (
+        <EditProductDialog product={data} onClose={closeForm} />
+      )}
+      {data !== undefined && form === 'gtin' && <GtinDialog product={data} onClose={closeForm} />}
+      {data !== undefined && form === 'packaging' && (
+        <PackagingDialog product={data} onClose={closeForm} />
+      )}
+      {data !== undefined && form === 'classify' && (
+        <ClassifyDialog product={data} onClose={closeForm} />
+      )}
 
       <ConfirmDialog
         open={confirming !== null}

@@ -88,3 +88,87 @@ export function useChangeProductStatus(id: string) {
     },
   });
 }
+
+type RegisterBody = NonNullable<
+  paths['/api/products']['post']['requestBody']
+>['content']['application/json'];
+type UpdateBody = NonNullable<
+  paths['/api/products/{id}']['patch']['requestBody']
+>['content']['application/merge-patch+json'];
+type GtinBody = NonNullable<
+  paths['/api/products/{id}/gtins']['post']['requestBody']
+>['content']['application/json'];
+type PackagingBody = NonNullable<
+  paths['/api/products/{id}/packaging-levels']['post']['requestBody']
+>['content']['application/json'];
+type ClassifyBody = NonNullable<
+  paths['/api/products/{id}/classification']['post']['requestBody']
+>['content']['application/json'];
+
+/**
+ * Every change to a product answers with the product as it is now: it goes into the cache of the
+ * product and the lists are asked again, so the page and the catalogue show it without a reload.
+ */
+function useProductMutation<Variables>(
+  id: string | undefined,
+  call: (variables: Variables) => Promise<Product>,
+) {
+  const queries = useQueryClient();
+
+  return useMutation({
+    mutationFn: call,
+    onSuccess: async (product) => {
+      queries.setQueryData(productKeys.detail(id ?? product.id), product);
+      await queries.invalidateQueries({ queryKey: productKeys.lists() });
+    },
+  });
+}
+
+export function useRegisterProduct() {
+  const api = useApi();
+
+  return useProductMutation(undefined, async (body: RegisterBody) =>
+    unwrap(await api.POST('/api/products', { body })),
+  );
+}
+
+/** A merge patch: only the fields that are in `body` change. */
+export function useUpdateProduct(id: string) {
+  const api = useApi();
+
+  return useProductMutation(id, async (body: UpdateBody) =>
+    unwrap(
+      await api.PATCH('/api/products/{id}', {
+        params: { path: { id } },
+        body,
+        headers: { 'Content-Type': 'application/merge-patch+json' },
+      }),
+    ),
+  );
+}
+
+export function useAssignGtin(id: string) {
+  const api = useApi();
+
+  return useProductMutation(id, async (body: GtinBody) =>
+    unwrap(await api.POST('/api/products/{id}/gtins', { params: { path: { id } }, body })),
+  );
+}
+
+export function useDefinePackagingLevel(id: string) {
+  const api = useApi();
+
+  return useProductMutation(id, async (body: PackagingBody) =>
+    unwrap(
+      await api.POST('/api/products/{id}/packaging-levels', { params: { path: { id } }, body }),
+    ),
+  );
+}
+
+export function useClassifyProduct(id: string) {
+  const api = useApi();
+
+  return useProductMutation(id, async (body: ClassifyBody) =>
+    unwrap(await api.POST('/api/products/{id}/classification', { params: { path: { id } }, body })),
+  );
+}
