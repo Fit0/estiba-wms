@@ -14,6 +14,8 @@ import { ProductPage } from './pages/ProductPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ReceiptPage } from './pages/ReceiptPage';
 import { StockPage } from './pages/StockPage';
+import { WavePage } from './pages/WavePage';
+import { WavesPage } from './pages/WavesPage';
 import { WarehousePage } from './pages/WarehousePage';
 import { WarehousesPage } from './pages/WarehousesPage';
 
@@ -54,6 +56,8 @@ export const routes: RouteObject[] = [
           { path: 'receipts/:id', element: <ReceiptPage /> },
           { path: 'orders', element: <OrdersPage /> },
           { path: 'orders/:id', element: <OrderPage /> },
+          { path: 'waves', element: <WavesPage /> },
+          { path: 'waves/:id', element: <WavePage /> },
           { path: 'stock', element: <StockPage /> },
           {
             element: <RequireRole minimum="supervisor" />,

@@ -184,6 +184,16 @@ export function OrderPage() {
                 <Fact term={t('order.shortage')}>
                   <span className="tnum">{number(data.shortageUnits)}</span>
                 </Fact>
+                {data.waveId !== null && data.waveId !== undefined && (
+                  <Fact term={t('order.wave')}>
+                    <Link
+                      to={`/waves/${data.waveId}`}
+                      className="inline-flex min-h-control items-center text-accent underline-offset-2 hover:underline"
+                    >
+                      {t('order.wave.open', { name: data.waveId.slice(0, 8) })}
+                    </Link>
+                  </Fact>
+                )}
                 <Fact term={t('order.backorder')}>
                   {data.backorderAccepted ? t('common.yes') : t('common.no')}
                 </Fact>
