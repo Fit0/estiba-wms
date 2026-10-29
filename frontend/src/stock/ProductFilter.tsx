@@ -16,11 +16,15 @@ const maxResults = 8;
 export function ProductFilter({
   productId,
   onChange,
+  label,
 }: {
   productId: string | undefined;
   onChange: (productId: string | undefined) => void;
+  /** The name of the field; the stock filter's by default. */
+  label?: string;
 }) {
   const { t } = useTranslation();
+  const name = label ?? t('stock.filter.product');
   const resultsId = useId();
   const chosen = useProduct(productId ?? '');
   const [typed, setTyped] = useState('');
@@ -46,13 +50,13 @@ export function ProductFilter({
   }
 
   if (productId !== undefined) {
-    const label = chosen.data === undefined ? '…' : `${chosen.data.sku} · ${chosen.data.name}`;
+    const shown = chosen.data === undefined ? '…' : `${chosen.data.sku} · ${chosen.data.name}`;
 
     return (
       <div className="grid gap-1">
-        <span className="text-label-md text-fg-secondary">{t('stock.filter.product')}</span>
+        <span className="text-label-md text-fg-secondary">{name}</span>
         <div className="flex h-control items-center gap-1 rounded-control border border-input-border bg-surface-1 pl-3 text-body-md">
-          <span className="truncate">{label}</span>
+          <span className="truncate">{shown}</span>
           <Button
             variant="ghost"
             icon
@@ -76,7 +80,7 @@ export function ProductFilter({
     <div className="grid gap-1">
       <TextField
         type="search"
-        label={t('stock.filter.product')}
+        label={name}
         placeholder={t('stock.filter.product.placeholder')}
         autoComplete="off"
         aria-controls={resultsId}

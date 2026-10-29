@@ -176,6 +176,67 @@ describe('accessibility (axe)', () => {
     }
   });
 
+  it('the orders, the form to register one with its errors, and one order with the dialog to cancel it', async () => {
+    const user = userEvent.setup();
+    const order = {
+      id: 'o-1',
+      reference: 'PED-1',
+      warehouseId: 'w-1',
+      customer: 'Marea Moda',
+      shipTo: {
+        street: 'Calle Mayor 12',
+        postalCode: '50001',
+        city: 'Zaragoza',
+        countryCode: 'ES',
+      },
+      priority: 'high',
+      cutOffAt: '2026-10-30T14:00:00+00:00',
+      registeredAt: '2026-10-29T09:00:00+00:00',
+      status: 'partially_allocated',
+      shortageUnits: 4,
+      backorderAccepted: false,
+      waveId: null,
+      lines: [
+        {
+          lineNumber: 1,
+          productId: 'p-1',
+          orderedUnits: 24,
+          allocatedUnits: 20,
+          shortageUnits: 4,
+          pickedUnits: 0,
+          shippedUnits: 0,
+          reservationId: 'r-1',
+        },
+      ],
+    };
+    const orders = apiOf(['supervisor'], {
+      ...withSession(['supervisor']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/orders?page=1&itemsPerPage=30': () => paged([order]),
+      'GET /api/orders/o-1': () => json(order),
+      'GET /api/products/p-1': () => json(inboundFixtures.product),
+    });
+    open('/orders', orders);
+    await screen.findByText('PED-1');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Nuevo pedido' }));
+    const form = await screen.findByRole('dialog', { name: 'Nuevo pedido' });
+    await user.click(within(form).getByRole('button', { name: 'Guardar' }));
+    await within(form).findAllByText('Escribe un valor.');
+    await expectNoViolations();
+    await user.click(within(form).getByRole('button', { name: 'Cancelar' }));
+
+    await user.click(await screen.findByRole('link', { name: 'Abrir PED-1' }));
+    await screen.findByRole('heading', { name: 'PED-1 · Marea Moda' });
+    await screen.findByText('CAM-LIN · Camisa de lino');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Cancelar pedido' }));
+    await screen.findByRole('dialog', { name: 'Cancelar PED-1' });
+    await expectNoViolations();
+  });
+
   it('the deliveries, one delivery with the dialog to open a receipt, and the receipt', async () => {
     const user = userEvent.setup();
     const delivery = inboundFixtures.asn();

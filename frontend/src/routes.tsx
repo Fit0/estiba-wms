@@ -8,6 +8,8 @@ import { AuditPage } from './pages/AuditPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { OrderPage } from './pages/OrderPage';
+import { OrdersPage } from './pages/OrdersPage';
 import { ProductPage } from './pages/ProductPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ReceiptPage } from './pages/ReceiptPage';
@@ -50,6 +52,8 @@ export const routes: RouteObject[] = [
           { path: 'inbound', element: <AsnsPage /> },
           { path: 'inbound/:id', element: <AsnPage /> },
           { path: 'receipts/:id', element: <ReceiptPage /> },
+          { path: 'orders', element: <OrdersPage /> },
+          { path: 'orders/:id', element: <OrderPage /> },
           { path: 'stock', element: <StockPage /> },
           {
             element: <RequireRole minimum="supervisor" />,
