@@ -112,7 +112,13 @@ describe('the side navigation', () => {
       group.items.map((item) => item.label),
     );
 
-    expect(labels).toEqual(['nav.home', 'nav.warehouses', 'nav.products', 'nav.inbound']);
+    expect(labels).toEqual([
+      'nav.home',
+      'nav.warehouses',
+      'nav.products',
+      'nav.inbound',
+      'nav.stock',
+    ]);
     expect(visibleNavigation(['operator'])).toHaveLength(1);
   });
 
@@ -126,6 +132,7 @@ describe('the side navigation', () => {
       'nav.warehouses',
       'nav.products',
       'nav.inbound',
+      'nav.stock',
       'nav.audit',
     ]);
   });

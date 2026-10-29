@@ -47,6 +47,7 @@ export function useLocations(warehouseId: string, search: LocationSearch = {}) {
 
   return useQuery({
     queryKey: warehouseKeys.locationList(warehouseId, search),
+    enabled: warehouseId !== '',
     queryFn: async ({ signal }): Promise<Page<Location>> =>
       unwrapPage(
         await api.GET('/api/warehouses/{warehouseId}/locations', {

@@ -25,7 +25,7 @@ export const productKeys = {
  * The products of a page and how many there are in all. While the next page loads, the one on the
  * screen stays, so the table does not flash empty between pages or between two letters of a search.
  */
-export function useProducts(search: ProductSearch = {}) {
+export function useProducts(search: ProductSearch = {}, options: { enabled?: boolean } = {}) {
   const api = useApi();
 
   return useQuery({
@@ -33,6 +33,7 @@ export function useProducts(search: ProductSearch = {}) {
     queryFn: async ({ signal }): Promise<Page<Product>> =>
       unwrapPage(await api.GET('/api/products', { params: { query: search }, signal })),
     placeholderData: keepPreviousData,
+    enabled: options.enabled ?? true,
   });
 }
 
@@ -41,6 +42,7 @@ export function useProduct(id: string) {
 
   return useQuery({
     queryKey: productKeys.detail(id),
+    enabled: id !== '',
     queryFn: async ({ signal }): Promise<Product> =>
       unwrap(await api.GET('/api/products/{id}', { params: { path: { id } }, signal })),
   });
