@@ -191,6 +191,26 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('the stock, on hand and as a ledger of movements', async () => {
+    const user = userEvent.setup();
+    const stock = apiOf(['operator'], {
+      ...withSession(['operator']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/warehouses/w-1/locations?page=1&itemsPerPage=100': () => paged([location]),
+      'GET /api/stock-items?page=1&itemsPerPage=30&warehouseId=w-1': () =>
+        paged([inboundFixtures.stockLine('s-1', 'A-01-01')]),
+      'GET /api/stock-movements?page=1&itemsPerPage=30': () =>
+        paged([inboundFixtures.movement('m-1')]),
+    });
+    open('/stock', stock);
+    await screen.findByText('A-01-01', { selector: 'td' });
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('tab', { name: 'Movimientos' }));
+    await screen.findByText('ASN-2026-0042');
+    await expectNoViolations();
+  });
+
   it('the command palette', async () => {
     const user = userEvent.setup();
     open('/', apiOf(['operator'], withSession(['operator'])));

@@ -55,3 +55,43 @@ export const location = (code: string, type: string) => ({
   pickSequence: 10,
   status: 'active',
 });
+
+export const stockLine = (
+  id: string,
+  locationCode: string,
+  overrides: Record<string, unknown> = {},
+) => ({
+  id,
+  productId: 'p-1',
+  sku: 'CAM-LIN',
+  productName: 'Camisa de lino',
+  warehouseId: 'w-1',
+  warehouseCode: 'ZGZ1',
+  locationId: `l-${locationCode}`,
+  locationCode,
+  lot: null,
+  expiryDate: null,
+  status: 'available',
+  onHand: 100,
+  ...overrides,
+});
+
+export const movement = (id: string, overrides: Record<string, unknown> = {}) => ({
+  id,
+  stockItemId: 's-1',
+  productId: 'p-1',
+  sku: 'CAM-LIN',
+  locationId: 'l-A-01-01',
+  locationCode: 'A-01-01',
+  lot: null,
+  expiryDate: null,
+  status: 'available',
+  type: 'receipt',
+  change: 100,
+  balanceAfter: 100,
+  reference: 'ASN-2026-0042',
+  reason: null,
+  authorId: 'u-1',
+  occurredAt: '2026-10-28T09:00:00+00:00',
+  ...overrides,
+});

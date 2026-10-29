@@ -19,7 +19,7 @@ export const stockKeys = {
  * The stock lines of a page and how many there are in all (E03-06). While the next page loads, the
  * one on the screen stays, so the table does not flash empty between pages.
  */
-export function useStockItems(search: StockSearch = {}) {
+export function useStockItems(search: StockSearch = {}, options: { enabled?: boolean } = {}) {
   const api = useApi();
 
   return useQuery({
@@ -27,6 +27,7 @@ export function useStockItems(search: StockSearch = {}) {
     queryFn: async ({ signal }): Promise<Page<StockItem>> =>
       unwrapPage(await api.GET('/api/stock-items', { params: { query: search }, signal })),
     placeholderData: keepPreviousData,
+    enabled: options.enabled ?? true,
   });
 }
 
@@ -37,5 +38,27 @@ export function useStockItem(id: string) {
     queryKey: stockKeys.item(id),
     queryFn: async ({ signal }): Promise<StockItem> =>
       unwrap(await api.GET('/api/stock-items/{id}', { params: { path: { id } }, signal })),
+  });
+}
+
+export type StockMovement = Schema<'StockMovement'>;
+export type MovementSearch = NonNullable<
+  paths['/api/stock-movements']['get']['parameters']['query']
+>;
+
+export const movementKeys = {
+  all: ['stock-movements'] as const,
+  list: (search: MovementSearch) => [...movementKeys.all, 'list', search] as const,
+};
+
+/** The ledger of the stock, the latest movement first, a page at a time. */
+export function useStockMovements(search: MovementSearch = {}) {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: movementKeys.list(search),
+    queryFn: async ({ signal }): Promise<Page<StockMovement>> =>
+      unwrapPage(await api.GET('/api/stock-movements', { params: { query: search }, signal })),
+    placeholderData: keepPreviousData,
   });
 }

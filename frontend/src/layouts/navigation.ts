@@ -1,6 +1,7 @@
 import {
   ClipboardList,
   LayoutDashboard,
+  Boxes,
   Package,
   Truck,
   Warehouse,
@@ -35,6 +36,7 @@ export const navigation: readonly NavGroup[] = [
       { to: '/warehouses', label: 'nav.warehouses', icon: Warehouse },
       { to: '/products', label: 'nav.products', icon: Package },
       { to: '/inbound', label: 'nav.inbound', icon: Truck },
+      { to: '/stock', label: 'nav.stock', icon: Boxes },
     ],
   },
   {

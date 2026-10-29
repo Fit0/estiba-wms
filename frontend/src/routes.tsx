@@ -11,6 +11,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 import { ProductPage } from './pages/ProductPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ReceiptPage } from './pages/ReceiptPage';
+import { StockPage } from './pages/StockPage';
 import { WarehousePage } from './pages/WarehousePage';
 import { WarehousesPage } from './pages/WarehousesPage';
 
@@ -49,6 +50,7 @@ export const routes: RouteObject[] = [
           { path: 'inbound', element: <AsnsPage /> },
           { path: 'inbound/:id', element: <AsnPage /> },
           { path: 'receipts/:id', element: <ReceiptPage /> },
+          { path: 'stock', element: <StockPage /> },
           {
             element: <RequireRole minimum="supervisor" />,
             children: [{ path: 'audit', element: <AuditPage /> }],
