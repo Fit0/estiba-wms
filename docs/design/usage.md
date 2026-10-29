@@ -27,6 +27,11 @@ How to build a screen so that it looks and behaves like the rest. The values are
 - React Hook Form with a Zod schema (ADR 0029). The messages of the schema are keys of the catalog.
 - Each error is text under its field, linked with `aria-describedby`, and the field has `aria-invalid`. What the API refuses is shown in a `role="alert"` under the fields.
 
+## Lists
+
+- The text, the filters and the page of a list live in the address (`useSearchParams`), and the server does the searching and the paging (ADR 0031). Copy `ProductsPage`.
+- Ask before what cannot be undone with `ConfirmDialog`; a form that needs fields uses `FormDialog`.
+
 ## Density
 
 - The office uses `compact`, the PWA of the pickers `touch`. Do not branch on the density in a component: use the tokens and the layout adapts.
