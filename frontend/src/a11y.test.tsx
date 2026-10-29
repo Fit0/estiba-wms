@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { TooltipProvider } from './components/ui/Tooltip';
 import { DesignGalleryPage } from './pages/DesignGalleryPage';
 import { expectNoViolations } from './testing/axe';
-import { json } from './testing/fakeApi';
+import { json, problem } from './testing/fakeApi';
 import * as inboundFixtures from './testing/inboundFixtures';
 import { paged } from './testing/paged';
 import { apiOf, noSession, open, withSession } from './testing/renderApp';
@@ -140,6 +140,40 @@ describe('accessibility (axe)', () => {
     await user.click(screen.getByRole('button', { name: 'Descatalogar' }));
     await screen.findByRole('dialog', { name: 'Descatalogar LAC-01' });
     await expectNoViolations();
+  });
+
+  it('the forms of the catalogue: new product with its errors, and the ones of one product', async () => {
+    const user = userEvent.setup();
+    const product = { ...inboundFixtures.product, family: null };
+    const forms = apiOf(['supervisor'], {
+      ...withSession(['supervisor']),
+      'GET /api/products?page=1&itemsPerPage=30': () => paged([product]),
+      'GET /api/products/p-1': () => json(product),
+      'GET /api/products/p-1/stock': () => problem(404, 'shared.not_found'),
+      'GET /api/stock-items?productId=p-1&page=1&itemsPerPage=30': () => paged([]),
+    });
+    open('/products', forms);
+    await user.click(await screen.findByRole('button', { name: 'Nuevo producto' }));
+    let dialog = await screen.findByRole('dialog', { name: 'Nuevo producto' });
+    await user.click(within(dialog).getByRole('checkbox', { name: 'Control por caducidad' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Guardar' }));
+    await within(dialog).findAllByText('Escribe un número entero, sin signo.');
+    await expectNoViolations();
+    await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+
+    await user.click(await screen.findByRole('link', { name: 'Abrir CAM-LIN' }));
+    await screen.findByRole('heading', { name: 'CAM-LIN · Camisa de lino' });
+    for (const [button, title] of [
+      ['Editar', 'Editar CAM-LIN'],
+      ['Añadir GTIN', 'Añadir un GTIN a CAM-LIN'],
+      ['Definir embalaje', 'Embalaje de CAM-LIN'],
+      ['Clasificar', 'Clasificar CAM-LIN'],
+    ] as const) {
+      await user.click(screen.getByRole('button', { name: button }));
+      dialog = await screen.findByRole('dialog', { name: title });
+      await expectNoViolations();
+      await user.click(within(dialog).getByRole('button', { name: 'Cancelar' }));
+    }
   });
 
   it('the deliveries, one delivery with the dialog to open a receipt, and the receipt', async () => {
