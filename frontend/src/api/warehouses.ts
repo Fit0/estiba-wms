@@ -129,3 +129,37 @@ export function useSetLocationBlocked(warehouseId: string) {
     onSuccess: () => queries.invalidateQueries({ queryKey: warehouseKeys.locations(warehouseId) }),
   });
 }
+
+/**
+ * The active docks of a warehouse, where a delivery can be received. The API cannot filter the
+ * locations by type, so this reads them all, a page of 100 at a time, and keeps the docks.
+ */
+export function useDockLocations(warehouseId: string | undefined) {
+  const api = useApi();
+  const id = warehouseId ?? '';
+
+  return useQuery({
+    queryKey: [...warehouseKeys.locations(id), 'docks'] as const,
+    enabled: warehouseId !== undefined,
+    queryFn: async ({ signal }): Promise<Location[]> => {
+      const docks: Location[] = [];
+      for (let page = 1; page <= 50; page += 1) {
+        const result = unwrapPage(
+          await api.GET('/api/warehouses/{warehouseId}/locations', {
+            params: {
+              path: { warehouseId: id },
+              query: { page, itemsPerPage: 100, status: 'active' },
+            },
+            signal,
+          }),
+        );
+        docks.push(...result.items.filter((location) => location.type === 'dock'));
+        if (page * 100 >= result.total) {
+          break;
+        }
+      }
+
+      return docks;
+    },
+  });
+}

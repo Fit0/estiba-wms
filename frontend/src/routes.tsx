@@ -2,12 +2,15 @@ import type { RouteObject } from 'react-router';
 import { RequireAuth } from './auth/RequireAuth';
 import { RequireRole } from './auth/RequireRole';
 import { AppLayout } from './layouts/AppLayout';
+import { AsnPage } from './pages/AsnPage';
+import { AsnsPage } from './pages/AsnsPage';
 import { AuditPage } from './pages/AuditPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { ProductPage } from './pages/ProductPage';
 import { ProductsPage } from './pages/ProductsPage';
+import { ReceiptPage } from './pages/ReceiptPage';
 import { WarehousePage } from './pages/WarehousePage';
 import { WarehousesPage } from './pages/WarehousesPage';
 
@@ -43,6 +46,9 @@ export const routes: RouteObject[] = [
           { path: 'warehouses/:id', element: <WarehousePage /> },
           { path: 'products', element: <ProductsPage /> },
           { path: 'products/:id', element: <ProductPage /> },
+          { path: 'inbound', element: <AsnsPage /> },
+          { path: 'inbound/:id', element: <AsnPage /> },
+          { path: 'receipts/:id', element: <ReceiptPage /> },
           {
             element: <RequireRole minimum="supervisor" />,
             children: [{ path: 'audit', element: <AuditPage /> }],
