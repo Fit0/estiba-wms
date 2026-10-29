@@ -5,6 +5,7 @@ import { TooltipProvider } from './components/ui/Tooltip';
 import { DesignGalleryPage } from './pages/DesignGalleryPage';
 import { expectNoViolations } from './testing/axe';
 import { json } from './testing/fakeApi';
+import * as inboundFixtures from './testing/inboundFixtures';
 import { paged } from './testing/paged';
 import { apiOf, noSession, open, withSession } from './testing/renderApp';
 
@@ -138,6 +139,55 @@ describe('accessibility (axe)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Descatalogar' }));
     await screen.findByRole('dialog', { name: 'Descatalogar LAC-01' });
+    await expectNoViolations();
+  });
+
+  it('the deliveries, one delivery with the dialog to open a receipt, and the receipt', async () => {
+    const user = userEvent.setup();
+    const delivery = inboundFixtures.asn();
+    const counted = {
+      lineNumber: 1,
+      productId: 'p-1',
+      units: 250,
+      lot: null,
+      expiryDate: null,
+      condition: 'good',
+      receivedAt: '2026-10-28T08:20:00+00:00',
+    };
+    const inbound = apiOf(['supervisor'], {
+      ...withSession(['supervisor']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/asns?page=1&itemsPerPage=30': () => paged([delivery]),
+      'GET /api/asns/a-1': () => json(delivery),
+      'GET /api/products/p-1': () => json(inboundFixtures.product),
+      'GET /api/warehouses/w-1/locations?page=1&itemsPerPage=100&status=active': () =>
+        paged([{ ...location, id: 'l-D-01', code: 'D-01', type: 'dock' }]),
+      'GET /api/receipts/r-1': () =>
+        json(
+          inboundFixtures.receipt({
+            overReceivedUnits: 10,
+            lines: [counted],
+            discrepancies: [{ type: 'excess', productId: 'p-1', units: 10 }],
+          }),
+        ),
+    });
+    const { router } = open('/inbound', inbound);
+    await user.click(await screen.findByRole('link', { name: 'Abrir ASN-2026-0042' }));
+    await screen.findByRole('heading', { name: 'ASN-2026-0042 · Textiles del Ebro' });
+    await screen.findByText('CAM-LIN · Camisa de lino');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Abrir recepción' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Abrir recepción de ASN-2026-0042' });
+    await within(dialog).findByRole('combobox', { name: 'Muelle' });
+    await expectNoViolations();
+    await user.keyboard('{Escape}');
+
+    await router.navigate('/receipts/r-1');
+    await screen.findByRole('heading', { name: 'Recepción de ASN-2026-0042' });
+    await screen.findAllByText('CAM-LIN · Camisa de lino');
+    await user.click(screen.getByRole('button', { name: 'Contar' }));
+    await screen.findByText('Escribe un código de 8 a 14 cifras.');
     await expectNoViolations();
   });
 
