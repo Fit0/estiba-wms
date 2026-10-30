@@ -38,6 +38,12 @@ export default tseslint.config(
     },
   },
 
+  // Playwright fixtures call `use`, which is not React's hook.
+  {
+    files: ['e2e/**/*.ts'],
+    rules: { 'react-hooks/rules-of-hooks': 'off' },
+  },
+
   // The configuration files run in Node.
   {
     files: ['*.config.{js,ts}'],
