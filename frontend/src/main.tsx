@@ -7,6 +7,7 @@ import { App } from './App';
 import { AuthClient } from './auth/AuthClient';
 import './i18n';
 import './index.css';
+import { UpdatePrompt } from './pwa/UpdatePrompt';
 import { routes } from './routes';
 import { applyDensity, readStoredDensity, resolveDensity } from './theme/density';
 import { applyTheme, readStoredTheme, resolveTheme } from './theme/theme';
@@ -26,5 +27,6 @@ applyDensity(resolveDensity(readStoredDensity(), window.matchMedia('(pointer: co
 createRoot(root).render(
   <StrictMode>
     <App client={new AuthClient()} router={createBrowserRouter(routes)} />
+    <UpdatePrompt />
   </StrictMode>,
 );

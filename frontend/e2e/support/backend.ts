@@ -390,7 +390,9 @@ export class Backend {
       return this.release(m[1], body);
     }
     if (key === 'GET /api/pick-lists') {
-      return ok(this.pickLists.filter((pickList) => pickList.waveId === query.get('waveId')));
+      const waveId = query.get('waveId');
+
+      return ok(this.pickLists.filter((pickList) => waveId === null || pickList.waveId === waveId));
     }
 
     return undefined;
