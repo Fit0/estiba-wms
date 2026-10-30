@@ -581,4 +581,24 @@ export const es = {
   'wave.cancel.done': 'Ola cancelada',
   'order.wave': 'Ola',
   'order.wave.open': 'Ver la ola {{name}}',
+  'inbound.new': 'Nueva entrega',
+  'asn.create.title': 'Nueva entrega esperada',
+  'asn.create.description':
+    'Lo que el proveedor anuncia. Indica el lote y la caducidad si el producto los lleva.',
+  'asn.created': 'Entrega {{reference}} registrada',
+  'asn.error.lines': 'La entrega necesita al menos una línea.',
+  'asn.line.lotOptional': 'Lote (opcional)',
+  'asn.line.expiryOptional': 'Caducidad (opcional)',
+  'asn.cancel': 'Cancelar entrega',
+  'asn.cancel.title': 'Cancelar {{reference}}',
+  'asn.cancel.description':
+    'La entrega deja de esperarse. Solo se puede si no ha llegado nada y no hay una recepción abierta.',
+  'asn.cancel.confirm': 'Cancelar la entrega',
+  'asn.cancel.done': 'Entrega {{reference}} cancelada',
+  'asn.close': 'Cerrar entrega',
+  'asn.close.title': 'Cerrar {{reference}}',
+  'asn.close.description':
+    'Lo que no ha llegado queda como falta. Solo se puede si no hay una recepción abierta.',
+  'asn.close.confirm': 'Cerrar la entrega',
+  'asn.close.done': 'Entrega {{reference}} cerrada',
 } as const;

@@ -105,3 +105,31 @@ export const receiveFormSchema = z.object({
 
 export type ReceiveFormInput = z.input<typeof receiveFormSchema>;
 export type ReceiveFormOutput = z.output<typeof receiveFormSchema>;
+
+const text = (max: number) =>
+  z.string().trim().min(1, message('form.required')).max(max, message('form.tooLong'));
+
+/** The form to register an expected delivery. The rules repeat the cheap ones of the domain. */
+export const asnFormSchema = z.object({
+  reference: text(40),
+  supplier: text(100),
+  expectedDate: z
+    .string()
+    .min(1, message('form.required'))
+    .transform((value) => new Date(value))
+    .pipe(z.date({ error: message('form.required') }))
+    .transform((date) => date.toISOString()),
+  lines: z
+    .array(
+      z.object({
+        productId: z.string().min(1, message('order.error.product')),
+        units,
+        lot: optionalText,
+        expiryDate,
+      }),
+    )
+    .min(1, message('asn.error.lines')),
+});
+
+export type AsnFormInput = z.input<typeof asnFormSchema>;
+export type AsnFormOutput = z.output<typeof asnFormSchema>;

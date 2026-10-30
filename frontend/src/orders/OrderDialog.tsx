@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { useRegisterOrder, type Order } from '../api/orders';
 import { Button } from '../components/Button';
+import { tomorrowForInput } from '../components/dateTimeInput';
 import { failureText, FormDialog, useFieldError } from '../components/FormDialog';
 import { TextField } from '../components/TextField';
 import { Select } from '../components/ui/Select';
@@ -11,15 +12,6 @@ import { useTranslation } from '../i18n';
 import { ProductFilter } from '../stock/ProductFilter';
 import { useActiveWarehouse } from '../warehouse/ActiveWarehouse';
 import { orderFormSchema, priorities, type OrderFormInput, type OrderFormOutput } from './schemas';
-
-/** The next full hour in a week, as the `datetime-local` field writes it: a sensible cut-off to start from. */
-function defaultCutOff(): string {
-  const date = new Date(Date.now() + 24 * 3600 * 1000);
-  date.setMinutes(0, 0, 0);
-  const pad = (n: number): string => String(n).padStart(2, '0');
-
-  return `${String(date.getFullYear())}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:00`;
-}
 
 /** The form to register an order for the active warehouse. Stock is reserved afterwards, from the order. */
 export function OrderDialog({
@@ -48,7 +40,7 @@ export function OrderDialog({
       city: '',
       countryCode: 'ES',
       priority: 'normal',
-      cutOffAt: defaultCutOff(),
+      cutOffAt: tomorrowForInput(),
       lines: [{ productId: '', units: '' }],
     },
   });

@@ -309,6 +309,32 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('the form to register a delivery with its errors, and the dialog to cancel one', async () => {
+    const user = userEvent.setup();
+    const delivery = inboundFixtures.asn();
+    const forms = apiOf(['supervisor'], {
+      ...withSession(['supervisor']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/asns?page=1&itemsPerPage=30': () => paged([delivery]),
+      'GET /api/asns/a-1': () => json(delivery),
+      'GET /api/products/p-1': () => json(inboundFixtures.product),
+    });
+    open('/inbound', forms);
+    await screen.findByText('ASN-2026-0042');
+    await user.click(screen.getByRole('button', { name: 'Nueva entrega' }));
+    const form = await screen.findByRole('dialog', { name: 'Nueva entrega esperada' });
+    await user.click(within(form).getByRole('button', { name: 'Guardar' }));
+    await within(form).findByText('Elige un producto.');
+    await expectNoViolations();
+    await user.click(within(form).getByRole('button', { name: 'Cancelar' }));
+
+    await user.click(await screen.findByRole('link', { name: 'Abrir ASN-2026-0042' }));
+    await screen.findByRole('heading', { name: 'ASN-2026-0042 · Textiles del Ebro' });
+    await user.click(screen.getByRole('button', { name: 'Cancelar entrega' }));
+    await screen.findByRole('dialog', { name: 'Cancelar ASN-2026-0042' });
+    await expectNoViolations();
+  });
+
   it('the deliveries, one delivery with the dialog to open a receipt, and the receipt', async () => {
     const user = userEvent.setup();
     const delivery = inboundFixtures.asn();

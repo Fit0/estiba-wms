@@ -15,6 +15,9 @@ export type Asn = Schema<'Asn'>;
 export type AsnStatus = Asn['status'];
 export type Receipt = Schema<'Receipt'>;
 export type AsnSearch = NonNullable<paths['/api/asns']['get']['parameters']['query']>;
+export type RegisterAsnBody = NonNullable<
+  paths['/api/asns']['post']['requestBody']
+>['content']['application/json'];
 export type ReceiveItemBody = NonNullable<
   paths['/api/receipts/{id}/items']['post']['requestBody']
 >['content']['application/json'];
@@ -151,4 +154,41 @@ export function useCloseReceipt(receiptId: string) {
   return useReceiptMutation<undefined>(receiptId, async () =>
     unwrap(await api.POST('/api/receipts/{id}/close', { params: { path: { id: receiptId } } })),
   );
+}
+
+/** Registers an expected delivery. The answer is the delivery, which goes into the cache. */
+export function useRegisterAsn() {
+  const api = useApi();
+  const queries = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: RegisterAsnBody): Promise<Asn> =>
+      unwrap(await api.POST('/api/asns', { body })),
+    onSuccess: async (asn) => {
+      queries.setQueryData(inboundKeys.asn(asn.id), asn);
+      await queries.invalidateQueries({ queryKey: inboundKeys.asns });
+    },
+  });
+}
+
+export type AsnAction = 'cancel' | 'close';
+
+/** Cancels or closes a delivery; each answers with the delivery as it is now. */
+export function useChangeAsn(id: string) {
+  const api = useApi();
+  const queries = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (action: AsnAction): Promise<Asn> => {
+      const params = { params: { path: { id } } };
+
+      return action === 'cancel'
+        ? unwrap(await api.POST('/api/asns/{id}/cancel', params))
+        : unwrap(await api.POST('/api/asns/{id}/close', params));
+    },
+    onSuccess: async (asn) => {
+      queries.setQueryData(inboundKeys.asn(id), asn);
+      await queries.invalidateQueries({ queryKey: inboundKeys.asns });
+    },
+  });
 }

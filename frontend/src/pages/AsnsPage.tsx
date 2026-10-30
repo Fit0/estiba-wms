@@ -1,12 +1,18 @@
-import { Link, useSearchParams } from 'react-router';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { describeError } from '../api/describeError';
 import { useAsns, type Asn, type AsnSearch, type AsnStatus } from '../api/inbound';
+import { hasRole } from '../auth/roles';
+import { useAuth } from '../auth/useAuth';
+import { Button } from '../components/Button';
 import { DataTable, type Column } from '../components/DataTable';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
 import { Select } from '../components/ui/Select';
 import { useTranslation } from '../i18n';
 import { formatDateTime } from '../i18n/format';
+import { AsnDialog } from '../inbound/AsnDialog';
 import { asnTone } from '../inbound/display';
 
 const pageSizes = [10, 30, 100] as const;
@@ -30,6 +36,10 @@ function positiveInt(value: string | null, fallback: number): number {
  */
 export function AsnsPage() {
   const { t, language } = useTranslation();
+  const { session } = useAuth();
+  const navigate = useNavigate();
+  const canCreate = session.status === 'signedIn' && hasRole(session.user.roles, 'supervisor');
+  const [creating, setCreating] = useState(false);
   const [params, setParams] = useSearchParams();
 
   const status = statuses.find((value) => value === params.get('status'));
@@ -104,7 +114,7 @@ export function AsnsPage() {
     <>
       <PageHeader title={t('inbound.title')}>{t('inbound.intro')}</PageHeader>
 
-      <div className="mb-gutter flex flex-wrap items-end gap-2">
+      <div className="mb-gutter flex flex-wrap items-end justify-between gap-2">
         <Select
           label={t('inbound.filter')}
           value={status ?? 'all'}
@@ -116,6 +126,17 @@ export function AsnsPage() {
             ...statuses.map((value) => ({ value, label: t(`asn.status.${value}`) })),
           ]}
         />
+        {canCreate && (
+          <Button
+            variant="primary"
+            onClick={() => {
+              setCreating(true);
+            }}
+          >
+            <Plus aria-hidden="true" className="size-4" />
+            {t('inbound.new')}
+          </Button>
+        )}
       </div>
 
       <DataTable
@@ -140,6 +161,18 @@ export function AsnsPage() {
           pageSizes,
         }}
       />
+
+      {creating && (
+        <AsnDialog
+          onClose={() => {
+            setCreating(false);
+          }}
+          onCreated={(asn) => {
+            setCreating(false);
+            void navigate(`/inbound/${asn.id}`);
+          }}
+        />
+      )}
     </>
   );
 }
