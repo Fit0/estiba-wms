@@ -99,4 +99,9 @@ test('from a delivery to a released wave', async ({ page, api }) => {
   await expect(page.getByText('En el almacén').first()).toBeVisible();
   await expect(page.getByRole('table', { name: 'Listas de picking' })).toBeVisible();
   await expect(page.getByText('0 de 4')).toBeVisible();
+
+  // On the floor: the list of the wave waits for an operator in the picking screen of the PWA.
+  await page.goto('/picking');
+  const free = page.getByRole('region', { name: 'Listas sin asignar' });
+  await expect(free.getByText('0 de 4 unidades')).toBeVisible();
 });

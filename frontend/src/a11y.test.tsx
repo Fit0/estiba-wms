@@ -237,6 +237,28 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('the picking screen of the PWA, with lists and without', async () => {
+    const operator = apiOf(['operator'], {
+      ...withSession(['operator']),
+      'GET /api/pick-lists': () =>
+        json([
+          {
+            id: 'pl-0001-xxxx',
+            waveId: 'wave-0001-aaaa',
+            status: 'in_progress',
+            operatorId: '0192f2b4-7c3e-7a15-9d5b-3c1f0a8e6b2d',
+            unitsToPick: 100,
+            unitsPicked: 40,
+            lines: [],
+            createdAt: '2026-10-29T09:10:00+00:00',
+          },
+        ]),
+    });
+    open('/picking', operator);
+    await screen.findByText('Lista pl-0001-');
+    await expectNoViolations();
+  });
+
   it('the waves, the form to make one, and one wave on the floor with the dialog to cancel it', async () => {
     const user = userEvent.setup();
     const wave = {

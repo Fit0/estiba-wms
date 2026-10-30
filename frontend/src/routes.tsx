@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router';
 import { RequireAuth } from './auth/RequireAuth';
 import { RequireRole } from './auth/RequireRole';
 import { AppLayout } from './layouts/AppLayout';
+import { PickingLayout } from './layouts/PickingLayout';
 import { AsnPage } from './pages/AsnPage';
 import { AsnsPage } from './pages/AsnsPage';
 import { AuditPage } from './pages/AuditPage';
@@ -10,6 +11,7 @@ import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OrderPage } from './pages/OrderPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { PickingPage } from './pages/PickingPage';
 import { ProductPage } from './pages/ProductPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ReceiptPage } from './pages/ReceiptPage';
@@ -43,6 +45,8 @@ export const routes: RouteObject[] = [
   {
     element: <RequireAuth />,
     children: [
+      // The picking screens of the PWA have a frame of their own, made for a phone (E07-01).
+      { element: <PickingLayout />, children: [{ path: 'picking', element: <PickingPage /> }] },
       {
         element: <AppLayout />,
         children: [
