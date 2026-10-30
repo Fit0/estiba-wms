@@ -67,7 +67,9 @@ describe('routes and authentication', () => {
 
   it('does not follow a destination that leaves the app', async () => {
     const user = userEvent.setup();
-    const client = new AuthClient(apiOf(['operator'], noSession).send);
+    const api = apiOf(['operator'], noSession);
+    api.install();
+    const client = new AuthClient(api.send);
     const router = createMemoryRouter(routes, {
       initialEntries: [{ pathname: '/login', state: { from: '//evil.example' } }],
     });
