@@ -2,6 +2,8 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { problem } from '../testing/fakeApi';
+import { delay } from 'msw';
+import { http, HttpResponse, server } from '../testing/msw';
 import { paged } from '../testing/paged';
 import { apiOf, open, withSession } from '../testing/renderApp';
 
@@ -52,21 +54,24 @@ describe('the catalogue', () => {
 
   it('asks the server for the text once the person stops typing', async () => {
     const user = userEvent.setup();
-    const api = apiOf(['operator'], {
-      ...withSession(['operator']),
-      'GET /api/products?page=1&itemsPerPage=30': () => paged([product('CAM-LIN', 'Camisa')]),
-      'GET /api/products?page=1&itemsPerPage=30&q=zapato': () =>
-        paged([product('ZAP-01', 'Zapato de cuero')]),
-    });
-    open('/products', api);
+    const asked: (string | null)[] = [];
+    server.use(
+      http.get('*/api/products', ({ request }) => {
+        const q = new URL(request.url).searchParams.get('q');
+        asked.push(q);
+
+        return q === 'zapato'
+          ? paged([product('ZAP-01', 'Zapato de cuero')])
+          : paged([product('CAM-LIN', 'Camisa')]);
+      }),
+    );
+    open('/products', apiOf(['operator'], withSession(['operator'])));
 
     await screen.findByText('Camisa');
     await user.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'zapato');
 
     expect(await screen.findByText('Zapato de cuero')).toBeInTheDocument();
-    expect(api.calls.filter((call) => call.includes('q='))).toEqual([
-      'GET /api/products?page=1&itemsPerPage=30&q=zapato',
-    ]);
+    expect(asked.filter((q) => q !== null)).toEqual(['zapato']);
   });
 
   it('filters by status, and says so when nothing matches', async () => {
@@ -132,5 +137,25 @@ describe('the catalogue', () => {
     await waitFor(() => {
       expect(screen.getByText('Camisa')).toBeInTheDocument();
     });
+  });
+
+  it('shows the loading state while the server is slow, and retries a dropped connection by itself', async () => {
+    let attempts = 0;
+    server.use(
+      http.get('*/api/products', async () => {
+        attempts += 1;
+        if (attempts === 1) {
+          return HttpResponse.error();
+        }
+        await delay(100);
+
+        return paged([product('CAM-LIN', 'Camisa')]);
+      }),
+    );
+    open('/products', apiOf(['operator'], withSession(['operator'])));
+
+    expect(await screen.findByText('Camisa', {}, { timeout: 6000 })).toBeInTheDocument();
+    expect(attempts).toBe(2);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

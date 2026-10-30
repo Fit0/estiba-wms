@@ -5,7 +5,8 @@ import { App } from '../App';
 import { AuthClient } from '../auth/AuthClient';
 import type { Role } from '../auth/roles';
 import { routes } from '../routes';
-import { fakeApi, json, me, problem, type Handler } from './fakeApi';
+import { json, me, problem, type Handler } from './fakeApi';
+import { mockApi, type MockApi } from './msw';
 
 /**
  * What the tests of the screens share: an API that knows one user, and the whole app on a route.
@@ -14,7 +15,7 @@ import { fakeApi, json, me, problem, type Handler } from './fakeApi';
  * The API of a user who is signed in or can sign in with `secret`, with these roles.
  */
 export function apiOf(roles: readonly Role[], extra: Record<string, Handler> = {}) {
-  return fakeApi({
+  return mockApi({
     'POST /api/auth/login': ({ body }) =>
       body !== null && typeof body === 'object' && 'password' in body && body.password === 'secret'
         ? json({ token: 'token-1' })
@@ -25,7 +26,8 @@ export function apiOf(roles: readonly Role[], extra: Record<string, Handler> = {
   });
 }
 
-export function open(path: string, api: ReturnType<typeof fakeApi>) {
+export function open(path: string, api: MockApi) {
+  api.install();
   const client = new AuthClient(api.send);
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   render(<App client={client} router={router} />);

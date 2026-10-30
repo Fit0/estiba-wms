@@ -1,11 +1,23 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
-import { afterEach, beforeEach, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { i18n, LANGUAGE_KEY } from './i18n';
 import { DENSITY_KEY } from './theme/density';
+import { server } from './testing/msw';
 
 // Without globals, Testing Library does not clean the page between tests by itself.
 afterEach(cleanup);
+
+// The network of the tests is Mock Service Worker (ADR 0037): a request nobody answers is an error.
+beforeAll(() => {
+  server.listen({ onUnhandledFrame: 'error' });
+});
+afterEach(() => {
+  server.resetHandlers();
+});
+afterAll(() => {
+  server.close();
+});
 
 // The interface is Spanish unless the browser asks for English (ADR 0004), and jsdom asks for English.
 // The language lives in one instance for the whole run, so each test starts from Spanish again.
