@@ -1,4 +1,4 @@
-import type { AsnStatus } from '../api/inbound';
+import type { Asn, AsnStatus } from '../api/inbound';
 import type { Product } from '../api/products';
 import type { Tone } from '../components/tone';
 
@@ -20,4 +20,19 @@ export function productLabel(products: ReadonlyMap<string, Product>, id: string)
 /** An ASN takes a receipt while goods may still arrive: expected, or partly received. */
 export function takesReceipts(status: AsnStatus): boolean {
   return status === 'expected' || status === 'partially_received';
+}
+
+/** Only a delivery that is still expected, and with no receipt open. */
+export function canCancelAsn(asn: Asn): boolean {
+  return (
+    asn.status === 'expected' && (asn.openReceiptId === null || asn.openReceiptId === undefined)
+  );
+}
+
+/** Once goods have arrived, and with no receipt open. What did not arrive stays as a shortage. */
+export function canCloseAsn(asn: Asn): boolean {
+  return (
+    (asn.status === 'partially_received' || asn.status === 'received') &&
+    (asn.openReceiptId === null || asn.openReceiptId === undefined)
+  );
 }

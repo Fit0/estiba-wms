@@ -1,15 +1,26 @@
 import { ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { useAsn, useProductsById } from '../api/inbound';
+import { useAsn, useChangeAsn, useProductsById, type AsnAction } from '../api/inbound';
+import { hasRole } from '../auth/roles';
+import { useAuth } from '../auth/useAuth';
 import { Fact, Facts } from '../catalog/Facts';
 import { Button } from '../components/Button';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { failureText } from '../components/FormDialog';
+import { toast } from '../components/ui/Toaster';
 import { DataTable, type Column } from '../components/DataTable';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
 import { useTranslation } from '../i18n';
 import { formatDate, formatDateTime, formatNumber } from '../i18n/format';
-import { asnTone, productLabel, takesReceipts } from '../inbound/display';
+import {
+  asnTone,
+  canCancelAsn,
+  canCloseAsn,
+  productLabel,
+  takesReceipts,
+} from '../inbound/display';
 import { OpenReceiptDialog } from '../inbound/OpenReceiptDialog';
 import { parseAsnLines, type AsnLine } from '../inbound/schemas';
 
@@ -21,6 +32,10 @@ export function AsnPage() {
   const { id = '' } = useParams();
   const { t, language } = useTranslation();
   const asn = useAsn(id);
+  const { session } = useAuth();
+  const canChange = session.status === 'signedIn' && hasRole(session.user.roles, 'supervisor');
+  const change = useChangeAsn(id);
+  const [confirming, setConfirming] = useState<AsnAction | null>(null);
   const [opening, setOpening] = useState(false);
 
   const lines = useMemo(
@@ -40,6 +55,15 @@ export function AsnPage() {
 
   const data = asn.data;
   const number = (value: number): string => formatNumber(language, value);
+
+  function run(action: AsnAction): void {
+    change.mutate(action, {
+      onSuccess: (updated) => {
+        setConfirming(null);
+        toast.success(t(`asn.${action}.done`, { reference: updated.reference }));
+      },
+    });
+  }
 
   const columns: Column<AsnLine>[] = [
     {
@@ -118,6 +142,26 @@ export function AsnPage() {
               ) : (
                 <p className="text-body-md text-fg-secondary">{t('asn.receipt.unavailable')}</p>
               )}
+              {canChange && canCloseAsn(data) && (
+                <Button
+                  onClick={() => {
+                    change.reset();
+                    setConfirming('close');
+                  }}
+                >
+                  {t('asn.close')}
+                </Button>
+              )}
+              {canChange && canCancelAsn(data) && (
+                <Button
+                  onClick={() => {
+                    change.reset();
+                    setConfirming('cancel');
+                  }}
+                >
+                  {t('asn.cancel')}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -135,6 +179,24 @@ export function AsnPage() {
           </section>
 
           {opening && <OpenReceiptDialog asn={data} open onOpenChange={setOpening} />}
+          <ConfirmDialog
+            open={confirming !== null}
+            onOpenChange={(open) => {
+              if (!open) {
+                setConfirming(null);
+              }
+            }}
+            title={t(`asn.${confirming ?? 'cancel'}.title`, { reference: data.reference })}
+            description={t(`asn.${confirming ?? 'cancel'}.description`)}
+            confirmLabel={t(`asn.${confirming ?? 'cancel'}.confirm`)}
+            pending={change.isPending}
+            failure={change.isError ? failureText(change.error, t) : undefined}
+            onConfirm={() => {
+              if (confirming !== null) {
+                run(confirming);
+              }
+            }}
+          />
         </>
       )}
     </>

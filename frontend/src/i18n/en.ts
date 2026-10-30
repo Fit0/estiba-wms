@@ -583,4 +583,24 @@ export const en: Record<keyof typeof es, string> = {
   'wave.cancel.done': 'Wave cancelled',
   'order.wave': 'Wave',
   'order.wave.open': 'See wave {{name}}',
+  'inbound.new': 'New delivery',
+  'asn.create.title': 'New expected delivery',
+  'asn.create.description':
+    'What the supplier announces. Give the lot and expiry date if the product has them.',
+  'asn.created': 'Delivery {{reference}} registered',
+  'asn.error.lines': 'The delivery needs at least one line.',
+  'asn.line.lotOptional': 'Lot (optional)',
+  'asn.line.expiryOptional': 'Expiry date (optional)',
+  'asn.cancel': 'Cancel delivery',
+  'asn.cancel.title': 'Cancel {{reference}}',
+  'asn.cancel.description':
+    'The delivery is no longer expected. Only possible if nothing has arrived and no receipt is open.',
+  'asn.cancel.confirm': 'Cancel the delivery',
+  'asn.cancel.done': 'Delivery {{reference}} cancelled',
+  'asn.close': 'Close delivery',
+  'asn.close.title': 'Close {{reference}}',
+  'asn.close.description':
+    'What did not arrive stays as a shortage. Only possible if no receipt is open.',
+  'asn.close.confirm': 'Close the delivery',
+  'asn.close.done': 'Delivery {{reference}} closed',
 };
