@@ -389,6 +389,18 @@ export class Backend {
     if (method === 'POST' && m?.[1] !== undefined) {
       return this.release(m[1], body);
     }
+    m = /^\/api\/pick-lists\/([^/]+)$/.exec(path);
+    if (method === 'GET' && m?.[1] !== undefined) {
+      return this.byId(this.pickLists, m[1]);
+    }
+    m = /^\/api\/pick-lists\/([^/]+)\/start$/.exec(path);
+    if (method === 'POST' && m?.[1] !== undefined) {
+      return this.startPickList(m[1]);
+    }
+    m = /^\/api\/pick-lists\/([^/]+)\/lines\/(\d+)\/confirm$/.exec(path);
+    if (method === 'POST' && m?.[1] !== undefined && m[2] !== undefined) {
+      return this.confirmPick(m[1], Number(m[2]), body);
+    }
     if (key === 'GET /api/pick-lists') {
       const waveId = query.get('waveId');
 
@@ -544,22 +556,42 @@ export class Backend {
       return problem(404, 'shared.not_found');
     }
     const lists = Math.max(1, whole(body, 'pickLists'));
-    const total = this.orders
+    // One stop per order line, dealt out among the lists in turn, all at the same shelf.
+    const stops = this.orders
       .filter((order) => (wave.orderIds as string[]).includes(text(order, 'id')))
-      .flatMap((order) => records(order, 'lines'))
-      .reduce((sum, line) => sum + whole(line, 'allocatedUnits'), 0);
+      .flatMap((order) =>
+        records(order, 'lines').map((line) => ({
+          orderId: text(order, 'id'),
+          orderLineNumber: whole(line, 'lineNumber'),
+          productId: text(line, 'productId'),
+          quantityToPick: whole(line, 'allocatedUnits'),
+        })),
+      );
     const ids: string[] = [];
     for (let index = 0; index < lists; index += 1) {
       const id = this.id('pl');
       ids.push(id);
+      const lines = stops
+        .filter((_, stop) => stop % lists === index)
+        .map((stop, position) => ({
+          ...stop,
+          position: position + 1,
+          locationId: 'l-A-01-01',
+          locationCode: 'A-01-01',
+          lot: null,
+          expiryDate: null,
+          quantityPicked: 0,
+          confirmed: false,
+          shortReason: null,
+        }));
       this.pickLists.push({
         id,
         waveId,
         status: 'generated',
         operatorId: null,
-        unitsToPick: Math.ceil(total / lists),
+        unitsToPick: lines.reduce((sum, line) => sum + line.quantityToPick, 0),
         unitsPicked: 0,
-        lines: [],
+        lines,
         createdAt: new Date().toISOString(),
         startedAt: null,
         completedAt: null,
@@ -570,5 +602,97 @@ export class Backend {
     wave.pickListIds = ids;
 
     return { status: 200, body: wave };
+  }
+
+  /** A pick list that is ready on the floor, without going through receipt, order and wave. */
+  seedPickList(options: { units: number; location: string }): void {
+    const product = {
+      id: this.id('p'),
+      sku: 'SEED-001',
+      name: 'Producto de prueba',
+      gtins: ['8412345678905'],
+    };
+    this.products.push(product);
+    this.pickLists.push({
+      id: this.id('pl'),
+      waveId: 'wave-seed',
+      status: 'generated',
+      operatorId: null,
+      unitsToPick: options.units,
+      unitsPicked: 0,
+      lines: [
+        {
+          position: 1,
+          orderId: 'o-seed',
+          orderLineNumber: 1,
+          productId: product.id,
+          locationId: 'l-seed',
+          locationCode: options.location,
+          lot: null,
+          expiryDate: null,
+          quantityToPick: options.units,
+          quantityPicked: 0,
+          confirmed: false,
+          shortReason: null,
+        },
+      ],
+      createdAt: new Date().toISOString(),
+      startedAt: null,
+      completedAt: null,
+    });
+  }
+
+  private startPickList(id: string) {
+    const list = this.pickLists.find((item) => item.id === id);
+    if (list === undefined) {
+      return problem(404, 'shared.not_found');
+    }
+    if (list.status === 'generated') {
+      list.status = 'in_progress';
+      list.operatorId = 'u-1';
+      list.startedAt = new Date().toISOString();
+    }
+
+    return { status: 200, body: list };
+  }
+
+  private confirmPick(id: string, position: number, body: Rec) {
+    const list = this.pickLists.find((item) => item.id === id);
+    const line =
+      list === undefined
+        ? undefined
+        : records(list, 'lines').find((item) => whole(item, 'position') === position);
+    if (list === undefined || line === undefined) {
+      return problem(404, 'shared.not_found');
+    }
+    if (list.status !== 'in_progress') {
+      return problem(409, 'outbound.pick_list_not_in_progress');
+    }
+    const product = this.products.find((item) => item.id === line.productId);
+    const gtins = product === undefined ? [] : (product.gtins as string[]);
+    if (
+      text(body, 'location').trim().toUpperCase() !== text(line, 'locationCode').toUpperCase() ||
+      !gtins.includes(text(body, 'gtin'))
+    ) {
+      return problem(422, 'outbound.pick_scan_mismatch');
+    }
+    const units = whole(body, 'units');
+    const asked = whole(line, 'quantityToPick');
+    if (units > asked) {
+      return problem(422, 'outbound.pick_exceeds_requested');
+    }
+    if (units < asked && text(body, 'reason') === '') {
+      return problem(422, 'outbound.short_pick_reason_required');
+    }
+    line.quantityPicked = units;
+    line.confirmed = true;
+    line.shortReason = units < asked ? text(body, 'reason') : null;
+    list.unitsPicked = whole(list, 'unitsPicked') + units;
+    if (records(list, 'lines').every((item) => item.confirmed === true)) {
+      list.status = 'completed';
+      list.completedAt = new Date().toISOString();
+    }
+
+    return { status: 200, body: list };
   }
 }

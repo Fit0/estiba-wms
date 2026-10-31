@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const ci = process.env.CI !== undefined;
@@ -21,7 +22,16 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        ...(chromiumPath === undefined ? {} : { launchOptions: { executablePath: chromiumPath } }),
+        permissions: ['camera'],
+        launchOptions: {
+          ...(chromiumPath === undefined ? {} : { executablePath: chromiumPath }),
+          // A camera that shows the EAN-13 of `e2e/fixtures` (8412345678905), for the scanner tests.
+          args: [
+            '--use-fake-ui-for-media-stream',
+            '--use-fake-device-for-media-stream',
+            `--use-file-for-fake-video-capture=${resolve(import.meta.dirname, 'e2e/fixtures/ean13.mjpeg')}`,
+          ],
+        },
       },
     },
     { name: 'firefox', use: { ...devices['Desktop Firefox'] } },

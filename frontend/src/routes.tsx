@@ -11,6 +11,7 @@ import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { OrderPage } from './pages/OrderPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { PickListPage } from './pages/PickListPage';
 import { PickingPage } from './pages/PickingPage';
 import { ProductPage } from './pages/ProductPage';
 import { ProductsPage } from './pages/ProductsPage';
@@ -46,7 +47,13 @@ export const routes: RouteObject[] = [
     element: <RequireAuth />,
     children: [
       // The picking screens of the PWA have a frame of their own, made for a phone (E07-01).
-      { element: <PickingLayout />, children: [{ path: 'picking', element: <PickingPage /> }] },
+      {
+        element: <PickingLayout />,
+        children: [
+          { path: 'picking', element: <PickingPage /> },
+          { path: 'picking/:id', element: <PickListPage /> },
+        ],
+      },
       {
         element: <AppLayout />,
         children: [
