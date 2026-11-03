@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { describeError } from '../api/describeError';
 import { useFloorPickLists } from '../api/picking';
 import type { PickList } from '../api/waves';
@@ -31,6 +32,13 @@ function PickListCard({ list }: { list: PickList }) {
       <div aria-hidden="true" className="h-2 overflow-hidden rounded-control bg-surface-3">
         <div className="h-full bg-primary" style={{ width: `${String(share)}%` }} />
       </div>
+      <Link
+        to={`/picking/${list.id}`}
+        aria-label={t('picking.open', { name: waveName(list.id) })}
+        className="flex h-control items-center justify-center rounded-control border border-line-strong bg-surface-2 text-body-md font-semibold text-fg hover:bg-surface-3"
+      >
+        {t(list.status === 'generated' ? 'picking.start' : 'picking.continue')}
+      </Link>
     </li>
   );
 }

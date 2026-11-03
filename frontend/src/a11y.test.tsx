@@ -259,6 +259,62 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('a pick list of the PWA: to start, one stop with its scan fields and the short pick reason', async () => {
+    const user = userEvent.setup();
+    const operatorId = '0192f2b4-7c3e-7a15-9d5b-3c1f0a8e6b2d';
+    let started = false;
+    const list = () => ({
+      id: 'pl-0001-xxxx',
+      waveId: 'wave-0001-aaaa',
+      status: started ? 'in_progress' : 'generated',
+      operatorId: started ? operatorId : null,
+      unitsToPick: 4,
+      unitsPicked: 0,
+      lines: [
+        {
+          position: 1,
+          orderId: 'o-1',
+          orderLineNumber: 1,
+          productId: 'p-1',
+          locationId: 'l-1',
+          locationCode: 'A-01-01',
+          lot: 'L-9',
+          expiryDate: '2027-03-31',
+          quantityToPick: 4,
+          quantityPicked: 0,
+          confirmed: false,
+          shortReason: null,
+        },
+      ],
+      createdAt: '2026-10-29T09:10:00+00:00',
+    });
+    open(
+      '/picking/pl-0001-xxxx',
+      apiOf(['operator'], {
+        ...withSession(['operator']),
+        'GET /api/products/p-1': () => json(inboundFixtures.product),
+        'GET /api/pick-lists/pl-0001-xxxx': () => json(list()),
+        'POST /api/pick-lists/pl-0001-xxxx/start': () => {
+          started = true;
+
+          return json(list());
+        },
+      }),
+    );
+    await screen.findByText(/Paradas: 1\. Unidades: 4/);
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Empezar la lista' }));
+    await screen.findByText('A-01-01');
+    await expectNoViolations();
+
+    await user.clear(screen.getByLabelText('Unidades recogidas'));
+    await user.type(screen.getByLabelText('Unidades recogidas'), '2');
+    await user.click(screen.getByRole('button', { name: 'Confirmar parada' }));
+    await screen.findByText('Indica por qué faltan unidades.');
+    await expectNoViolations();
+  });
+
   it('the waves, the form to make one, and one wave on the floor with the dialog to cancel it', async () => {
     const user = userEvent.setup();
     const wave = {

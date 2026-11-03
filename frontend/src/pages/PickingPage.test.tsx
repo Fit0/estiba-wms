@@ -46,10 +46,16 @@ describe('PickingPage', () => {
     expect(within(mine).getByText('Lista mine-000')).toBeInTheDocument();
     expect(within(mine).getByText('12 de 40 unidades')).toBeInTheDocument();
     expect(within(mine).getByText('En curso')).toBeInTheDocument();
+    expect(within(mine).getByRole('link', { name: 'Abrir la lista mine-000' })).toHaveAttribute(
+      'href',
+      '/picking/mine-0001-aaaa',
+    );
+    expect(within(mine).getByText('Continuar')).toBeInTheDocument();
 
     const free = screen.getByRole('region', { name: 'Listas sin asignar' });
     expect(within(free).getByText('Lista free-000')).toBeInTheDocument();
     expect(within(free).getByText('Generada')).toBeInTheDocument();
+    expect(within(free).getByText('Empezar la lista')).toBeInTheDocument();
 
     // Someone else's list and a completed one are not the operator's business.
     expect(screen.queryByText('Lista other-00')).not.toBeInTheDocument();

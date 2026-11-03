@@ -104,4 +104,16 @@ test('from a delivery to a released wave', async ({ page, api }) => {
   await page.goto('/picking');
   const free = page.getByRole('region', { name: 'Listas sin asignar' });
   await expect(free.getByText('0 de 4 unidades')).toBeVisible();
+
+  // The operator takes the list and walks its only stop: scan the shelf, scan the product, confirm.
+  await page.getByRole('link', { name: /Abrir la lista/ }).click();
+  await page.getByRole('button', { name: 'Empezar la lista' }).click();
+  await expect(page.getByText('A-01-01', { exact: true })).toBeVisible();
+  await expect(page.getByText('Coge 4 unidades')).toBeVisible();
+
+  await page.getByLabel('Ubicación', { exact: true }).fill('A-01-01');
+  await page.getByLabel('Código de barras del producto', { exact: true }).fill(gtin);
+  await page.getByRole('button', { name: 'Confirmar parada' }).click();
+
+  await expect(page.getByText('Lista completada. Buen trabajo.')).toBeVisible();
 });
