@@ -25,6 +25,58 @@ export type SessionState =
   | { readonly status: 'signedIn'; readonly user: Me };
 
 /**
+ * A request that could not get an answer because there is no connection. It is a `TypeError`, like the
+ * one `fetch` throws, so that whoever only asks "did the network fail?" does not need to know of it.
+ */
+export class NetworkError extends TypeError {
+  constructor(cause: unknown) {
+    super('The request could not reach the API.', { cause });
+    this.name = 'NetworkError';
+  }
+}
+
+/**
+ * The last user who was signed in on this device, kept so that the app can open without a
+ * connection: it carries who they are and what they may do, never a token. The API decides everything;
+ * this only lets the screens be drawn until the connection is back and the session is renewed.
+ */
+export interface SessionHint {
+  read(): Me | null;
+  write(user: Me | null): void;
+}
+
+/** No hint: what tests and a browser without storage use. */
+export const noSessionHint: SessionHint = { read: () => null, write: () => undefined };
+
+const HINT_KEY = 'estiba-session-hint';
+
+/** The hint in `localStorage`, which may be missing or full: then there is none. */
+export function storedSessionHint(): SessionHint {
+  return {
+    read: () => {
+      try {
+        const raw = window.localStorage.getItem(HINT_KEY);
+
+        return raw === null ? null : parseMe(JSON.parse(raw));
+      } catch {
+        return null;
+      }
+    },
+    write: (user) => {
+      try {
+        if (user === null) {
+          window.localStorage.removeItem(HINT_KEY);
+        } else {
+          window.localStorage.setItem(HINT_KEY, JSON.stringify(user));
+        }
+      } catch {
+        // Without the hint the app asks for a connection to open, as before.
+      }
+    },
+  };
+}
+
+/**
  * A sign-in that the API refused. `code` is the stable error code of the problem (ADR 0007), which
  * the screen turns into a text of its own language.
  */
@@ -115,7 +167,10 @@ export class AuthClient {
 
   private restoration: Promise<void> | null = null;
 
-  constructor(private readonly send: typeof fetch = (input, init) => fetch(input, init)) {}
+  constructor(
+    private readonly send: typeof fetch = (input, init) => fetch(input, init),
+    private readonly hint: SessionHint = noSessionHint,
+  ) {}
 
   subscribe = (listener: () => void): (() => void) => {
     this.listeners.add(listener);
@@ -190,8 +245,14 @@ export class AuthClient {
         token === null
           ? { status: 'signedOut', reason: 'none' }
           : { status: 'signedIn', user: await this.loadMe() };
-    } catch {
-      found = { status: 'signedOut', reason: 'none' };
+    } catch (error) {
+      // With no connection the session cannot be renewed, but whoever was signed in on this device is
+      // still who they are: the screens open, and the requests renew the session when they can.
+      const remembered = error instanceof NetworkError ? this.hint.read() : null;
+      found =
+        remembered === null
+          ? { status: 'signedOut', reason: 'none' }
+          : { status: 'signedIn', user: remembered };
     }
 
     // Whoever signs in while the old session is still being looked for has the last word: the answer
@@ -208,7 +269,16 @@ export class AuthClient {
       headers.set('Authorization', `Bearer ${token}`);
     }
 
-    return this.send(input, { ...init, headers });
+    return this.reach(input, { ...init, headers });
+  }
+
+  /** `send`, with a failure of the connection told apart from anything else. */
+  private async reach(input: string, init: RequestInit): Promise<Response> {
+    try {
+      return await this.send(input, init);
+    } catch (error) {
+      throw error instanceof TypeError ? new NetworkError(error) : error;
+    }
   }
 
   private async loadMe(): Promise<Me> {
@@ -236,7 +306,7 @@ export class AuthClient {
     // A second tab that asks at the same moment is refused for a few seconds. By the time we ask
     // again, the cookie that the first tab received is here.
     for (const attempt of [1, 2]) {
-      const response = await this.send('/api/auth/refresh', {
+      const response = await this.reach('/api/auth/refresh', {
         method: 'POST',
         headers: { Accept: 'application/json' },
       });
@@ -255,6 +325,11 @@ export class AuthClient {
 
   private set(state: SessionState): void {
     this.state = state;
+    if (state.status === 'signedIn') {
+      this.hint.write(state.user);
+    } else if (state.status === 'signedOut') {
+      this.hint.write(null);
+    }
     for (const listener of this.listeners) {
       listener();
     }

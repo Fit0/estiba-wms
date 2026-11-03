@@ -3,6 +3,7 @@ import { Link, Outlet } from 'react-router';
 import { BrandMark } from '../components/BrandMark';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../i18n';
+import { PendingConfirmations } from '../offline/PendingConfirmations';
 import { applyDensity, currentDensity } from '../theme/density';
 import { OnlineStatus } from './OnlineStatus';
 
@@ -38,7 +39,8 @@ export function PickingLayout() {
           <ThemeToggle />
         </div>
       </header>
-      <main id="content" tabIndex={-1} className="flex-1 p-margin">
+      <main id="content" tabIndex={-1} className="grid flex-1 content-start gap-gutter-lg p-margin">
+        <PendingConfirmations />
         <Outlet />
       </main>
       <footer className="border-t border-line bg-surface-1 p-margin">

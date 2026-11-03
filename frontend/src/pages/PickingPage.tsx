@@ -1,6 +1,8 @@
 import { Link } from 'react-router';
 import { describeError } from '../api/describeError';
-import { useFloorPickLists } from '../api/picking';
+import { isActive, useFloorPickLists } from '../api/picking';
+import { applyQueued } from '../offline/overlay';
+import { useQueued } from '../offline/OfflineProvider';
 import type { PickList } from '../api/waves';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
@@ -80,16 +82,17 @@ export function PickingPage() {
   const { session } = useAuth();
   const { t } = useTranslation();
   const lists = useFloorPickLists();
+  const queued = useQueued();
 
   if (session.status !== 'signedIn') {
     return null;
   }
 
   const userId = session.user.id;
-  const mine = (lists.data ?? []).filter((list) => list.operatorId === userId);
-  const free = (lists.data ?? []).filter(
-    (list) => list.operatorId === null || list.operatorId === undefined,
-  );
+  // What the operator confirmed without a connection counts, and a list finished that way is done.
+  const active = (lists.data ?? []).map((list) => applyQueued(list, queued)).filter(isActive);
+  const mine = active.filter((list) => list.operatorId === userId);
+  const free = active.filter((list) => list.operatorId === null || list.operatorId === undefined);
 
   return (
     <div className="grid gap-gutter-lg">
@@ -105,6 +108,10 @@ export function PickingPage() {
             {t('common.retry')}
           </Button>
         </div>
+      ) : lists.isPending && lists.fetchStatus === 'paused' ? (
+        <p role="status" className="text-body-md text-fg-secondary">
+          {t('offline.unavailable')}
+        </p>
       ) : lists.isPending ? (
         <p role="status" className="text-body-md text-fg-secondary">
           {t('common.loading')}

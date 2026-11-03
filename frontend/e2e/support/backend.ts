@@ -49,6 +49,8 @@ function problem(status: number, code: string): { status: number; body: Rec } {
 
 export class Backend {
   private signedIn = false;
+  /** While it is down every call fails as if there were no network. */
+  private down = false;
   private counter = 0;
   private readonly products: Rec[] = [];
   private readonly asns: Rec[] = [];
@@ -89,6 +91,11 @@ export class Backend {
     const raw = request.postData();
     const body: Rec = raw === null || raw === '' ? {} : (JSON.parse(raw) as Rec);
 
+    if (this.down) {
+      await route.abort('internetdisconnected');
+
+      return;
+    }
     const answer = this.dispatch(method, path, url.searchParams, body);
     if (answer === undefined) {
       const missing = problem(404, 'shared.not_found');
@@ -604,8 +611,22 @@ export class Backend {
     return { status: 200, body: wave };
   }
 
+  /** Cuts the network for the app: its calls fail like those of a phone out of coverage. */
+  setDown(down: boolean): void {
+    this.down = down;
+  }
+
+  /** The pick lists as this backend keeps them, to see what reached it. */
+  pickListsNow(): Rec[] {
+    return structuredClone(this.pickLists);
+  }
+
   /** A pick list that is ready on the floor, without going through receipt, order and wave. */
-  seedPickList(options: { units: number; location: string }): void {
+  seedPickList(options: {
+    units: number;
+    location: string;
+    stops?: { units: number; location: string }[];
+  }): void {
     const product = {
       id: this.id('p'),
       sku: 'SEED-001',
@@ -613,29 +634,28 @@ export class Backend {
       gtins: ['8412345678905'],
     };
     this.products.push(product);
+    const stops = options.stops ?? [{ units: options.units, location: options.location }];
     this.pickLists.push({
       id: this.id('pl'),
       waveId: 'wave-seed',
       status: 'generated',
       operatorId: null,
-      unitsToPick: options.units,
+      unitsToPick: stops.reduce((sum, stop) => sum + stop.units, 0),
       unitsPicked: 0,
-      lines: [
-        {
-          position: 1,
-          orderId: 'o-seed',
-          orderLineNumber: 1,
-          productId: product.id,
-          locationId: 'l-seed',
-          locationCode: options.location,
-          lot: null,
-          expiryDate: null,
-          quantityToPick: options.units,
-          quantityPicked: 0,
-          confirmed: false,
-          shortReason: null,
-        },
-      ],
+      lines: stops.map((stop, index) => ({
+        position: index + 1,
+        orderId: 'o-seed',
+        orderLineNumber: index + 1,
+        productId: product.id,
+        locationId: `l-seed-${String(index + 1)}`,
+        locationCode: stop.location,
+        lot: null,
+        expiryDate: null,
+        quantityToPick: stop.units,
+        quantityPicked: 0,
+        confirmed: false,
+        shortReason: null,
+      })),
       createdAt: new Date().toISOString(),
       startedAt: null,
       completedAt: null,

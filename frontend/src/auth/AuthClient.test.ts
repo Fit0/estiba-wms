@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeApi, json, me, problem } from '../testing/fakeApi';
-import { AuthClient, SignInError } from './AuthClient';
+import { AuthClient, NetworkError, SignInError, type SessionHint } from './AuthClient';
 
 describe('AuthClient', () => {
   beforeEach(() => {
@@ -243,5 +243,77 @@ describe('AuthClient', () => {
     await client.signOut();
 
     expect(listener).toHaveBeenCalledTimes(1);
+  });
+
+  describe('without a connection', () => {
+    function hintOf(user: ReturnType<typeof me> | null) {
+      let kept = user;
+      const hint: SessionHint = {
+        read: () => kept,
+        write: (next) => {
+          kept = next;
+        },
+      };
+
+      return { hint, kept: () => kept };
+    }
+    const offline = () => Promise.reject(new TypeError('Failed to fetch'));
+
+    it('remembers who signed in, and forgets them when they leave', async () => {
+      const api = fakeApi({
+        'POST /api/auth/login': () => json({ token: 'token-1' }),
+        'GET /api/me': () => json(me(['operator'])),
+      });
+      const { hint, kept } = hintOf(null);
+      const client = new AuthClient(api.send, hint);
+
+      await client.signIn('ana@marea-moda.example', 'right');
+      expect(kept()).toMatchObject({ email: 'ana@marea-moda.example', roles: ['operator'] });
+
+      await client.signOut();
+      expect(kept()).toBeNull();
+    });
+
+    it('opens as the remembered user when the session cannot be renewed for lack of connection', async () => {
+      const { hint } = hintOf(me(['operator']));
+      const client = new AuthClient(offline, hint);
+
+      await client.restore();
+
+      expect(client.getState()).toMatchObject({
+        status: 'signedIn',
+        user: { email: 'ana@marea-moda.example', roles: ['operator'] },
+      });
+    });
+
+    it('does not open anyone when nobody is remembered', async () => {
+      const client = new AuthClient(offline, hintOf(null).hint);
+
+      await client.restore();
+
+      expect(client.getState()).toEqual({ status: 'signedOut', reason: 'none' });
+    });
+
+    it('does not trust the memory when the API refuses the session', async () => {
+      const api = fakeApi({
+        'POST /api/auth/refresh': () => problem(401, 'identity.refresh_token_invalid'),
+      });
+      const { hint, kept } = hintOf(me(['operator']));
+      const client = new AuthClient(api.send, hint);
+
+      const restoring = client.restore();
+      await vi.runAllTimersAsync();
+      await restoring;
+
+      expect(client.getState()).toEqual({ status: 'signedOut', reason: 'none' });
+      expect(kept()).toBeNull();
+    });
+
+    it('tells a failed connection from any other failure', async () => {
+      const client = new AuthClient(offline);
+
+      await expect(client.authorizedFetch('/api/me')).rejects.toBeInstanceOf(NetworkError);
+      await expect(client.authorizedFetch('/api/me')).rejects.toBeInstanceOf(TypeError);
+    });
   });
 });
