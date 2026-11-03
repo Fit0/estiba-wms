@@ -4,9 +4,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createBrowserRouter } from 'react-router';
 import { App } from './App';
-import { AuthClient } from './auth/AuthClient';
+import { AuthClient, storedSessionHint } from './auth/AuthClient';
 import './i18n';
 import './index.css';
+import { ConfirmationQueue } from './offline/ConfirmationQueue';
+import { canUseDatabase, openOfflineDatabase } from './offline/database';
 import { UpdatePrompt } from './pwa/UpdatePrompt';
 import { routes } from './routes';
 import { applyDensity, readStoredDensity, resolveDensity } from './theme/density';
@@ -24,9 +26,17 @@ applyTheme(
 
 applyDensity(resolveDensity(readStoredDensity(), window.matchMedia('(pointer: coarse)').matches));
 
+const offline = canUseDatabase() ? openOfflineDatabase() : undefined;
+
 createRoot(root).render(
   <StrictMode>
-    <App client={new AuthClient()} router={createBrowserRouter(routes)} />
+    <App
+      client={new AuthClient(undefined, storedSessionHint())}
+      router={createBrowserRouter(routes)}
+      {...(offline === undefined
+        ? {}
+        : { queue: new ConfirmationQueue(offline.queue), cache: offline.cache })}
+    />
     <UpdatePrompt />
   </StrictMode>,
 );

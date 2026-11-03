@@ -2,6 +2,8 @@ import { ArrowLeft } from 'lucide-react';
 import { Link, useParams } from 'react-router';
 import { describeError } from '../api/describeError';
 import { nextStop, pickLines, usePickList, useStartPickList } from '../api/picking';
+import { applyQueued } from '../offline/overlay';
+import { useQueued } from '../offline/OfflineProvider';
 import { useAuth } from '../auth/useAuth';
 import { Button } from '../components/Button';
 import { failureText } from '../components/FormDialog';
@@ -36,10 +38,19 @@ export function PickListPage() {
   const { session } = useAuth();
   const { t, language } = useTranslation();
   const list = usePickList(id);
+  const queued = useQueued();
   const start = useStartPickList(id);
 
   if (session.status !== 'signedIn') {
     return null;
+  }
+  if (list.isPending && list.fetchStatus === 'paused') {
+    return (
+      <>
+        <BackLink />
+        <PageHeader title={t('picking.notFound')}>{t('offline.unavailable')}</PageHeader>
+      </>
+    );
   }
   if (list.isPending) {
     return (
@@ -57,7 +68,7 @@ export function PickListPage() {
     );
   }
 
-  const data = list.data;
+  const data = applyQueued(list.data, queued);
   const number = (value: number): string => formatNumber(language, value);
   const lines = pickLines(data);
   const stop = nextStop(lines);

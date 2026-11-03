@@ -1,6 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { unwrap } from './ApiError';
+import { toast } from '../components/ui/Toaster';
+import { useTranslation } from '../i18n';
+import { useAuth } from '../auth/useAuth';
+import { useQueue } from '../offline/OfflineProvider';
 import { useApi } from './ApiProvider';
+import type { ApiClient } from './client';
+import { isNetworkFailure } from './networkFailure';
 import { orderKeys, orderRefreshMs } from './orders';
 import { waveKeys, type PickList } from './waves';
 
@@ -105,24 +111,24 @@ export function usePickList(id: string) {
   });
 }
 
+/** The lists of the floor and of the wave, and the orders, change when a list does: ask again. */
+export async function refreshAfterPick(queries: QueryClient, list: PickList): Promise<void> {
+  queries.setQueryData(pickingKeys.detail(list.id), list);
+  await Promise.all([
+    queries.invalidateQueries({ queryKey: pickingKeys.lists() }),
+    queries.invalidateQueries({ queryKey: waveKeys.pickLists(list.waveId) }),
+    queries.invalidateQueries({ queryKey: waveKeys.detail(list.waveId) }),
+    queries.invalidateQueries({ queryKey: orderKeys.all }),
+  ]);
+}
+
 /** Every change answers with the list as it is now; the lists of the floor and of the wave refresh. */
-function usePickListMutation<Variables>(
-  id: string,
-  call: (variables: Variables) => Promise<PickList>,
-) {
+function usePickListMutation<Variables>(call: (variables: Variables) => Promise<PickList>) {
   const queries = useQueryClient();
 
   return useMutation({
     mutationFn: call,
-    onSuccess: async (list) => {
-      queries.setQueryData(pickingKeys.detail(id), list);
-      await Promise.all([
-        queries.invalidateQueries({ queryKey: pickingKeys.lists() }),
-        queries.invalidateQueries({ queryKey: waveKeys.pickLists(list.waveId) }),
-        queries.invalidateQueries({ queryKey: waveKeys.detail(list.waveId) }),
-        queries.invalidateQueries({ queryKey: orderKeys.all }),
-      ]);
-    },
+    onSuccess: (list) => refreshAfterPick(queries, list),
   });
 }
 
@@ -130,7 +136,7 @@ function usePickListMutation<Variables>(
 export function useStartPickList(id: string) {
   const api = useApi();
 
-  return usePickListMutation<undefined>(id, async () =>
+  return usePickListMutation<undefined>(async () =>
     unwrap(await api.POST('/api/pick-lists/{id}/start', { params: { path: { id } } })),
   );
 }
@@ -144,17 +150,69 @@ export interface PickConfirmation {
   readonly reason?: string;
 }
 
+/** Sends one confirmation. The queue of confirmations without a connection sends them with this too. */
+export async function confirmPickLine(
+  api: ApiClient,
+  id: string,
+  position: number,
+  confirmation: PickConfirmation,
+): Promise<PickList> {
+  return unwrap(
+    await api.POST('/api/pick-lists/{id}/lines/{position}/confirm', {
+      params: { path: { id, position: String(position) } },
+      body: confirmation,
+    }),
+  );
+}
+
+/** What confirming a stop came to: the list as the API has it, or `queued` when it waits for a connection. */
+export type Confirmed =
+  { readonly queued: false; readonly list: PickList } | { readonly queued: true };
+
+/**
+ * Confirms a stop. With a connection the API answers at once, and what it refuses (a wrong scan) is
+ * an error the operator sees. Without one, or when the request cannot get through, the confirmation
+ * goes to the queue and the screen carries on as if it had been sent (the queue is applied over what
+ * the API says, see `applyQueued`).
+ */
 export function useConfirmPickLine(id: string) {
   const api = useApi();
+  const queue = useQueue();
+  const { session } = useAuth();
+  const queries = useQueryClient();
+  const { t } = useTranslation();
 
-  return usePickListMutation(
-    id,
-    async ({ position, ...body }: PickConfirmation & { position: number }) =>
-      unwrap(
-        await api.POST('/api/pick-lists/{id}/lines/{position}/confirm', {
-          params: { path: { id, position: String(position) } },
-          body,
-        }),
-      ),
-  );
+  return useMutation({
+    // The point is to work when the connection is down, so it must not wait for one.
+    networkMode: 'always',
+    mutationFn: async ({
+      position,
+      ...confirmation
+    }: PickConfirmation & { position: number }): Promise<Confirmed> => {
+      if (navigator.onLine) {
+        try {
+          return { queued: false, list: await confirmPickLine(api, id, position, confirmation) };
+        } catch (error) {
+          if (!isNetworkFailure(error)) {
+            throw error;
+          }
+        }
+      }
+      if (session.status !== 'signedIn') {
+        throw new Error('A confirmation needs a signed-in user.');
+      }
+      await queue.enqueue({ userId: session.user.id, listId: id, position, confirmation });
+
+      return { queued: true };
+    },
+    onSuccess: async (result) => {
+      if (result.queued) {
+        toast.info(t('picking.queued'));
+
+        return;
+      }
+      toast.success(t('picking.confirmed'));
+      await refreshAfterPick(queries, result.list);
+    },
+  });
 }

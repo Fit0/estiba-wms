@@ -5,7 +5,6 @@ import type { PickList } from '../api/waves';
 import { Button } from '../components/Button';
 import { failureText } from '../components/FormDialog';
 import { TextField } from '../components/TextField';
-import { toast } from '../components/ui/Toaster';
 import { useTranslation } from '../i18n';
 import { ScanField } from '../scanner/ScanField';
 
@@ -87,21 +86,14 @@ export function PickStopForm({
     if (Object.keys(found).length > 0) {
       return;
     }
-    confirm.mutate(
-      {
-        position: line.position,
-        location: location.trim(),
-        gtin: gtin.trim(),
-        units: picked,
-        ...(line.lot === null ? {} : { lot: lot.trim() }),
-        ...(isShort ? { reason: reason.trim() } : {}),
-      },
-      {
-        onSuccess: () => {
-          toast.success(t('picking.confirmed', { n: String(index) }));
-        },
-      },
-    );
+    confirm.mutate({
+      position: line.position,
+      location: location.trim(),
+      gtin: gtin.trim(),
+      units: picked,
+      ...(line.lot === null ? {} : { lot: lot.trim() }),
+      ...(isShort ? { reason: reason.trim() } : {}),
+    });
   }
 
   // A scanner presses Enter after the code: go to the next field, and confirm from the last one.
