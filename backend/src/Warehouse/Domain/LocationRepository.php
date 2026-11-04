@@ -6,6 +6,7 @@ namespace App\Warehouse\Domain;
 
 use App\Shared\Domain\Page;
 use App\Shared\Domain\PageRequest;
+use App\Shared\Domain\TenantId;
 
 /**
  * There is no delete method on purpose: locations are blocked, never deleted, because
@@ -31,6 +32,16 @@ interface LocationRepository extends LocationCodeRegistry
      * @return list<Location>
      */
     public function findActiveOfTypes(WarehouseId $warehouseId, array $types): array;
+
+    /**
+     * The ids of the active locations of these types in all the warehouses of the tenant, in no
+     * particular order.
+     *
+     * @param list<LocationType> $types
+     *
+     * @return list<LocationId>
+     */
+    public function activeIdsOfTypes(TenantId $tenantId, array $types): array;
 
     public function save(Location $location): void;
 }

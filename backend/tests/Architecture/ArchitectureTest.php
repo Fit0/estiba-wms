@@ -35,10 +35,12 @@ final class ArchitectureTest
         'Outbound' => ['Catalog', 'Warehouse', 'Inventory'],
         // The audit trail reads every event through the event bus, and knows no context.
         'Audit' => [],
+        // The figures are asked from the contracts of the contexts that own the data, and nothing depends on them.
+        'Analytics' => ['Warehouse', 'Inventory', 'Outbound'],
     ];
 
     /** Shared is not a bounded context, but it follows the same layering rules. */
-    private const array LAYERED = ['Identity', 'Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Audit', 'Shared'];
+    private const array LAYERED = ['Identity', 'Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Audit', 'Analytics', 'Shared'];
 
     private const array FRAMEWORKS = ['Symfony', 'Doctrine', 'ApiPlatform', 'Lexik', 'Redis', 'Twig'];
 

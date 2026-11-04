@@ -25,6 +25,7 @@ tags:
   Inbound: 'Expected deliveries (ASN), the receipts that count them at the dock, and putaway.'
   Outbound: 'Orders, waves, pick lists and the packing of parcels with their SSCC labels.'
   Audit: 'The trail of everything that happened, and who did it.'
+  Analytics: 'The operating figures of the warehouse: orders, picking, stock and storage locations.'
 
 operations:
   # ------------------------------------------------------------------ Identity
@@ -351,6 +352,17 @@ operations:
       - { name: subjectId, description: 'Only the events of this aggregate, such as one order.', example: '0192f2b4-7c3e-7a14-8d5b-3c1f0a8e6b2b' }
       - { name: from, description: 'From this moment on, included (ISO 8601).', example: '2026-10-24T00:00:00+00:00' }
       - { name: until, description: 'Until this moment, not included (ISO 8601).', example: '2026-10-25T00:00:00+00:00' }
+
+  # ------------------------------------------------------------------ Kpis
+  'GET /api/kpis':
+    summary: 'Get the operating figures of the warehouse'
+    description: 'Orders, picking speed, short picks, stock by status and how many storage locations hold stock. Orders open, stock and locations are a picture of now. Orders registered and shipped, and the picking figures (measured on the pick lists completed in the period), count what happened between `from` and `until`. A ratio with nothing to divide by (picking speed with no list completed, occupancy with no storage location) is left out of the answer, never sent as zero. The period is the last 7 days by default and lasts a year at most.'
+    role: supervisor
+    conflicts: false
+    paged: false
+    query:
+      - { name: from, description: 'Start of the period, included: a date or a date with time (ISO 8601).', example: '2026-10-24' }
+      - { name: until, description: 'End of the period, not included: a date or a date with time (ISO 8601).', example: '2026-10-31' }
 
   # ------------------------------------------------------------------ Labels (not a JSON resource)
   'GET /api/shipments/{id}/parcels/{sscc}/label.{format}':

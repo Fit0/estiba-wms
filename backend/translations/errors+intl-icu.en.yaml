@@ -20,6 +20,9 @@ shared:
     request_invalid: 'The request is not valid.'
     internal_error: 'An unexpected error happened. Try again later.'
 
+analytics:
+    period_invalid: '{reason, select, not_forward {The period must end after it starts.} too_long {The period lasts {maxDays} days at most.} other {The period is not valid.}}'
+
 catalog:
     dimensions_invalid: '{field, select, lengthMm {The length} widthMm {The width} heightMm {The height} weightGrams {The weight} other {The measure}} must be a positive whole number, got {value}.'
     expiry_requires_lot_tracking: 'A product tracked by expiry date must also be tracked by lot.'

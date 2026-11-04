@@ -6,6 +6,7 @@ namespace App\Warehouse\Infrastructure\Persistence\Doctrine;
 
 use App\Shared\Domain\Page;
 use App\Shared\Domain\PageRequest;
+use App\Shared\Domain\TenantId;
 use App\Warehouse\Domain\Location;
 use App\Warehouse\Domain\LocationCode;
 use App\Warehouse\Domain\LocationId;
@@ -51,6 +52,29 @@ final readonly class DoctrineLocationRepository implements LocationRepository
             ->getResult();
 
         return new Page($items, (int) $total, $page);
+    }
+
+    #[\Override]
+    public function activeIdsOfTypes(TenantId $tenantId, array $types): array
+    {
+        if ([] === $types) {
+            return [];
+        }
+
+        /** @var list<string> $ids */
+        $ids = $this->entityManager->createQueryBuilder()
+            ->select('l.id')
+            ->from(Location::class, 'l')
+            ->where('l.tenantId = :tenant')
+            ->andWhere('l.status = :active')
+            ->andWhere('l.type IN (:types)')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->setParameter('active', LocationStatus::Active)
+            ->setParameter('types', array_map(static fn (LocationType $type): string => $type->value, $types))
+            ->getQuery()
+            ->getSingleColumnResult();
+
+        return array_map(LocationId::fromString(...), $ids);
     }
 
     #[\Override]
