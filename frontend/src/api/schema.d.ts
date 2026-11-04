@@ -116,6 +116,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/kpis": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the operating figures of the warehouse
+         * @description Orders, picking speed, short picks, stock by status and how many storage locations hold stock. Orders open, stock and locations are a picture of now. Orders registered and shipped, and the picking figures (measured on the pick lists completed in the period), count what happened between `from` and `until`. A ratio with nothing to divide by (picking speed with no list completed, occupancy with no storage location) is left out of the answer, never sent as zero. The period is the last 7 days by default and lasts a year at most.
+         *
+         *     **Role:** supervisor or admin.
+         */
+        get: operations["api_kpis_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/locations/{id}": {
         parameters: {
             query?: never;
@@ -1337,6 +1359,7 @@ export interface components {
             expectedDate?: string;
             lines?: unknown[];
         };
+        /** @description One line of the audit trail: what happened, when, who did it and what the event carried. */
         AuditEntry: {
             id: string;
             eventType: string;
@@ -1385,6 +1408,19 @@ export interface components {
             /** @description A URI reference that identifies the problem type */
             readonly type?: string;
         };
+        /**
+         * @description The operating figures of the warehouse for a period: orders, picking, stock and storage
+         *     locations. A ratio with nothing to divide by is left out.
+         */
+        Kpis: {
+            from: string;
+            until: string;
+            orders: components["schemas"]["OrderKpisResource"];
+            picking: components["schemas"]["PickingKpisResource"];
+            stock: components["schemas"]["StockKpisResource"];
+            locations: components["schemas"]["LocationKpisResource"];
+            id: string;
+        };
         Location: {
             id: string;
             warehouseId: string;
@@ -1413,6 +1449,15 @@ export interface components {
             maxVolumeLitres?: number | null;
             maxPalletPositions?: number | null;
         };
+        LocationKpisResource: {
+            storage: number;
+            occupied: number;
+            occupancyPercent?: number | null;
+        };
+        /**
+         * @description Who the token belongs to: the user, its roles and its tenant. A client calls it right after
+         *     signing in to know what to show.
+         */
         Me: {
             id: string;
             email: string;
@@ -1447,6 +1492,11 @@ export interface components {
             priority?: "low" | "normal" | "high" | "urgent";
             lines?: unknown[];
         };
+        OrderKpisResource: {
+            open: number;
+            registered: number;
+            shipped: number;
+        };
         PickList: {
             id: string;
             waveId: string;
@@ -1469,6 +1519,16 @@ export interface components {
             units?: number;
             lot?: string | null;
             reason?: string | null;
+        };
+        PickingKpisResource: {
+            listsCompleted: number;
+            linesPicked: number;
+            unitsPicked: number;
+            linesPerHour?: number | null;
+            averageListMinutes?: number | null;
+            shortPickLines: number;
+            unitsShort: number;
+            shortPickPercent?: number | null;
         };
         Product: {
             id: string;
@@ -1533,6 +1593,10 @@ export interface components {
             heightMm?: number | null;
             weightGrams?: number | null;
         };
+        /**
+         * @description How much the tenant holds of a product, in total and by warehouse. `available` is the units in
+         *     available status; once reservations arrive (E04-01) it will leave out the reserved ones.
+         */
         ProductStock: {
             productId: string;
             sku: string;
@@ -1544,6 +1608,13 @@ export interface components {
             onHold: number;
             warehouses: unknown[];
         };
+        /**
+         * @description `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
+         *     the confirmation (ADR 0012).
+         *
+         *     The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
+         *     in `config/packages/security.yaml`.
+         */
         PutawayTask: {
             id: string;
             receiptId: string;
@@ -1563,13 +1634,34 @@ export interface components {
             confirmedAt?: string | null;
             stockMoved: boolean;
         };
+        /**
+         * @description `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
+         *     the confirmation (ADR 0012).
+         *
+         *     The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
+         *     in `config/packages/security.yaml`.
+         */
         "PutawayTask.ConfirmPutawayInput": {
             locationId?: string;
             reason?: string | null;
         };
+        /**
+         * @description `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
+         *     the confirmation (ADR 0012).
+         *
+         *     The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
+         *     in `config/packages/security.yaml`.
+         */
         "PutawayTask.SplitPutawayTaskInput": {
             units?: number;
         };
+        /**
+         * @description `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
+         *     their putaway, a moment after it closes (ADR 0012).
+         *
+         *     Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
+         *     see `access_control` in `config/packages/security.yaml`.
+         */
         Receipt: {
             id: string;
             asnId: string;
@@ -1585,9 +1677,23 @@ export interface components {
             lines: unknown[];
             discrepancies: unknown[];
         };
+        /**
+         * @description `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
+         *     their putaway, a moment after it closes (ADR 0012).
+         *
+         *     Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
+         *     see `access_control` in `config/packages/security.yaml`.
+         */
         "Receipt.OpenReceiptInput": {
             dockLocationId?: string;
         };
+        /**
+         * @description `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
+         *     their putaway, a moment after it closes (ADR 0012).
+         *
+         *     Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
+         *     see `access_control` in `config/packages/security.yaml`.
+         */
         "Receipt.ReceiveItemInput": {
             gtin?: string;
             units?: number;
@@ -1609,6 +1715,10 @@ export interface components {
             city: string;
             countryCode: string;
         };
+        /**
+         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
+         *     not JSON: see ParcelLabelController.
+         */
         Shipment: {
             id: string;
             orderId: string;
@@ -1624,17 +1734,37 @@ export interface components {
             trackingNumber?: string | null;
             dispatchedAt?: string | null;
         };
+        /**
+         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
+         *     not JSON: see ParcelLabelController.
+         */
         "Shipment.CloseParcelInput": {
             weightGrams?: number;
             contents?: unknown[];
         };
+        /**
+         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
+         *     not JSON: see ParcelLabelController.
+         */
         "Shipment.DispatchShipmentInput": {
             carrier?: string;
             trackingNumber?: string | null;
         };
+        /**
+         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
+         *     not JSON: see ParcelLabelController.
+         */
         "Shipment.StartPackingInput": {
             orderId?: string;
         };
+        /**
+         * @description The stock of one product in one location, of one lot, expiry date and status, from the read
+         *     model (ADR 0013): it shows a movement a moment after it is recorded. Dates are days, as
+         *     `YYYY-MM-DD`.
+         *
+         *     The list holds the stock items with units, filtered by `productId`, `locationId`, `warehouseId`
+         *     and `status`.
+         */
         StockItem: {
             id: string;
             productId: string;
@@ -1650,6 +1780,18 @@ export interface components {
             status: "available" | "quarantine" | "damaged" | "on_hold";
             onHand: number;
         };
+        StockKpisResource: {
+            onHand: number;
+            available: number;
+            quarantine: number;
+            damaged: number;
+            onHold: number;
+        };
+        /**
+         * @description The history of the stock: one line of the ledger, newest first, filtered by `stockItemId`,
+         *     `productId` and `locationId`. `change` is negative when units left; `balanceAfter` is what the
+         *     stock item held afterwards.
+         */
         StockMovement: {
             id: string;
             stockItemId: string;
@@ -2119,6 +2261,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditEntry"][];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    api_kpis_get: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Start of the period, included: a date or a date with time (ISO 8601).
+                 * @example 2026-10-24
+                 */
+                from?: string;
+                /**
+                 * @description End of the period, not included: a date or a date with time (ISO 8601).
+                 * @example 2026-10-31
+                 */
+                until?: string;
+            };
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Kpis resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Kpis"];
                 };
             };
             400: components["responses"]["BadRequest"];
