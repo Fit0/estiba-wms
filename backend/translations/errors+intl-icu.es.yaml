@@ -20,6 +20,9 @@ shared:
     request_invalid: 'La petición no es válida.'
     internal_error: 'Ha ocurrido un error inesperado. Inténtalo de nuevo más tarde.'
 
+analytics:
+    period_invalid: '{reason, select, not_forward {El periodo debe terminar después de empezar.} too_long {El periodo dura como máximo {maxDays} días.} other {El periodo no es válido.}}'
+
 catalog:
     dimensions_invalid: '{field, select, lengthMm {El largo} widthMm {El ancho} heightMm {El alto} weightGrams {El peso} other {La medida}} debe ser un número entero positivo, y se ha recibido {value}.'
     expiry_requires_lot_tracking: 'Un producto controlado por fecha de caducidad debe controlarse también por lote.'

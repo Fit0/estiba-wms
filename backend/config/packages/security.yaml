@@ -56,6 +56,8 @@ security:
         - { path: '^/api/shipments(/[^/]+/(parcels|complete))?$', methods: [POST], roles: ROLE_OPERATOR }
         # The audit trail says who did what, so reading it is for supervisors and admins.
         - { path: ^/api/audit-log, roles: ROLE_SUPERVISOR }
+        # The figures of the warehouse are for the people who run it.
+        - { path: ^/api/kpis, roles: ROLE_SUPERVISOR }
         - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
         - { path: ^/api, roles: ROLE_SUPERVISOR }
 

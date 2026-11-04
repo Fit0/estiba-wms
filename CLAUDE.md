@@ -40,7 +40,7 @@ Hexagonal architecture with DDD, organized by bounded context under `backend/src
 ```
 src/
 ├── Shared/                  Cross-cutting code (health check, base infrastructure)
-└── <Context>/               Identity, Catalog, Warehouse, Inventory, Inbound, Outbound, Audit
+└── <Context>/               Identity, Catalog, Warehouse, Inventory, Inbound, Outbound, Audit, Analytics
     ├── Domain/              Entities, value objects, domain events, repository interfaces (ports)
     ├── Application/         Use cases: commands, queries and their handlers
     └── Infrastructure/      Adapters: Doctrine repositories, XML mappings, HTTP controllers, API resources

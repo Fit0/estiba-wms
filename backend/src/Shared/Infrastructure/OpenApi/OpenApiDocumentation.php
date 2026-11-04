@@ -85,6 +85,7 @@ final readonly class OpenApiDocumentation
             'asns', 'receipts', 'putaway-tasks' => 'Inbound',
             'orders', 'waves', 'pick-lists', 'shipments' => 'Outbound',
             'audit-log' => 'Audit',
+            'kpis' => 'Analytics',
             default => 'Other',
         };
     }
