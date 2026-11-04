@@ -6,6 +6,8 @@ import { DesignGalleryPage } from './pages/DesignGalleryPage';
 import { expectNoViolations } from './testing/axe';
 import { json, problem } from './testing/fakeApi';
 import * as inboundFixtures from './testing/inboundFixtures';
+import { kpis } from './testing/kpiFixtures';
+import { http, server } from './testing/msw';
 import { paged } from './testing/paged';
 import { apiOf, noSession, open, withSession } from './testing/renderApp';
 
@@ -65,6 +67,28 @@ describe('accessibility (axe)', () => {
 
     await user.click(screen.getByRole('button', { name: /Densidad compacta/ }));
     await user.click(screen.getByRole('button', { name: /Densidad cómoda/ }));
+    await expectNoViolations();
+  });
+
+  it('the dashboard, with its figures and when they could not be loaded', async () => {
+    const user = userEvent.setup();
+    open('/', supervisor);
+    server.use(http.get(`${globalThis.location.origin}/api/kpis`, () => json(kpis)));
+    await screen.findByText('Pedidos abiertos');
+    await screen.findByText('45 líneas');
+    await expectNoViolations();
+
+    server.use(
+      http.get(`${globalThis.location.origin}/api/kpis`, () =>
+        problem(500, 'shared.internal_error'),
+      ),
+    );
+    await user.click(screen.getByRole('button', { name: 'Actualizar' }));
+    await screen.findByRole('alert');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a inglés' }));
+    await screen.findByText('Open orders');
     await expectNoViolations();
   });
 
