@@ -45,6 +45,9 @@ framework:
             App\Inbound\Domain\Event\ReceiptClosed: async
             App\Inbound\Domain\Event\PutawayConfirmed: async
             App\Inventory\Domain\Event\StockMovementRecorded: async
+            # Telling the people connected must never slow down or fail a pick (ADR 0045).
+            App\Outbound\Domain\Event\PickListCompleted: async
+            App\Outbound\Domain\Event\ShortPickReported: async
 
 when@dev:
     framework:
