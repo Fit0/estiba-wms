@@ -29,6 +29,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Frontend quality | ESLint 9 (`typescript-eslint` strict, `react-hooks`, `jsx-a11y`), Prettier, Testing Library, `axe-core` in the tests (ADR 0030) | In use (E05-02) |
 | Frontend testing | Vitest (in use since E05-02), MSW, Playwright | MSW and Playwright planned (E06) |
 | Real time | Mercure: the hub built into FrankenPHP, spoken to directly (a POST and HS256 tokens, no package), notifications as server-sent events ([ADR 0045](docs/adr/0045-live-notifications-with-mercure.md)) | In use (E07-06) |
+| Legacy ERP (simulated) | `erp-legacy/`: PHP 5.6 on Apache, SQLite, a hand-written SOAP 1.1 service and CSV files in an SFTP folder ([ADR 0046](docs/adr/0046-a-simulated-legacy-erp.md)). Outside the backend: nothing in `backend/` may depend on it | In use (E08-01) |
 | CI | GitHub Actions | In use |
 
 Do not add a dependency that is not in this table without asking first. When one is approved, add it here.
@@ -158,6 +159,7 @@ Everything runs inside Docker. Use `make` from the repository root (`make` alone
 | `make front-sh` / `make front-format` | Shell in the frontend container / apply Prettier |
 | `make worker-logs` / `make worker-restart` | Follow / restart the worker that handles the asynchronous events |
 | `make failed` / `make retry-failed` | List / handle again the events that failed every retry |
+| `make erp-up` / `make erp-order n=3` / `make erp-check` | Start the simulated legacy ERP and its SFTP server / make the ERP take orders / try it end to end. `make down` stops them too |
 | `make stock-rebuild` | Build the stock read model again from the ledger (after a migration that creates it, or if it drifts) |
 
 If `make` is not available in the shell, run the equivalent `docker compose exec -T php ...` command from the `Makefile`.
