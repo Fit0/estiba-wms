@@ -37,10 +37,12 @@ final class ArchitectureTest
         'Audit' => [],
         // The figures are asked from the contracts of the contexts that own the data, and nothing depends on them.
         'Analytics' => ['Warehouse', 'Inventory', 'Outbound'],
+        // The anti-corruption layer of the ERP (ADR 0047): it reads the catalogue and hands orders to Outbound.
+        'Erp' => ['Catalog', 'Outbound'],
     ];
 
     /** Shared is not a bounded context, but it follows the same layering rules. */
-    private const array LAYERED = ['Identity', 'Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Audit', 'Analytics', 'Shared'];
+    private const array LAYERED = ['Identity', 'Catalog', 'Warehouse', 'Inventory', 'Inbound', 'Outbound', 'Audit', 'Analytics', 'Erp', 'Shared'];
 
     private const array FRAMEWORKS = ['Symfony', 'Doctrine', 'ApiPlatform', 'Lexik', 'Redis', 'Twig'];
 

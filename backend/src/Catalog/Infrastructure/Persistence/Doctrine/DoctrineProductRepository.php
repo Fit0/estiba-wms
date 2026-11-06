@@ -46,6 +46,22 @@ final readonly class DoctrineProductRepository implements ProductRepository
     }
 
     #[\Override]
+    public function findBySku(TenantId $tenantId, Sku $sku): ?Product
+    {
+        $product = $this->entityManager->createQueryBuilder()
+            ->select('p')
+            ->from(Product::class, 'p')
+            ->where('p.tenantId = :tenant')
+            ->andWhere('p.sku = :sku')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->setParameter('sku', $sku, 'sku')
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $product instanceof Product ? $product : null;
+    }
+
+    #[\Override]
     public function search(TenantId $tenantId, ?string $skuPrefix, ?ProductStatus $status, ?string $text, PageRequest $page): Page
     {
         $total = $this->filtered($tenantId, $skuPrefix, $status, $text)

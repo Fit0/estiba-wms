@@ -177,7 +177,7 @@ abstract class OutboundApiTestCase extends ApiTestCase
     /**
      * @param array<string, mixed> $tracking
      */
-    private function product(string $sku, array $tracking = [], ?string $gtin = null): string
+    protected function product(string $sku, array $tracking = [], ?string $gtin = null): string
     {
         $id = $this->id($this->request('POST', '/api/products', $tracking + [
             'sku' => $sku,

@@ -9,6 +9,9 @@ x-php-environment: &php-environment
   XDEBUG_MODE: "${XDEBUG_MODE:-off}"
   # The Mercure hub is the one inside the php service (backend/frankenphp/Caddyfile, ADR 0045). The
   # keys here are for development only: set your own in production.
+  # The simulated legacy ERP (ADR 0046, ADR 0047). It is only there after `make erp-up`; the application
+  # does not need it to start.
+  ERP_SOAP_WSDL: "${ERP_SOAP_WSDL:-http://erp/soap/erp.php?wsdl}"
   MERCURE_URL: "http://php/.well-known/mercure"
   MERCURE_PUBLISHER_JWT_KEY: "${MERCURE_PUBLISHER_JWT_KEY:-dev-publisher-key-change-me-0123456789abcdef}"
   MERCURE_SUBSCRIBER_JWT_KEY: "${MERCURE_SUBSCRIBER_JWT_KEY:-dev-subscriber-key-change-me-0123456789abcdef}"

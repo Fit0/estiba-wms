@@ -3,3 +3,5 @@
 *.jpg binary
 *.pdf binary
 .githooks/* text eol=lf
+# Files the simulated ERP wrote: Latin-1, CRLF. They are test data and must reach every checkout byte for byte.
+backend/tests/Support/erp/*.csv binary

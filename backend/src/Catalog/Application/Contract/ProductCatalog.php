@@ -24,4 +24,12 @@ interface ProductCatalog
      * @throws DomainError when the text is not a valid GTIN
      */
     public function findByGtin(TenantId $tenantId, string $gtin): ?ProductSnapshot;
+
+    /**
+     * The product with a SKU, which is how an outside system, such as an ERP, names it. Case and
+     * surrounding spaces do not matter (CAT-01).
+     *
+     * @throws DomainError when the text is not a valid SKU
+     */
+    public function findBySku(TenantId $tenantId, string $sku): ?ProductSnapshot;
 }

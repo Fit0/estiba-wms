@@ -39,6 +39,12 @@ catalog:
     sku_already_used: 'The tenant already has a product with SKU {sku}.'
     sku_invalid: '"{value}" is not a valid SKU. Use 1 to 40 letters, digits, dots, dashes, underscores or slashes, starting and ending with a letter or digit.'
 
+erp:
+    article_unknown: 'The ERP order names article {sku}, and the catalogue has no product with that SKU.'
+    order_file_malformed: 'The ERP order file is not valid at row {line}, in {field}.'
+    shipment_rejected: 'The ERP refused the shipment of order {reference} (code {code}): {detail}'
+    unavailable: 'The ERP cannot be reached or is not ready yet: {reason}'
+
 identity:
     credentials_invalid: 'The email or the password is not correct.'
     email_already_used: 'Another user already uses the email address {email}.'

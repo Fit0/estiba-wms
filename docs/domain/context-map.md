@@ -9,6 +9,7 @@ An arrow means "depends on". There are no cycles (DD-7).
 ```mermaid
 flowchart TB
     erp(["Legacy ERP"]):::ext
+    erpctx["<b>Erp</b><br/>anti-corruption layer"]:::down
     inbound["<b>Inbound</b><br/>receiving, putaway"]:::down
     outbound["<b>Outbound</b><br/>orders, picking, shipping"]:::down
     inventory["<b>Inventory</b><br/>stock ledger, reservations"]:::core
@@ -29,8 +30,10 @@ flowchart TB
     analytics --> inventory
     analytics --> warehouse
 
-    erp <-.->|"anti-corruption layer"| inbound
-    erp <-.->|"anti-corruption layer"| outbound
+    erpctx --> catalog
+    erpctx --> outbound
+
+    erp <-.->|"SOAP, CSV over SFTP"| erpctx
 
     classDef up fill:#2f855a,stroke:#22543d,color:#ffffff
     classDef core fill:#2b6cb0,stroke:#1a4971,color:#ffffff
@@ -47,9 +50,10 @@ flowchart TB
 | Inbound | Downstream. Brings goods in. | Catalog, Warehouse, Inventory |
 | Outbound | Downstream. Sends goods out. | Catalog, Warehouse, Inventory |
 | Analytics | Downstream, read only. Puts together the figures a supervisor looks at (orders, picking speed, short picks, stock by status, occupancy of the storage locations). It owns no table: each context answers for its own data through a contract and Analytics adds and divides ([ADR 0043](../adr/0043-operating-figures-asked-from-each-context.md)). Nothing depends on it. | Warehouse, Inventory, Outbound |
+| Erp | Downstream. The anti-corruption layer of the ERP: it reads the orders the ERP leaves, translates them into the warehouse's words and hands them to Outbound, and tells the ERP when a shipment left. The ERP's model never goes further ([ADR 0047](../adr/0047-an-anti-corruption-layer-for-the-erp.md)). Nothing depends on it. | Catalog, Outbound |
 | Audit | Observer. Writes down every domain event of the others and answers who did what. It reads them through the event bus and knows none of them, so it depends on nothing and nothing depends on it ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)). | Nothing |
 
-Inbound and Outbound talk to the ERP through an anti-corruption layer (E08), so the ERP's model never reaches the domain.
+The ERP is reached through the `Erp` context, an anti-corruption layer, so the ERP's model never reaches the domain. Only orders and shipment confirmations cross so far; the purchase side for Inbound is not built.
 
 ## Published contracts
 
@@ -63,7 +67,7 @@ None. The other contexts need no contract from it. The tenant of a request reach
 
 | Contract | Purpose |
 |---|---|
-| `ProductCatalog` | Find a product by id or GTIN and return a `ProductSnapshot` (id, SKU, name, storage class, tracking policy and shelf lives, whether it is available for operations, family, turnover class, dimensions). In use since E03-03; SKU lookup, base unit and packaging levels come when a context needs them. |
+| `ProductCatalog` | Find a product by id, GTIN or SKU and return a `ProductSnapshot` (id, SKU, name, storage class, tracking policy and shelf lives, whether it is available for operations, family, turnover class, dimensions). In use since E03-03 (`findBySku` since E08-02); base unit and packaging levels come when a context needs them. |
 | `ProductRegistered`, `ProductBlocked` | Integration events |
 
 ### Warehouse
@@ -102,6 +106,7 @@ None. It publishes no contract and uses none: it describes any event by reflecti
 | Contract | Purpose |
 |---|---|
 | `OutboundKpis` | Orders open, registered and shipped, and what the pick lists completed in a period say: stops, units, short picks and time spent. Plain SQL over Outbound's own tables. In use since E07-04. |
+| `OrderIntake` | Registers an order that another system took, as an `IncomingOrder` in the warehouse's words, with the rules of the API. Answers `Registered` or `AlreadyRegistered`. In use since E08-02. |
 | `OrderAllocated`, `OrderCancelled` | Integration events |
 | `ShipmentDispatched` | Integration event. Triggers the stock issue and the ERP confirmation. |
 

@@ -39,6 +39,12 @@ catalog:
     sku_already_used: 'El cliente ya tiene un producto con la referencia {sku}.'
     sku_invalid: '"{value}" no es una referencia (SKU) válida. Usa de 1 a 40 letras, dígitos, puntos, guiones, guiones bajos o barras, empezando y terminando por una letra o un dígito.'
 
+erp:
+    article_unknown: 'El pedido del ERP nombra el artículo {sku}, y el catálogo no tiene ningún producto con ese SKU.'
+    order_file_malformed: 'El fichero de pedidos del ERP no es válido en la fila {line}, en {field}.'
+    shipment_rejected: 'El ERP ha rechazado el envío del pedido {reference} (código {code}): {detail}'
+    unavailable: 'No se puede contactar con el ERP o todavía no está listo: {reason}'
+
 identity:
     credentials_invalid: 'El correo o la contraseña no son correctos.'
     email_already_used: 'Ya existe otro usuario con el correo {email}.'

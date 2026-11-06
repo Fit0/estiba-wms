@@ -30,6 +30,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Frontend testing | Vitest (in use since E05-02), MSW, Playwright | MSW and Playwright planned (E06) |
 | Real time | Mercure: the hub built into FrankenPHP, spoken to directly (a POST and HS256 tokens, no package), notifications as server-sent events ([ADR 0045](docs/adr/0045-live-notifications-with-mercure.md)) | In use (E07-06) |
 | Legacy ERP (simulated) | `erp-legacy/`: PHP 5.6 on Apache, SQLite, a hand-written SOAP 1.1 service and CSV files in an SFTP folder ([ADR 0046](docs/adr/0046-a-simulated-legacy-erp.md)). Outside the backend: nothing in `backend/` may depend on it | In use (E08-01) |
+| ERP integration | The `Erp` context: `ext-soap` for the SOAP client, a reader of the CSV files, and a translator into `OrderIntake` of Outbound ([ADR 0047](docs/adr/0047-an-anti-corruption-layer-for-the-erp.md)) | In use (E08-02) |
 | CI | GitHub Actions | In use |
 
 Do not add a dependency that is not in this table without asking first. When one is approved, add it here.
@@ -41,7 +42,7 @@ Hexagonal architecture with DDD, organized by bounded context under `backend/src
 ```
 src/
 ├── Shared/                  Cross-cutting code (health check, base infrastructure)
-└── <Context>/               Identity, Catalog, Warehouse, Inventory, Inbound, Outbound, Audit, Analytics
+└── <Context>/               Identity, Catalog, Warehouse, Inventory, Inbound, Outbound, Audit, Analytics, Erp
     ├── Domain/              Entities, value objects, domain events, repository interfaces (ports)
     ├── Application/         Use cases: commands, queries and their handlers
     └── Infrastructure/      Adapters: Doctrine repositories, XML mappings, HTTP controllers, API resources

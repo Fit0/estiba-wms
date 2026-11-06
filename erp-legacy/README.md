@@ -7,6 +7,8 @@ The ERP speaks to the WMS in two ways:
 - **Orders go out as CSV files.** The ERP leaves one file per customer order in a folder, which an SFTP server shows. The WMS reads them (E08-03).
 - **Shipments come back over SOAP.** The WMS tells the ERP that an order left the warehouse, with `ConfirmarEnvio` (E08-04).
 
+The WMS side of this contract is the `Erp` context of the backend ([ADR 0047](../docs/adr/0047-an-anti-corruption-layer-for-the-erp.md)): `CsvErpOrderFiles` reads these files and `SoapErpGateway` calls this service.
+
 ## Running it
 
 ```bash
