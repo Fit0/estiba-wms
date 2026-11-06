@@ -3,6 +3,7 @@ import { Outlet } from 'react-router';
 import { useAuth } from '../auth/useAuth';
 import { CommandPalette, useCommandPaletteShortcut } from '../components/ui/CommandPalette';
 import { useTranslation } from '../i18n';
+import { NotificationStream } from '../notifications/NotificationStream';
 import { ActiveWarehouseProvider } from '../warehouse/ActiveWarehouse';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
@@ -27,6 +28,7 @@ export function AppLayout() {
 
   return (
     <ActiveWarehouseProvider>
+      <NotificationStream />
       <div className="flex min-h-screen">
         <a
           href="#content"

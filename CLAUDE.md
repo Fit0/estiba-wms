@@ -28,7 +28,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | | React Hook Form + Zod | In use (ADR 0029): schemas in `src/warehouse/schemas.ts`, `FormDialog` |
 | Frontend quality | ESLint 9 (`typescript-eslint` strict, `react-hooks`, `jsx-a11y`), Prettier, Testing Library, `axe-core` in the tests (ADR 0030) | In use (E05-02) |
 | Frontend testing | Vitest (in use since E05-02), MSW, Playwright | MSW and Playwright planned (E06) |
-| Real time | Mercure | Planned (E07) |
+| Real time | Mercure: the hub built into FrankenPHP, spoken to directly (a POST and HS256 tokens, no package), notifications as server-sent events ([ADR 0045](docs/adr/0045-live-notifications-with-mercure.md)) | In use (E07-06) |
 | CI | GitHub Actions | In use |
 
 Do not add a dependency that is not in this table without asking first. When one is approved, add it here.

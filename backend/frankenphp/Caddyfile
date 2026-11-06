@@ -5,5 +5,18 @@
 {$SERVER_NAME:localhost} {
 	root * /app/public
 	encode zstd br gzip
+
+	# The Mercure hub that comes with FrankenPHP (ADR 0045). The API publishes to it and browsers
+	# listen on /.well-known/mercure with the token the API hands out. The hub's default transport
+	# keeps the updates in memory: a notification is a hint to look at the screen, not a record (the
+	# audit trail is the record).
+	mercure {
+		# The hub is told to read the tokens the way the API makes them: HS256 with `mercure.publish`
+		# and `mercure.subscribe` claims (protocol 8). Newer hubs refuse these directives unless asked.
+		protocol_version_compatibility 8
+		publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY} HS256
+		subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} HS256
+	}
+
 	php_server
 }

@@ -1316,6 +1316,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/notifications/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get access to the live notifications of the tenant
+         * @description Answers with the `topic` and the `hub` to listen to (Mercure, server-sent events) and sets the `mercureAuthorization` cookie (`HttpOnly`, `SameSite=Strict`, only sent to the hub) that lets the hub send the notifications of this tenant and no other. It lasts one hour, like the access token, so ask again before `expiresAt`. The notifications are hints (a pick list was completed, units were not found); the screens always show the truth.
+         *
+         *     **Role:** supervisor or admin.
+         */
+        get: operations["api_notifications_access_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/shipments/{id}/parcels/{sscc}/label.{format}": {
         parameters: {
             query?: never;
@@ -4530,6 +4552,50 @@ export interface operations {
                 };
                 content?: never;
             };
+        };
+    };
+    api_notifications_access_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Where to listen, and until when the access lasts. The cookie is set for the hub. */
+            200: {
+                headers: {
+                    /** @description The `mercureAuthorization` cookie: `HttpOnly`, `SameSite=Strict`, only sent to the hub. */
+                    "Set-Cookie"?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "topic": "/tenants/0192f2b4-7c3e-7a10-8d5b-3c1f0a8e6b20/notifications",
+                     *       "hub": "/.well-known/mercure",
+                     *       "expiresAt": "2026-11-04T11:00:00+00:00"
+                     *     }
+                     */
+                    "application/json": {
+                        /** @description The Mercure topic of the notifications of the tenant. */
+                        topic: string;
+                        /** @description The path of the hub, to open an `EventSource` on. */
+                        hub: string;
+                        /**
+                         * Format: date-time
+                         * @description When the access ends. Ask again before.
+                         */
+                        expiresAt: string;
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     api_shipments_parcels_label_get: {

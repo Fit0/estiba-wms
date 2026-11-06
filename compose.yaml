@@ -7,6 +7,11 @@ x-php-environment: &php-environment
   MESSENGER_TRANSPORT_DSN: "redis://redis:6379/messages"
   MESSENGER_FAILED_TRANSPORT_DSN: "doctrine://default?queue_name=failed&auto_setup=0"
   XDEBUG_MODE: "${XDEBUG_MODE:-off}"
+  # The Mercure hub is the one inside the php service (backend/frankenphp/Caddyfile, ADR 0045). The
+  # keys here are for development only: set your own in production.
+  MERCURE_URL: "http://php/.well-known/mercure"
+  MERCURE_PUBLISHER_JWT_KEY: "${MERCURE_PUBLISHER_JWT_KEY:-dev-publisher-key-change-me-0123456789abcdef}"
+  MERCURE_SUBSCRIBER_JWT_KEY: "${MERCURE_SUBSCRIBER_JWT_KEY:-dev-subscriber-key-change-me-0123456789abcdef}"
 
 x-php-volumes: &php-volumes
   - ./backend:/app

@@ -55,6 +55,8 @@ export default defineConfig({
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
       '/health': { target: apiTarget, changeOrigin: true },
+      // The Mercure hub of the API: the notifications are a stream that stays open (ADR 0045).
+      '/.well-known/mercure': { target: apiTarget, changeOrigin: true },
     },
     // A bind mount from Windows or macOS does not tell the container that a file changed.
     watch: process.env.VITE_USE_POLLING === 'true' ? { usePolling: true, interval: 300 } : {},

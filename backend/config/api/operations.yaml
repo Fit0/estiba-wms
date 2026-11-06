@@ -26,6 +26,7 @@ tags:
   Outbound: 'Orders, waves, pick lists and the packing of parcels with their SSCC labels.'
   Audit: 'The trail of everything that happened, and who did it.'
   Analytics: 'The operating figures of the warehouse: orders, picking, stock and storage locations.'
+  Notifications: 'What happens in the warehouse, as it happens: live notifications for supervisors.'
 
 operations:
   # ------------------------------------------------------------------ Identity
@@ -363,6 +364,14 @@ operations:
     query:
       - { name: from, description: 'Start of the period, included: a date or a date with time (ISO 8601).', example: '2026-10-24' }
       - { name: until, description: 'End of the period, not included: a date or a date with time (ISO 8601).', example: '2026-10-31' }
+
+  # ------------------------------------------------------------------ Notifications (not a JSON resource)
+  'GET /api/notifications/access':
+    summary: 'Get access to the live notifications of the tenant'
+    description: 'Answers with the `topic` and the `hub` to listen to (Mercure, server-sent events) and sets the `mercureAuthorization` cookie (`HttpOnly`, `SameSite=Strict`, only sent to the hub) that lets the hub send the notifications of this tenant and no other. It lasts one hour, like the access token, so ask again before `expiresAt`. The notifications are hints (a pick list was completed, units were not found); the screens always show the truth.'
+    role: supervisor
+    conflicts: false
+    paged: false
 
   # ------------------------------------------------------------------ Labels (not a JSON resource)
   'GET /api/shipments/{id}/parcels/{sscc}/label.{format}':

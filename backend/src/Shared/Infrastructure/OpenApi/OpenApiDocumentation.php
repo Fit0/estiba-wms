@@ -86,6 +86,7 @@ final readonly class OpenApiDocumentation
             'orders', 'waves', 'pick-lists', 'shipments' => 'Outbound',
             'audit-log' => 'Audit',
             'kpis' => 'Analytics',
+            'notifications' => 'Notifications',
             default => 'Other',
         };
     }
@@ -325,6 +326,7 @@ final readonly class OpenApiDocumentation
             self::LABEL => $this->label(),
             '/api/auth/refresh' => $this->refresh(),
             '/api/auth/logout' => $this->logout(),
+            '/api/notifications/access' => $this->notificationAccess(),
             default => [],
         };
     }
@@ -357,6 +359,36 @@ final readonly class OpenApiDocumentation
                 '204' => [
                     'description' => 'The session is over and the cookie is cleared.',
                     'headers' => ['Set-Cookie' => ['description' => 'Clears the refresh token cookie.', 'schema' => ['type' => 'string']]],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function notificationAccess(): array
+    {
+        return [
+            'operationId' => 'api_notifications_access_get',
+            'responses' => [
+                '200' => [
+                    'description' => 'Where to listen, and until when the access lasts. The cookie is set for the hub.',
+                    'headers' => [
+                        'Set-Cookie' => ['description' => 'The `mercureAuthorization` cookie: `HttpOnly`, `SameSite=Strict`, only sent to the hub.', 'schema' => ['type' => 'string']],
+                    ],
+                    'content' => ['application/json' => [
+                        'schema' => [
+                            'type' => 'object',
+                            'required' => ['topic', 'hub', 'expiresAt'],
+                            'properties' => [
+                                'topic' => ['type' => 'string', 'description' => 'The Mercure topic of the notifications of the tenant.'],
+                                'hub' => ['type' => 'string', 'description' => 'The path of the hub, to open an `EventSource` on.'],
+                                'expiresAt' => ['type' => 'string', 'format' => 'date-time', 'description' => 'When the access ends. Ask again before.'],
+                            ],
+                        ],
+                        'example' => ['topic' => '/tenants/0192f2b4-7c3e-7a10-8d5b-3c1f0a8e6b20/notifications', 'hub' => '/.well-known/mercure', 'expiresAt' => '2026-11-04T11:00:00+00:00'],
+                    ]],
                 ],
             ],
         ];

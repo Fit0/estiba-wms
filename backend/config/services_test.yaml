@@ -1,0 +1,6 @@
+# Services that replace the real ones only in the tests.
+services:
+    # There is no Mercure hub in the tests: this notifier remembers what it was asked to say.
+    App\Tests\Support\RecordingNotifier: ~
+
+    App\Shared\Application\Notifier: '@App\Tests\Support\RecordingNotifier'
