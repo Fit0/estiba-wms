@@ -21,3 +21,7 @@ Thumbs.db
 /frontend/coverage/
 /frontend/playwright-report/
 /frontend/test-results/
+
+# Legacy ERP (simulated), when run outside Docker
+/erp-legacy/data/
+/erp-legacy/outbox/

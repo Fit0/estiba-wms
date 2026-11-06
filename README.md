@@ -120,6 +120,7 @@ The token goes in `Authorization: Bearer <token>`. See [authentication](docs/api
 | Frontend | http://localhost:5173 (it forwards `/api` to the API) |
 | PostgreSQL 17 | `localhost:5433` (user, password and database: `estiba`) |
 | Redis 7.4 | internal to the Docker network |
+| Legacy ERP (`make erp-up`) | http://localhost:8081 (SOAP at `/soap/erp.php`) and SFTP on `localhost:2222`, user `erp` |
 
 Common commands (run `make` to list them all):
 
@@ -135,6 +136,8 @@ make demo                    # A fashion company with its warehouse and collecti
 ```
 
 `make demo` loads **Marea Moda**, a fashion company that receives its collection from factories and ships it to its own stores and to franchises. It creates an admin, a supervisor and an operator (`admin@`, `supervisor@` and `operario@marea.test`, sharing the password you type), a distribution centre in Zaragoza with 6 zones and 42 locations, and 39 products: a spring-summer collection in sizes and colours. Loading it twice does nothing.
+
+The simulated legacy ERP that Estiba integrates with does not start with the rest. `make erp-up` brings up the old PHP 5.6 application and its SFTP server, `make erp-order n=3` makes it take three orders, and `make erp-check` tries it end to end. Its web page is at http://localhost:8081, and the contract with Estiba is in [erp-legacy/README.md](erp-legacy/README.md).
 
 ## Quality checks
 

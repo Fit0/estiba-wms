@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="ErpService"
+    targetNamespace="urn:marea:erp:v1"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+    xmlns:tns="urn:marea:erp:v1"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <types>
+    <xsd:schema targetNamespace="urn:marea:erp:v1" elementFormDefault="qualified">
+
+      <xsd:element name="ConfirmarEnvio">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="NumeroPedido" type="xsd:string"/>
+            <xsd:element name="FechaEnvio" type="xsd:string"/>
+            <xsd:element name="Transportista" type="xsd:string"/>
+            <xsd:element name="Seguimiento" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="Bultos" type="xsd:int"/>
+            <xsd:element name="Lineas">
+              <xsd:complexType>
+                <xsd:sequence>
+                  <xsd:element name="Linea" minOccurs="0" maxOccurs="unbounded">
+                    <xsd:complexType>
+                      <xsd:sequence>
+                        <xsd:element name="Articulo" type="xsd:string"/>
+                        <xsd:element name="Unidades" type="xsd:int"/>
+                      </xsd:sequence>
+                    </xsd:complexType>
+                  </xsd:element>
+                </xsd:sequence>
+              </xsd:complexType>
+            </xsd:element>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="ConfirmarEnvioResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Codigo" type="xsd:int"/>
+            <xsd:element name="Mensaje" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="ConsultarPedido">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="NumeroPedido" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+      <xsd:element name="ConsultarPedidoResponse">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="Codigo" type="xsd:int"/>
+            <xsd:element name="Mensaje" type="xsd:string"/>
+            <xsd:element name="Estado" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="ExportadoEn" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="EnviadoEn" type="xsd:string" minOccurs="0"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+
+    </xsd:schema>
+  </types>
+
+  <message name="ConfirmarEnvioIn"><part name="parameters" element="tns:ConfirmarEnvio"/></message>
+  <message name="ConfirmarEnvioOut"><part name="parameters" element="tns:ConfirmarEnvioResponse"/></message>
+  <message name="ConsultarPedidoIn"><part name="parameters" element="tns:ConsultarPedido"/></message>
+  <message name="ConsultarPedidoOut"><part name="parameters" element="tns:ConsultarPedidoResponse"/></message>
+
+  <portType name="ErpPortType">
+    <operation name="ConfirmarEnvio">
+      <input message="tns:ConfirmarEnvioIn"/>
+      <output message="tns:ConfirmarEnvioOut"/>
+    </operation>
+    <operation name="ConsultarPedido">
+      <input message="tns:ConsultarPedidoIn"/>
+      <output message="tns:ConsultarPedidoOut"/>
+    </operation>
+  </portType>
+
+  <binding name="ErpBinding" type="tns:ErpPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="ConfirmarEnvio">
+      <soap:operation soapAction="urn:marea:erp:v1#ConfirmarEnvio"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+    <operation name="ConsultarPedido">
+      <soap:operation soapAction="urn:marea:erp:v1#ConsultarPedido"/>
+      <input><soap:body use="literal"/></input>
+      <output><soap:body use="literal"/></output>
+    </operation>
+  </binding>
+
+  <service name="ErpService">
+    <port name="ErpPort" binding="tns:ErpBinding">
+      <soap:address location="__LOCATION__"/>
+    </port>
+  </service>
+</definitions>

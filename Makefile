@@ -5,7 +5,7 @@ PHP := $(DC) exec -T php
 FRONT := $(DC) exec -T frontend
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
+.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -17,8 +17,8 @@ env: ## Create backend/.env from .env.example with new secrets (leaves an existi
 up: env ## Start the stack and wait until it is healthy
 	$(DC) up -d --wait
 
-down: ## Stop the stack
-	$(DC) down --remove-orphans
+down: ## Stop the stack, the legacy ERP included
+	$(DC) --profile erp down --remove-orphans
 
 build: ## Rebuild the Docker images
 	$(DC) build --pull
@@ -46,6 +46,19 @@ demo: ## Load the fashion demo (a company, a distribution centre and a collectio
 
 stock-rebuild: ## Build the stock read model again from the ledger (ADR 0013)
 	$(PHP) bin/console app:stock-overview:rebuild
+
+## —— Legacy ERP (ADR 0046) ————————————————————————————————————
+erp-up: ## Start the simulated legacy ERP and its SFTP server (not part of `make up`)
+	$(DC) up -d --build --wait erp erp-sftp
+
+erp-logs: ## Follow the logs of the legacy ERP
+	$(DC) logs -f erp erp-sftp
+
+erp-order: ## Make the ERP take made-up orders, e.g. make erp-order n=5
+	$(DC) exec -u www-data erp php /var/www/bin/nuevo_pedido.php $(or $(n),1)
+
+erp-check: ## Try the ERP end to end: an order, its CSV file and its SOAP confirmation
+	$(DC) exec -T -u www-data erp php /var/www/bin/comprobar.php
 
 ## —— Worker ————————————————————————————————————————————————
 worker-logs: ## Follow the worker that handles the asynchronous events
