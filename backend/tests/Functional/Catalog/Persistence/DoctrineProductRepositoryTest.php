@@ -129,6 +129,20 @@ final class DoctrineProductRepositoryTest extends PersistenceTestCase
         self::assertFalse($this->repository->isSkuTaken($product->tenantId(), Sku::fromString('OTRO-1')));
     }
 
+    public function testFindsAProductBySkuOnlyWithinTheSameTenant(): void
+    {
+        $product = ProductMother::product();
+        $this->repository->save($product);
+        $this->flushAndForget();
+
+        $found = $this->repository->findBySku($product->tenantId(), Sku::fromString(' agua-500 '));
+
+        self::assertNotNull($found);
+        self::assertTrue($found->id()->equals($product->id()));
+        self::assertNull($this->repository->findBySku(ProductMother::tenantId(), Sku::fromString('AGUA-500')), 'A SKU of another tenant is not found.');
+        self::assertNull($this->repository->findBySku($product->tenantId(), Sku::fromString('OTRO-1')));
+    }
+
     // CAT-01: the database backs the registry check against two requests racing.
     public function testRejectsTwoProductsWithTheSameSkuForATenant(): void
     {

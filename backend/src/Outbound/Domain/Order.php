@@ -87,7 +87,9 @@ final class Order extends AggregateRoot
         }
 
         $lines = self::linesOf($items);
-        $order = new self($id, $tenantId, $reference, $warehouseId, $customer, $shipTo, $priority, $cutOffAt, $at, $lines);
+        // The database keeps the clock of an instant and not its time zone, so the instant is kept in UTC: a cut-off
+        // given as 14:00 in Madrid must not come back as 14:00 UTC.
+        $order = new self($id, $tenantId, $reference, $warehouseId, $customer, $shipTo, $priority, $cutOffAt->setTimezone(new \DateTimeZone('UTC')), $at, $lines);
         $order->record(new OrderRegistered($id, $tenantId, $reference, $at));
 
         return $order;

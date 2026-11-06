@@ -12,6 +12,9 @@ parameters:
     # The GS1 company prefix in front of every SSCC (OUT-19). This one is a placeholder for demos and
     # tests: a company that ships real parcels sets the prefix GS1 licensed to it.
     env(GS1_COMPANY_PREFIX): '8400000'
+    # The description (WSDL) of the SOAP service of the ERP (ADR 0047). In development it is the simulated
+    # ERP of `make erp-up`; in production it is the real one.
+    env(ERP_SOAP_WSDL): 'http://erp/soap/erp.php?wsdl'
     # The refresh token that keeps a user signed in (IDN-08 to IDN-10, ADR 0022), in seconds: how long
     # one works after it was issued (7 days), how long a session lasts however often it renews
     # (30 days), and how long a token just spent still counts as a second request of the same client.
@@ -51,6 +54,10 @@ services:
     App\Outbound\Infrastructure\Persistence\Sscc\DbalSsccSequence:
         arguments:
             $companyPrefix: '%env(GS1_COMPANY_PREFIX)%'
+
+    App\Erp\Infrastructure\Soap\LazySoapClientProvider:
+        arguments:
+            $wsdl: '%env(ERP_SOAP_WSDL)%'
 
     App\Identity\Application\RefreshTokenPolicy:
         arguments:

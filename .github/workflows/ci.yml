@@ -16,7 +16,7 @@ permissions:
 env:
   PHP_VERSION: "8.4"
   NODE_VERSION: "24"
-  PHP_EXTENSIONS: apcu, intl, pdo_pgsql, redis, zip
+  PHP_EXTENSIONS: apcu, intl, pdo_pgsql, redis, soap, zip
 
 defaults:
   run:

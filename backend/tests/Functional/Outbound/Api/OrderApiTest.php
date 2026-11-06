@@ -35,6 +35,14 @@ final class OrderApiTest extends OutboundApiTestCase
         self::assertSame(2, $this->lineOf($order, 2)['lineNumber']);
     }
 
+    public function testKeepsTheInstantOfACutOffGivenInAnotherTimeZone(): void
+    {
+        $order = $this->registerOrder('PED-2027-0001', extra: ['cutOffAt' => '2026-10-24T14:00:00+02:00']);
+
+        self::assertSame('2026-10-24T12:00:00+00:00', $order['cutOffAt']);
+        self::assertSame('2026-10-24T12:00:00+00:00', $this->request('GET', '/api/orders/'.$this->id($order))['cutOffAt']);
+    }
+
     public function testThePriorityIsNormalUnlessSaid(): void
     {
         self::assertSame('normal', $this->registerOrder()['priority']);

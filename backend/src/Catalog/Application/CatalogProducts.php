@@ -10,6 +10,7 @@ use App\Catalog\Domain\Gtin;
 use App\Catalog\Domain\Product;
 use App\Catalog\Domain\ProductId;
 use App\Catalog\Domain\ProductRepository;
+use App\Catalog\Domain\Sku;
 use App\Shared\Domain\TenantId;
 
 /**
@@ -31,6 +32,12 @@ final readonly class CatalogProducts implements ProductCatalog
     public function findByGtin(TenantId $tenantId, string $gtin): ?ProductSnapshot
     {
         return $this->snapshotOf($tenantId, $this->products->findByGtin($tenantId, Gtin::fromString($gtin)));
+    }
+
+    #[\Override]
+    public function findBySku(TenantId $tenantId, string $sku): ?ProductSnapshot
+    {
+        return $this->snapshotOf($tenantId, $this->products->findBySku($tenantId, Sku::fromString($sku)));
     }
 
     private function snapshotOf(TenantId $tenantId, ?Product $product): ?ProductSnapshot

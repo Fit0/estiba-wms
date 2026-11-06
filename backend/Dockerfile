@@ -20,6 +20,7 @@ RUN set -eux; \
         opcache \
         pdo_pgsql \
         redis \
+        soap \
         zip
 
 ENV COMPOSER_ALLOW_SUPERUSER=1

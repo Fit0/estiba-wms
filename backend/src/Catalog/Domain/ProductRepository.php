@@ -21,6 +21,8 @@ interface ProductRepository extends SkuRegistry, GtinRegistry
      */
     public function findByGtin(TenantId $tenantId, Gtin $gtin): ?Product;
 
+    public function findBySku(TenantId $tenantId, Sku $sku): ?Product;
+
     /**
      * The tenant's products, ordered by SKU, optionally narrowed to SKUs that start with a
      * text, to one status and to those whose SKU or name contains a text. Case does not
