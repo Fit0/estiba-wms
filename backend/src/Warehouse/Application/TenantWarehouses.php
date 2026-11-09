@@ -30,4 +30,17 @@ final readonly class TenantWarehouses implements WarehouseDirectory
 
         return new WarehouseSnapshot($warehouse->id()->value, $warehouse->code()->value, $warehouse->name()->value);
     }
+
+    #[\Override]
+    public function findByCode(TenantId $tenantId, string $code): ?WarehouseSnapshot
+    {
+        $wanted = strtoupper(trim($code));
+        foreach ($this->warehouses->findAllOf($tenantId) as $warehouse) {
+            if ($warehouse->code()->value === $wanted) {
+                return new WarehouseSnapshot($warehouse->id()->value, $warehouse->code()->value, $warehouse->name()->value);
+            }
+        }
+
+        return null;
+    }
 }

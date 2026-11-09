@@ -37,8 +37,8 @@ final class ArchitectureTest
         'Audit' => [],
         // The figures are asked from the contracts of the contexts that own the data, and nothing depends on them.
         'Analytics' => ['Warehouse', 'Inventory', 'Outbound'],
-        // The anti-corruption layer of the ERP (ADR 0047): it reads the catalogue and hands orders to Outbound.
-        'Erp' => ['Catalog', 'Outbound'],
+        // The anti-corruption layer of the ERP (ADR 0047): it reads the catalogue and the warehouses and hands orders to Outbound.
+        'Erp' => ['Catalog', 'Outbound', 'Warehouse'],
     ];
 
     /** Shared is not a bounded context, but it follows the same layering rules. */

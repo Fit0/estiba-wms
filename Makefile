@@ -48,11 +48,11 @@ stock-rebuild: ## Build the stock read model again from the ledger (ADR 0013)
 	$(PHP) bin/console app:stock-overview:rebuild
 
 ## —— Legacy ERP (ADR 0046) ————————————————————————————————————
-erp-up: ## Start the simulated legacy ERP and its SFTP server (not part of `make up`)
-	$(DC) up -d --build --wait erp erp-sftp
+erp-up: ## Start the simulated legacy ERP, its SFTP server and the scheduler that imports its orders (not part of `make up`)
+	$(DC) up -d --build --wait erp erp-sftp scheduler
 
 erp-logs: ## Follow the logs of the legacy ERP
-	$(DC) logs -f erp erp-sftp
+	$(DC) logs -f erp erp-sftp scheduler
 
 erp-order: ## Make the ERP take made-up orders, e.g. make erp-order n=5
 	$(DC) exec -u www-data erp php /var/www/bin/nuevo_pedido.php $(or $(n),1)

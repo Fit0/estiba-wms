@@ -44,6 +44,7 @@ erp:
     order_file_malformed: 'El fichero de pedidos del ERP no es válido en la fila {line}, en {field}.'
     shipment_rejected: 'El ERP ha rechazado el envío del pedido {reference} (código {code}): {detail}'
     unavailable: 'No se puede contactar con el ERP o todavía no está listo: {reason}'
+    warehouse_unknown: 'El almacén {code} que atiende los pedidos del ERP no existe.'
 
 identity:
     credentials_invalid: 'El correo o la contraseña no son correctos.'

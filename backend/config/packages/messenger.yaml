@@ -1,6 +1,8 @@
 # Three buses, kept apart on purpose (ADR 0009, ADR 0011, ADR 0012):
 #   command.bus changes state. Every command runs in one database transaction, flushed at the end.
 #   query.bus only reads. It has no transaction and nothing it handles may change state.
+#   job.bus carries the messages of a schedule (ADR 0048). It has no transaction: a job does several things, each
+#   through the command bus, and each of those has its own.
 #   event.bus tells the policies what happened. An event published by a command waits until the
 #   command commits; then it goes to the async transport or, if it is not routed, to its handlers.
 #   Each handler runs in its own transaction, and an event nobody handles is fine.
@@ -16,6 +18,7 @@ framework:
                 middleware:
                     - doctrine_transaction
             query.bus: ~
+            job.bus: ~
             event.bus:
                 default_middleware:
                     enabled: true

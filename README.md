@@ -137,7 +137,7 @@ make demo                    # A fashion company with its warehouse and collecti
 
 `make demo` loads **Marea Moda**, a fashion company that receives its collection from factories and ships it to its own stores and to franchises. It creates an admin, a supervisor and an operator (`admin@`, `supervisor@` and `operario@marea.test`, sharing the password you type), a distribution centre in Zaragoza with 6 zones and 42 locations, and 39 products: a spring-summer collection in sizes and colours. Loading it twice does nothing.
 
-The simulated legacy ERP that Estiba integrates with does not start with the rest. `make erp-up` brings up the old PHP 5.6 application and its SFTP server, `make erp-order n=3` makes it take three orders, and `make erp-check` tries it end to end. Its web page is at http://localhost:8081, and the contract with Estiba is in [erp-legacy/README.md](erp-legacy/README.md).
+The simulated legacy ERP that Estiba integrates with does not start with the rest. `make erp-up` brings up the old PHP 5.6 application and its SFTP server, `make erp-order n=3` makes it take three orders, and `make erp-check` tries it end to end. Its web page is at http://localhost:8081, and the contract with Estiba is in [erp-legacy/README.md](erp-legacy/README.md). `make erp-up` also starts the `scheduler`, which looks for the ERP's new orders every 30 seconds and registers them. It needs to know who receives them: put the id that `make demo` prints in `ERP_TENANT_ID` (in `.env` of the project root, which Compose reads) and run `make erp-up` again. `docker compose exec php bin/console app:erp:import-orders` imports once, now ([ADR 0048](docs/adr/0048-a-scheduled-import-of-erp-orders.md)).
 
 ## Quality checks
 

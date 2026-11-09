@@ -32,6 +32,7 @@ flowchart TB
 
     erpctx --> catalog
     erpctx --> outbound
+    erpctx --> warehouse
 
     erp <-.->|"SOAP, CSV over SFTP"| erpctx
 
@@ -50,7 +51,7 @@ flowchart TB
 | Inbound | Downstream. Brings goods in. | Catalog, Warehouse, Inventory |
 | Outbound | Downstream. Sends goods out. | Catalog, Warehouse, Inventory |
 | Analytics | Downstream, read only. Puts together the figures a supervisor looks at (orders, picking speed, short picks, stock by status, occupancy of the storage locations). It owns no table: each context answers for its own data through a contract and Analytics adds and divides ([ADR 0043](../adr/0043-operating-figures-asked-from-each-context.md)). Nothing depends on it. | Warehouse, Inventory, Outbound |
-| Erp | Downstream. The anti-corruption layer of the ERP: it reads the orders the ERP leaves, translates them into the warehouse's words and hands them to Outbound, and tells the ERP when a shipment left. The ERP's model never goes further ([ADR 0047](../adr/0047-an-anti-corruption-layer-for-the-erp.md)). Nothing depends on it. | Catalog, Outbound |
+| Erp | Downstream. The anti-corruption layer of the ERP: every 30 seconds it reads the orders the ERP leaves, translates them into the warehouse's words and hands them to Outbound, and tells the ERP when a shipment left. The ERP's model never goes further ([ADR 0047](../adr/0047-an-anti-corruption-layer-for-the-erp.md)). Nothing depends on it. | Catalog, Outbound, Warehouse |
 | Audit | Observer. Writes down every domain event of the others and answers who did what. It reads them through the event bus and knows none of them, so it depends on nothing and nothing depends on it ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)). | Nothing |
 
 The ERP is reached through the `Erp` context, an anti-corruption layer, so the ERP's model never reaches the domain. Only orders and shipment confirmations cross so far; the purchase side for Inbound is not built.
