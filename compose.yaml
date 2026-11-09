@@ -12,6 +12,15 @@ x-php-environment: &php-environment
   # The simulated legacy ERP (ADR 0046, ADR 0047). It is only there after `make erp-up`; the application
   # does not need it to start.
   ERP_SOAP_WSDL: "${ERP_SOAP_WSDL:-http://erp/soap/erp.php?wsdl}"
+  # The import of the orders of the ERP (ADR 0048): the tenant and the warehouse that receive them (empty
+  # means the import is not set up) and the SFTP folder where the ERP leaves them.
+  ERP_TENANT_ID: "${ERP_TENANT_ID:-}"
+  ERP_WAREHOUSE_CODE: "${ERP_WAREHOUSE_CODE:-ZGZ1}"
+  ERP_SFTP_HOST: "${ERP_SFTP_HOST:-erp-sftp}"
+  ERP_SFTP_PORT: "22"
+  ERP_SFTP_USER: "erp"
+  ERP_SFTP_PASSWORD: "${ERP_SFTP_PASSWORD:-erp-dev-password}"
+  ERP_SFTP_DIRECTORY: "outbox"
   MERCURE_URL: "http://php/.well-known/mercure"
   MERCURE_PUBLISHER_JWT_KEY: "${MERCURE_PUBLISHER_JWT_KEY:-dev-publisher-key-change-me-0123456789abcdef}"
   MERCURE_SUBSCRIBER_JWT_KEY: "${MERCURE_SUBSCRIBER_JWT_KEY:-dev-subscriber-key-change-me-0123456789abcdef}"
@@ -90,6 +99,27 @@ services:
     depends_on:
       php:
         condition: service_started
+
+  # Looks for new orders in the outbox of the ERP every 30 seconds (E08-03, ADR 0048). It is behind the "erp"
+  # profile with the ERP, and does nothing until ERP_TENANT_ID is set. After changing code, restart it.
+  scheduler:
+    profiles: ["erp"]
+    build:
+      context: ./backend
+      target: frankenphp_dev
+    command: ["php", "bin/console", "messenger:consume", "scheduler_erp", "--bus=job.bus", "--time-limit=3600", "--memory-limit=256M", "-vv"]
+    environment: *php-environment
+    volumes: *php-volumes
+    restart: unless-stopped
+    healthcheck:
+      disable: true
+    depends_on:
+      php:
+        condition: service_started
+      database:
+        condition: service_healthy
+      erp-sftp:
+        condition: service_healthy
 
   # The legacy ERP Estiba integrates with (ADR 0046): an old PHP 5.6 application that takes customer
   # orders, leaves them as CSV files in a folder and answers a SOAP service. It is behind the "erp"

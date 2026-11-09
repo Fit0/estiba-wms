@@ -16,4 +16,10 @@ interface WarehouseDirectory
      * @throws DomainError when the text is not a valid identifier
      */
     public function findById(TenantId $tenantId, string $warehouseId): ?WarehouseSnapshot;
+
+    /**
+     * The warehouse of the tenant with this code, for the systems that know a warehouse by the code
+     * staff use, not by its identifier. The code is compared as the warehouse writes it, in capitals.
+     */
+    public function findByCode(TenantId $tenantId, string $code): ?WarehouseSnapshot;
 }

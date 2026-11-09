@@ -5,8 +5,8 @@ The anti-corruption layer between the warehouse and the ERP that owns the custom
 | Layer | Holds |
 |---|---|
 | `Domain` | The ERP's model of an order (`ErpOrder`, `ErpOrderLine`, `ErpUrgency`) and the errors of talking to it |
-| `Application` | The `ErpGateway` port (tell the ERP a shipment left), the `ErpOrderFiles` port (read the files it leaves), and `ErpOrderTranslator`, which turns an ERP order into an `IncomingOrder` of Outbound |
-| `Infrastructure` | `SoapErpGateway` over `ext-soap`, and `CsvErpOrderFiles`, the reader of the CSV files |
+| `Application` | The `ErpGateway` port (tell the ERP a shipment left), the `ErpOrderFiles` port (read the files it leaves), the `ErpOrderInbox` port (the folder where it leaves them), `ErpOrderTranslator`, which turns an ERP order into an `IncomingOrder` of Outbound, and `ErpOrderImporter`, which does the whole import, started by the message `ImportErpOrders` |
+| `Infrastructure` | `SoapErpGateway` over `ext-soap`, `CsvErpOrderFiles`, the reader of the CSV files, `SftpErpOrderInbox` over phpseclib, `ErpSchedule` (every 30 seconds) and the command `app:erp:import-orders` |
 
 The contract with the ERP is written in [erp-legacy/README.md](../../../erp-legacy/README.md): the SOAP service, its codes, and the format of the files.
 
@@ -30,7 +30,28 @@ A caller decides what to do from the type of the exception: retry on `ErpUnavail
 
 ## Using it
 
-- To import an order: `CsvErpOrderFiles::read()` gives the `ErpOrder`s of a file, `ErpOrderTranslator::translate()` turns each into an `IncomingOrder` (the caller says the warehouse and the tenant), and `OrderIntake::register()` of Outbound registers it. A second time with the same number answers `AlreadyRegistered`. `OrderIntake` works for the current tenant, so a job with no signed-in user must set one first (E08-03).
+- To import an order: `CsvErpOrderFiles::read()` gives the `ErpOrder`s of a file, `ErpOrderTranslator::translate()` turns each into an `IncomingOrder` (the caller says the warehouse and the tenant), and `OrderIntake::register()` of Outbound registers it. A second time with the same number answers `AlreadyRegistered`. `OrderIntake` works for the current tenant, so a job with no signed-in user runs inside `TenantRunner::run()`.
+- To import what the ERP left, as the schedule does: `ErpOrderImporter::import($tenantId, $warehouseCode)` (see below).
 - To tell the ERP a shipment left: `ErpGateway::confirmShipment()`. The SOAP client is made when the first call is made, from the WSDL in `ERP_SOAP_WSDL`, so the application starts without the ERP.
+
+## The scheduled import
+
+[ADR 0048](../../../docs/adr/0048-a-scheduled-import-of-erp-orders.md). Every 30 seconds the `scheduler` service of Compose (`messenger:consume scheduler_erp --bus=job.bus`) sends `ImportErpOrders`. Its handler runs `ErpOrderImporter` for the tenant and the warehouse in the settings, and the importer does this with each file in the SFTP folder:
+
+| What happens to the file | Where it goes |
+|---|---|
+| Its orders were registered, or were already | `processed/` |
+| It is malformed, names an unknown article, or Outbound refuses its order | `rejected/`, with a warning in the log. The other files go on |
+| The ERP's side or ours fails (SFTP down, database down) | It stays where it is. The run stops and the next one starts over |
+
+Doing it twice is safe, so a run that stopped between registering and moving the file just finds the order `AlreadyRegistered` the next time and moves the file.
+
+| Setting | Meaning | In development |
+|---|---|---|
+| `ERP_TENANT_ID` | The tenant that receives the orders. Empty: the import does nothing | The id printed by `make demo` |
+| `ERP_WAREHOUSE_CODE` | The code of the warehouse that serves them | `ZGZ1` |
+| `ERP_SFTP_HOST`, `ERP_SFTP_PORT`, `ERP_SFTP_USER`, `ERP_SFTP_PASSWORD`, `ERP_SFTP_DIRECTORY` | Where the ERP leaves its files | `erp-sftp`, `22`, `erp`, `erp-dev-password`, `outbox` |
+
+`docker compose exec php bin/console app:erp:import-orders` runs the import once, now.
 
 This context needs the `soap` PHP extension.

@@ -15,6 +15,15 @@ parameters:
     # The description (WSDL) of the SOAP service of the ERP (ADR 0047). In development it is the simulated
     # ERP of `make erp-up`; in production it is the real one.
     env(ERP_SOAP_WSDL): 'http://erp/soap/erp.php?wsdl'
+    # The import of the orders of the ERP (ADR 0048): the tenant and warehouse that receive them, and the SFTP
+    # folder where the ERP leaves them. Without a tenant the import does nothing.
+    env(ERP_TENANT_ID): ''
+    env(ERP_WAREHOUSE_CODE): 'ZGZ1'
+    env(ERP_SFTP_HOST): 'erp-sftp'
+    env(ERP_SFTP_PORT): '22'
+    env(ERP_SFTP_USER): 'erp'
+    env(ERP_SFTP_PASSWORD): 'erp-dev-password'
+    env(ERP_SFTP_DIRECTORY): 'outbox'
     # The refresh token that keeps a user signed in (IDN-08 to IDN-10, ADR 0022), in seconds: how long
     # one works after it was issued (7 days), how long a session lasts however often it renews
     # (30 days), and how long a token just spent still counts as a second request of the same client.
@@ -42,10 +51,19 @@ services:
             tags: [{ name: messenger.message_handler, bus: query.bus }]
         App\Shared\Application\Bus\EventHandler:
             tags: [{ name: messenger.message_handler, bus: event.bus }]
+        App\Shared\Application\Bus\JobHandler:
+            tags: [{ name: messenger.message_handler, bus: job.bus }]
 
     # The event bus has two implementations, the one of Messenger and the audit trail that wraps it
     # (AuditingEventBus), so the interface says which is the real one.
     App\Shared\Application\Bus\EventBus: '@App\Shared\Infrastructure\Messenger\MessengerEventBus'
+
+    # The tenant is the one of the signed-in user unless a job sets its own (ADR 0048).
+    App\Shared\Infrastructure\Tenancy\ScopedCurrentTenant:
+        arguments:
+            $ofTheUser: '@App\Identity\Infrastructure\Security\SecurityCurrentTenant'
+    App\Shared\Application\CurrentTenant: '@App\Shared\Infrastructure\Tenancy\ScopedCurrentTenant'
+    App\Shared\Application\TenantRunner: '@App\Shared\Infrastructure\Tenancy\ScopedCurrentTenant'
 
     App\Inbound\Application\Putaway\PutawayPlanner:
         arguments:
@@ -58,6 +76,19 @@ services:
     App\Erp\Infrastructure\Soap\LazySoapClientProvider:
         arguments:
             $wsdl: '%env(ERP_SOAP_WSDL)%'
+
+    App\Erp\Infrastructure\Sftp\SftpErpOrderInbox:
+        arguments:
+            $host: '%env(ERP_SFTP_HOST)%'
+            $port: '%env(int:ERP_SFTP_PORT)%'
+            $user: '%env(ERP_SFTP_USER)%'
+            $password: '%env(ERP_SFTP_PASSWORD)%'
+            $directory: '%env(ERP_SFTP_DIRECTORY)%'
+
+    App\Erp\Application\ImportErpOrdersHandler:
+        arguments:
+            $tenantId: '%env(ERP_TENANT_ID)%'
+            $warehouseCode: '%env(ERP_WAREHOUSE_CODE)%'
 
     App\Identity\Application\RefreshTokenPolicy:
         arguments:

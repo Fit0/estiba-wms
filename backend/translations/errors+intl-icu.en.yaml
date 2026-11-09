@@ -44,6 +44,7 @@ erp:
     order_file_malformed: 'The ERP order file is not valid at row {line}, in {field}.'
     shipment_rejected: 'The ERP refused the shipment of order {reference} (code {code}): {detail}'
     unavailable: 'The ERP cannot be reached or is not ready yet: {reason}'
+    warehouse_unknown: 'The warehouse {code} that serves the ERP orders does not exist.'
 
 identity:
     credentials_invalid: 'The email or the password is not correct.'
