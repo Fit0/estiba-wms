@@ -8,6 +8,7 @@ use App\Erp\Domain\Exception\ErpUnavailable;
 use App\Erp\Domain\Exception\WarehouseNotConfigured;
 use App\Outbound\Application\Contract\IntakeResult;
 use App\Outbound\Application\Contract\OrderIntake;
+use App\Shared\Application\Clock;
 use App\Shared\Domain\DomainError;
 use App\Shared\Domain\TenantId;
 use App\Warehouse\Application\Contract\WarehouseDirectory;
@@ -30,6 +31,8 @@ final readonly class ErpOrderImporter
         private ErpOrderTranslator $translator,
         private OrderIntake $intake,
         private WarehouseDirectory $warehouses,
+        private ImportedOrders $imported,
+        private Clock $clock,
         private LoggerInterface $logger,
     ) {
     }
@@ -77,6 +80,8 @@ final readonly class ErpOrderImporter
         $results = [];
         foreach ($this->files->read($contents) as $order) {
             $results[] = $this->intake->register($this->translator->translate($tenantId, $warehouseId, $order));
+            // The order is in the warehouse now, so its shipment will have to be confirmed to the ERP (ADR 0049).
+            $this->imported->remember($tenantId, $order->number, $this->clock->now());
         }
 
         return $results;

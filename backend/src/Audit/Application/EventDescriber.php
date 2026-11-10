@@ -46,12 +46,13 @@ final readonly class EventDescriber
     }
 
     /**
-     * `App\Outbound\Domain\Event\PickListStarted` is `outbound.pick_list_started`. A class that does
+     * `App\Outbound\Domain\Event\PickListStarted` is `outbound.pick_list_started`, and an event that a context
+     * publishes for the others, in its `Application\Contract`, is named the same way. A class that does
      * not follow the layout keeps its full name, so it is still told apart.
      */
     private function typeOf(DomainEvent $event): string
     {
-        if (1 === preg_match('/^App\\\\(\w+)\\\\Domain\\\\Event\\\\(\w+)$/', $event::class, $parts)) {
+        if (1 === preg_match('/^App\\\\(\w+)\\\\(?:Domain\\\\Event|Application\\\\Contract)\\\\(\w+)$/', $event::class, $parts)) {
             $name = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $parts[2]));
 
             return strtolower($parts[1]).'.'.$name;

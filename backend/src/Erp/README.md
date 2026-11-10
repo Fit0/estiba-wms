@@ -5,8 +5,8 @@ The anti-corruption layer between the warehouse and the ERP that owns the custom
 | Layer | Holds |
 |---|---|
 | `Domain` | The ERP's model of an order (`ErpOrder`, `ErpOrderLine`, `ErpUrgency`) and the errors of talking to it |
-| `Application` | The `ErpGateway` port (tell the ERP a shipment left), the `ErpOrderFiles` port (read the files it leaves), the `ErpOrderInbox` port (the folder where it leaves them), `ErpOrderTranslator`, which turns an ERP order into an `IncomingOrder` of Outbound, and `ErpOrderImporter`, which does the whole import, started by the message `ImportErpOrders` |
-| `Infrastructure` | `SoapErpGateway` over `ext-soap`, `CsvErpOrderFiles`, the reader of the CSV files, `SftpErpOrderInbox` over phpseclib, `ErpSchedule` (every 30 seconds) and the command `app:erp:import-orders` |
+| `Application` | The `ErpGateway` port (tell the ERP a shipment left), the `ErpOrderFiles` port (read the files it leaves), the `ErpOrderInbox` port (the folder where it leaves them), `ErpOrderTranslator`, which turns an ERP order into an `IncomingOrder` of Outbound, `ErpOrderImporter`, which does the whole import, started by the message `ImportErpOrders`, and the outbox of confirmations: `QueueShipmentConfirmation`, `ShipmentOutbox`, `ErpOutboxSender` and `RetryPolicy` |
+| `Infrastructure` | `SoapErpGateway` over `ext-soap`, `CsvErpOrderFiles`, the reader of the CSV files, `SftpErpOrderInbox` over phpseclib, `DbalShipmentOutbox` and `DbalImportedOrders` (SQL), `ErpSchedule` (every 30 seconds) and the command `app:erp:import-orders` |
 
 The contract with the ERP is written in [erp-legacy/README.md](../../../erp-legacy/README.md): the SOAP service, its codes, and the format of the files.
 
@@ -53,5 +53,17 @@ Doing it twice is safe, so a run that stopped between registering and moving the
 | `ERP_SFTP_HOST`, `ERP_SFTP_PORT`, `ERP_SFTP_USER`, `ERP_SFTP_PASSWORD`, `ERP_SFTP_DIRECTORY` | Where the ERP leaves its files | `erp-sftp`, `22`, `erp`, `erp-dev-password`, `outbox` |
 
 `docker compose exec php bin/console app:erp:import-orders` runs the import once, now.
+
+## Confirming shipments
+
+[ADR 0049](../../../docs/adr/0049-a-database-outbox-for-erp-confirmations.md). When a shipment is dispatched, Outbound publishes `ShipmentLeft`. `QueueShipmentConfirmation` listens: if the order came from the ERP (it is in `erp_imported_orders`), it writes the confirmation into `erp_shipment_outbox`. Every 30 seconds `ErpOutboxSender` sends what is due through the `ErpGateway`:
+
+| The ERP | The row |
+|---|---|
+| Took it, or already had it | `sent` |
+| Could not be reached, or is not ready | `pending`, with a longer wait: 1 min, 2, 4, up to an hour; the eighth failure ends it |
+| Refused it (an order it does not know, a quantity that does not match) | `failed` at once, with the reason |
+
+A `failed` row stays in the table and is not tried again. `docker compose exec php bin/console app:erp:send-confirmations` sends once, now. To see the state: `select order_reference, status, attempts, last_error from erp_shipment_outbox;`
 
 This context needs the `soap` PHP extension.

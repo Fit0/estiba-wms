@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Erp\Infrastructure\Persistence\OutboxRow" table="erp_shipment_outbox">
+        <indexes>
+            <index name="idx_erp_shipment_outbox_due" columns="status,next_attempt_at"/>
+            <index name="idx_erp_shipment_outbox_tenant" columns="tenant_id,status"/>
+        </indexes>
+
+        <id name="shipmentId" column="shipment_id" type="guid"/>
+        <field name="tenantId" column="tenant_id" type="tenant_id"/>
+        <field name="orderReference" column="order_reference" length="40"/>
+        <field name="payload" type="json"/>
+        <field name="status" length="10"/>
+        <field name="attempts" type="integer"/>
+        <field name="nextAttemptAt" column="next_attempt_at" type="datetime_immutable"/>
+        <field name="lastError" column="last_error" type="text" nullable="true"/>
+        <field name="createdAt" column="created_at" type="datetime_immutable"/>
+        <field name="sentAt" column="sent_at" type="datetime_immutable" nullable="true"/>
+    </entity>
+</doctrine-mapping>
