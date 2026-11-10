@@ -144,6 +144,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Outbound/Infrastructure/Persistence/Sscc'
                 prefix: 'App\Outbound\Infrastructure\Persistence\Sscc'
                 alias: OutboundSscc
+            ErpPersistence:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Erp/Infrastructure/Persistence'
+                prefix: 'App\Erp\Infrastructure\Persistence'
+                alias: ErpPersistence
             CatalogGtinIndex:
                 type: xml
                 is_bundle: false

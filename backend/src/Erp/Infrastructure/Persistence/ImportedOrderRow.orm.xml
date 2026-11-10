@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping https://www.doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+    <entity name="App\Erp\Infrastructure\Persistence\ImportedOrderRow" table="erp_imported_orders">
+        <id name="tenantId" column="tenant_id" type="tenant_id"/>
+        <id name="reference" length="40"/>
+        <field name="importedAt" column="imported_at" type="datetime_immutable"/>
+    </entity>
+</doctrine-mapping>

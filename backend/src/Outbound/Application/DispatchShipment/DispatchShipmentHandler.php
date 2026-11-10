@@ -6,9 +6,12 @@ namespace App\Outbound\Application\DispatchShipment;
 
 use App\Inventory\Application\Contract\StockConsumption;
 use App\Inventory\Application\Contract\StockReservations;
+use App\Outbound\Application\Contract\ShipmentLeft;
+use App\Outbound\Application\Contract\ShippedUnits;
 use App\Outbound\Application\OrderLookup;
 use App\Outbound\Application\ShipmentLookup;
 use App\Outbound\Domain\CarrierName;
+use App\Outbound\Domain\Order;
 use App\Outbound\Domain\Shipment;
 use App\Outbound\Domain\TrackingNumber;
 use App\Shared\Application\Bus\CommandHandler;
@@ -52,8 +55,32 @@ final readonly class DispatchShipmentHandler implements CommandHandler
             $this->stock->consume(new StockConsumption($this->tenant->id(), $reservationId->value, 'shipment:'.$shipment->id()->value, $author, $at));
         }
 
-        $this->events->publish(...$shipment->pullEvents(), ...$order->pullEvents());
+        $this->events->publish(...[...$shipment->pullEvents(), ...$order->pullEvents(), $this->left($shipment, $order, $at)]);
 
         return $shipment;
+    }
+
+    /**
+     * What the other contexts hear about the dispatch: what left, by product, whatever the parcel it was in.
+     */
+    private function left(Shipment $shipment, Order $order, \DateTimeImmutable $at): ShipmentLeft
+    {
+        $units = [];
+        foreach ($shipment->parcels() as $parcel) {
+            foreach ($parcel->contents as $content) {
+                $units[$content->productId->value] = ($units[$content->productId->value] ?? 0) + $content->units;
+            }
+        }
+
+        return new ShipmentLeft(
+            $this->tenant->id(),
+            $shipment->id()->value,
+            $order->reference()->value,
+            $shipment->carrier() ?? '',
+            $shipment->trackingNumber(),
+            \count($shipment->parcels()),
+            array_map(static fn (string $productId, int $count): ShippedUnits => new ShippedUnits($productId, $count), array_keys($units), array_values($units)),
+            $at,
+        );
     }
 }

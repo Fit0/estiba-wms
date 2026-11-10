@@ -9,9 +9,11 @@ use App\Erp\Application\ErpOrderImporter;
 use App\Erp\Application\ErpOrderTranslator;
 use App\Erp\Application\ImportReport;
 use App\Erp\Infrastructure\File\CsvErpOrderFiles;
+use App\Erp\Infrastructure\Persistence\DbalImportedOrders;
 use App\Outbound\Application\Contract\OrderIntake;
 use App\Shared\Application\CurrentTenant;
 use App\Shared\Domain\TenantId;
+use App\Shared\Infrastructure\Clock\SystemClock;
 use App\Tests\Functional\Outbound\Api\OutboundApiTestCase;
 use App\Tests\Support\InMemoryErpOrderInbox;
 use App\Tests\Unit\Support\Ids;
@@ -48,6 +50,7 @@ final class ScheduledOrderImportTest extends OutboundApiTestCase
 
         self::assertSame(1, $report->registered);
         self::assertSame([self::FILE], $this->inbox->processed);
+        self::assertTrue(new DbalImportedOrders($this->entityManager()->getConnection())->has(TenantId::fromString($this->tenant), 'P2026000004'));
         $orders = $this->request('GET', '/api/orders');
         self::assertCount(1, $orders);
         self::assertIsArray($orders[0]);
@@ -110,6 +113,8 @@ final class ScheduledOrderImportTest extends OutboundApiTestCase
             new ErpOrderTranslator($container->get(ProductCatalog::class)),
             $container->get(OrderIntake::class),
             $container->get(WarehouseDirectory::class),
+            new DbalImportedOrders($this->entityManager()->getConnection()),
+            new SystemClock(),
             new NullLogger(),
         );
         $tenant = TenantId::fromString($this->tenant);

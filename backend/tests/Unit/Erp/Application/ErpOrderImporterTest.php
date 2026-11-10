@@ -17,10 +17,12 @@ use App\Erp\Domain\Exception\MalformedOrderFile;
 use App\Outbound\Application\Contract\IncomingOrder;
 use App\Outbound\Application\Contract\IntakeResult;
 use App\Outbound\Application\Contract\OrderIntake;
+use App\Shared\Application\Clock;
 use App\Shared\Domain\StorageClass;
 use App\Shared\Domain\TenantId;
 use App\Shared\Domain\TurnoverClass;
 use App\Tests\Support\InMemoryErpOrderInbox;
+use App\Tests\Support\InMemoryImportedOrders;
 use App\Tests\Unit\Support\AssertsDomainErrors;
 use App\Tests\Unit\Support\Ids;
 use App\Warehouse\Application\Contract\WarehouseDirectory;
@@ -40,6 +42,8 @@ final class ErpOrderImporterTest extends TestCase
 
     private InMemoryErpOrderInbox $inbox;
 
+    private InMemoryImportedOrders $imported;
+
     /** @var list<string> the references that are registered */
     private array $registered = [];
 
@@ -48,6 +52,7 @@ final class ErpOrderImporterTest extends TestCase
     {
         $this->tenant = TenantId::fromString(Ids::next());
         $this->inbox = new InMemoryErpOrderInbox();
+        $this->imported = new InMemoryImportedOrders();
         $this->registered = [];
     }
 
@@ -63,6 +68,17 @@ final class ErpOrderImporterTest extends TestCase
         self::assertSame(0, $report->rejectedFiles);
         self::assertSame(['a.csv', 'b.csv'], $this->inbox->processed);
         self::assertSame([], $this->inbox->waiting);
+    }
+
+    public function testRemembersTheOrdersItRegistersSoTheirShipmentsAreConfirmedToTheErp(): void
+    {
+        $this->inbox->waiting = ['a.csv' => 'order:P1,P2', 'b.csv' => 'order:P3:NOPE'];
+
+        $this->importer()->import($this->tenant, 'ZGZ1');
+
+        self::assertTrue($this->imported->has($this->tenant, 'P1'));
+        self::assertTrue($this->imported->has($this->tenant, 'P2'));
+        self::assertFalse($this->imported->has($this->tenant, 'P3'), 'An order that was rejected is not in the warehouse.');
     }
 
     public function testAnOrderThatIsAlreadyRegisteredIsCountedAndItsFileIsPutAsideAnyway(): void
@@ -214,6 +230,12 @@ final class ErpOrderImporterTest extends TestCase
             }
         };
 
-        return new ErpOrderImporter($this->inbox, $files, new ErpOrderTranslator($catalog), $intake, $warehouses, new NullLogger());
+        return new ErpOrderImporter($this->inbox, $files, new ErpOrderTranslator($catalog), $intake, $warehouses, $this->imported, new readonly class implements Clock {
+            #[\Override]
+            public function now(): \DateTimeImmutable
+            {
+                return new \DateTimeImmutable('2026-11-09 10:00:00');
+            }
+        }, new NullLogger());
     }
 }
