@@ -64,6 +64,12 @@ Doing it twice is safe, so a run that stopped between registering and moving the
 | Could not be reached, or is not ready | `pending`, with a longer wait: 1 min, 2, 4, up to an hour; the eighth failure ends it |
 | Refused it (an order it does not know, a quantity that does not match) | `failed` at once, with the reason |
 
-A `failed` row stays in the table and is not tried again. `docker compose exec php bin/console app:erp:send-confirmations` sends once, now. To see the state: `select order_reference, status, attempts, last_error from erp_shipment_outbox;`
+A `failed` row stays in the table and is not tried again by itself; a supervisor can put it back in the queue from the panel (below). `docker compose exec php bin/console app:erp:send-confirmations` sends once, now. To see the state: `select order_reference, status, attempts, last_error from erp_shipment_outbox;`
+
+## The integration panel
+
+[ADR 0050](../../../docs/adr/0050-an-integration-panel-and-a-contract-test-for-the-erp.md). The importer writes a row in `erp_import_log` for every file it moves (`processed` with the number of orders, or `rejected` with the reason). Supervisors read both lists, and retry failed confirmations, in the screen "Integración ERP" (`/erp`), which uses `GET /api/erp/confirmations?status=`, `GET /api/erp/imports?result=` and `POST /api/erp/confirmations/{shipmentId}/retry`. A retry puts the row back to `pending` and the next run of the job sends it.
+
+`tests/Unit/Erp/Infrastructure/Soap/WsdlContractTest.php` fails if `tests/Support/erp.wsdl` differs from `erp-legacy/inc/erp.wsdl` (apart from the service location), so the gateway is never tested against an old contract.
 
 This context needs the `soap` PHP extension.

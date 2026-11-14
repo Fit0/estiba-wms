@@ -524,6 +524,53 @@ describe('accessibility (axe)', () => {
   });
 });
 
+describe('the ERP integration panel', () => {
+  it('has no violations, with a failed confirmation and in English', async () => {
+    const user = userEvent.setup();
+    const confirmation = {
+      shipmentId: 's-2',
+      orderReference: 'PED-0002',
+      status: 'failed',
+      attempts: 5,
+      carrier: 'SEUR',
+      trackingNumber: null,
+      parcels: 1,
+      lines: [],
+      shippedAt: '2026-11-10T10:00:00+00:00',
+      nextAttemptAt: '2026-11-10T10:00:00+00:00',
+      lastError: 'The ERP is not available',
+      createdAt: '2026-11-10T10:00:00+00:00',
+      sentAt: null,
+    };
+    open(
+      '/erp',
+      apiOf(['supervisor'], {
+        ...withSession(['supervisor']),
+        'GET /api/erp/confirmations?page=1&itemsPerPage=10': () => paged([confirmation]),
+        'GET /api/erp/imports?page=1&itemsPerPage=10': () =>
+          paged([
+            {
+              id: 'i-1',
+              fileName: 'orders-1.csv',
+              result: 'rejected',
+              orders: 0,
+              errorCode: 'x',
+              message: 'Unknown SKU',
+              recordedAt: '2026-11-10T09:00:00+00:00',
+            },
+          ]),
+      }),
+    );
+    await screen.findByText('PED-0002');
+    await screen.findByText('orders-1.csv');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a inglés' }));
+    await screen.findByRole('heading', { name: 'ERP integration' });
+    await expectNoViolations();
+  });
+});
+
 describe('the audit itself', () => {
   it('fails on a page that is not accessible', async () => {
     render(<input type="text" />);

@@ -2,6 +2,7 @@ import {
   ClipboardList,
   LayoutDashboard,
   Boxes,
+  Cable,
   Package,
   ScanLine,
   PackageCheck,
@@ -47,7 +48,10 @@ export const navigation: readonly NavGroup[] = [
   },
   {
     label: 'nav.group.administration',
-    items: [{ to: '/audit', label: 'nav.audit', icon: ClipboardList, minimum: 'supervisor' }],
+    items: [
+      { to: '/audit', label: 'nav.audit', icon: ClipboardList, minimum: 'supervisor' },
+      { to: '/erp', label: 'nav.erp', icon: Cable, minimum: 'supervisor' },
+    ],
   },
 ];
 

@@ -9,6 +9,7 @@ use App\Erp\Domain\Exception\WarehouseNotConfigured;
 use App\Outbound\Application\Contract\IntakeResult;
 use App\Outbound\Application\Contract\OrderIntake;
 use App\Shared\Application\Clock;
+use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\DomainError;
 use App\Shared\Domain\TenantId;
 use App\Warehouse\Application\Contract\WarehouseDirectory;
@@ -21,7 +22,8 @@ use Psr\Log\LoggerInterface;
  *
  * A file that cannot become an order, because it is malformed or names an unknown article, goes to the
  * rejected files and the rest go on: one bad file must not hold back the others. A failure of the ERP's
- * side, or of our own, stops the run and leaves the files where they are for the next one.
+ * side, or of our own, stops the run and leaves the files where they are for the next one. Every file that is
+ * dealt with is written in the import log, with what became of it (ADR 0050).
  */
 final readonly class ErpOrderImporter
 {
@@ -33,6 +35,8 @@ final readonly class ErpOrderImporter
         private WarehouseDirectory $warehouses,
         private ImportedOrders $imported,
         private Clock $clock,
+        private ErpImportLog $log,
+        private IdGenerator $ids,
         private LoggerInterface $logger,
     ) {
     }
@@ -57,12 +61,14 @@ final readonly class ErpOrderImporter
                 throw $unavailable;
             } catch (DomainError $error) {
                 $this->logger->warning('An order file of the ERP was rejected.', ['file' => $name, 'code' => $error->errorCode(), 'parameters' => $error->errorParameters()]);
+                $this->log->record($tenantId, new ImportLogEntry($this->ids->next(), $name, ImportResult::Rejected, 0, $error->errorCode(), $error->getMessage(), $this->clock->now()));
                 $this->inbox->markRejected($name);
                 ++$rejected;
 
                 continue;
             }
 
+            $this->log->record($tenantId, new ImportLogEntry($this->ids->next(), $name, ImportResult::Processed, \count($results), null, null, $this->clock->now()));
             $this->inbox->markProcessed($name);
             foreach ($results as $result) {
                 IntakeResult::Registered === $result ? ++$registered : ++$already;

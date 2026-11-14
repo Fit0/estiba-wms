@@ -9,6 +9,8 @@ use App\Catalog\Application\Contract\ProductSnapshot;
 use App\Erp\Application\ErpOrderFiles;
 use App\Erp\Application\ErpOrderImporter;
 use App\Erp\Application\ErpOrderTranslator;
+use App\Erp\Application\ImportLogEntry;
+use App\Erp\Application\ImportResult;
 use App\Erp\Domain\ErpOrder;
 use App\Erp\Domain\ErpOrderLine;
 use App\Erp\Domain\ErpUrgency;
@@ -18,9 +20,11 @@ use App\Outbound\Application\Contract\IncomingOrder;
 use App\Outbound\Application\Contract\IntakeResult;
 use App\Outbound\Application\Contract\OrderIntake;
 use App\Shared\Application\Clock;
+use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\StorageClass;
 use App\Shared\Domain\TenantId;
 use App\Shared\Domain\TurnoverClass;
+use App\Tests\Support\InMemoryErpImportLog;
 use App\Tests\Support\InMemoryErpOrderInbox;
 use App\Tests\Support\InMemoryImportedOrders;
 use App\Tests\Unit\Support\AssertsDomainErrors;
@@ -44,6 +48,8 @@ final class ErpOrderImporterTest extends TestCase
 
     private InMemoryImportedOrders $imported;
 
+    private InMemoryErpImportLog $log;
+
     /** @var list<string> the references that are registered */
     private array $registered = [];
 
@@ -53,6 +59,7 @@ final class ErpOrderImporterTest extends TestCase
         $this->tenant = TenantId::fromString(Ids::next());
         $this->inbox = new InMemoryErpOrderInbox();
         $this->imported = new InMemoryImportedOrders();
+        $this->log = new InMemoryErpImportLog();
         $this->registered = [];
     }
 
@@ -68,6 +75,21 @@ final class ErpOrderImporterTest extends TestCase
         self::assertSame(0, $report->rejectedFiles);
         self::assertSame(['a.csv', 'b.csv'], $this->inbox->processed);
         self::assertSame([], $this->inbox->waiting);
+    }
+
+    public function testWritesEveryFileInTheLogWithWhatBecameOfIt(): void
+    {
+        $this->inbox->waiting = ['a.csv' => 'order:P1,P2', 'b.csv' => 'broken', 'c.csv' => 'order:P3:NOPE'];
+
+        $this->importer()->import($this->tenant, 'ZGZ1');
+
+        self::assertCount(3, $this->log->entries);
+        [$processed, $malformed, $unknown] = $this->log->entries;
+        self::assertSame(['a.csv', ImportResult::Processed, 2, null], [$processed->fileName, $processed->result, $processed->orders, $processed->errorCode]);
+        self::assertSame(['b.csv', ImportResult::Rejected, 0, 'erp.order_file_malformed'], [$malformed->fileName, $malformed->result, $malformed->orders, $malformed->errorCode]);
+        self::assertSame(['c.csv', ImportResult::Rejected, 'erp.article_unknown'], [$unknown->fileName, $unknown->result, $unknown->errorCode]);
+        self::assertNotNull($unknown->message);
+        self::assertSame(['log-1', 'log-2', 'log-3'], array_map(static fn (ImportLogEntry $entry): string => $entry->id, $this->log->entries));
     }
 
     public function testRemembersTheOrdersItRegistersSoTheirShipmentsAreConfirmedToTheErp(): void
@@ -235,6 +257,14 @@ final class ErpOrderImporterTest extends TestCase
             public function now(): \DateTimeImmutable
             {
                 return new \DateTimeImmutable('2026-11-09 10:00:00');
+            }
+        }, $this->log, new class implements IdGenerator {
+            private int $next = 0;
+
+            #[\Override]
+            public function next(): string
+            {
+                return 'log-'.++$this->next;
             }
         }, new NullLogger());
     }

@@ -6,6 +6,7 @@ import { PickingLayout } from './layouts/PickingLayout';
 import { AsnPage } from './pages/AsnPage';
 import { AsnsPage } from './pages/AsnsPage';
 import { AuditPage } from './pages/AuditPage';
+import { ErpPage } from './pages/ErpPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -72,7 +73,10 @@ export const routes: RouteObject[] = [
           { path: 'stock', element: <StockPage /> },
           {
             element: <RequireRole minimum="supervisor" />,
-            children: [{ path: 'audit', element: <AuditPage /> }],
+            children: [
+              { path: 'audit', element: <AuditPage /> },
+              { path: 'erp', element: <ErpPage /> },
+            ],
           },
           ...designRoutes,
           { path: '*', element: <NotFoundPage /> },
