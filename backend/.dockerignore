@@ -7,3 +7,16 @@
 /vendor/
 /var/
 /.phpunit.cache/
+
+# Secrets and development files never go into an image (ADR 0052). The production image takes
+# what it needs one directory at a time, and these are the safety net if a COPY is ever widened.
+/.env
+/.env.dev
+/.env.test
+/config/jwt/*.pem
+/config/secrets/
+/tests/
+/phpstan.dist.neon
+/phpunit.dist.xml
+/rector.php
+/.php-cs-fixer*

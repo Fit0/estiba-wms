@@ -33,6 +33,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | ERP integration | The `Erp` context: `ext-soap` for the SOAP client, a reader of the CSV files, and a translator into `OrderIntake` of Outbound ([ADR 0047](docs/adr/0047-an-anti-corruption-layer-for-the-erp.md)) | In use (E08-02) |
 | ERP import | `phpseclib/phpseclib` (pure PHP SFTP client, no extension) and `symfony/scheduler` (the 30-second schedule), on a `job.bus` without transaction ([ADR 0048](docs/adr/0048-a-scheduled-import-of-erp-orders.md)) | In use (E08-03). The confirmations of shipments go out through a database outbox ([ADR 0049](docs/adr/0049-a-database-outbox-for-erp-confirmations.md)), no new package (E08-04). A panel of the integration and a contract test of the WSDL ([ADR 0050](docs/adr/0050-an-integration-panel-and-a-contract-test-for-the-erp.md), E08-05) |
 | CI | GitHub Actions | In use |
+| Production images | Targets `frankenphp_prod` (FrankenPHP with the application and no development tools, the container compiled) and `frontend_prod` (the built app served by `caddy:2-alpine`) ([ADR 0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md)) | In use (E10-01) |
 
 Do not add a dependency that is not in this table without asking first. When one is approved, add it here.
 
@@ -159,6 +160,7 @@ Everything runs inside Docker. Use `make` from the repository root (`make` alone
 | `make front-qa` | The frontend checks only: lint, format, types, tests and build (the `Frontend` job of CI) |
 | `make front-npm c="..."` | npm in the frontend container, e.g. `make front-npm c="install foo"`; commit `package-lock.json` after |
 | `make front-sh` / `make front-format` | Shell in the frontend container / apply Prettier |
+| `make images` | Build the production images, `estiba-backend` and `estiba-frontend`, as the deployment does |
 | `make worker-logs` / `make worker-restart` | Follow / restart the worker that handles the asynchronous events |
 | `make failed` / `make retry-failed` | List / handle again the events that failed every retry |
 | `make erp-up` / `make erp-order n=3` / `make erp-check` | Start the simulated legacy ERP and its SFTP server / make the ERP take orders / try it end to end. `make down` stops them too |
