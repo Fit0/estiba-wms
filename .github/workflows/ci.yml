@@ -368,7 +368,7 @@ jobs:
       - name: The frontend image serves the app
         run: |
           docker run --detach --name frontend --publish 8080:80 --env API_UPSTREAM=http://127.0.0.1:9 estiba-frontend:ci
-          curl --silent --show-error --fail --retry 15 --retry-delay 1 --retry-connrefused --output /dev/null http://127.0.0.1:8080/
+          curl --silent --show-error --fail --retry 15 --retry-delay 1 --retry-connrefused --retry-all-errors --output /dev/null http://127.0.0.1:8080/
           # A route of the app is the app: the browser asks for /orders on a reload.
           curl --silent --show-error --fail http://127.0.0.1:8080/orders | grep -q 'id="root"'
           curl --silent --head http://127.0.0.1:8080/orders | grep -qi '^cache-control: no-cache'
