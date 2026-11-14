@@ -140,6 +140,10 @@ make demo                    # A fashion company with its warehouse and collecti
 
 The simulated legacy ERP that Estiba integrates with does not start with the rest. `make erp-up` brings up the old PHP 5.6 application and its SFTP server, `make erp-order n=3` makes it take three orders, and `make erp-check` tries it end to end. Its web page is at http://localhost:8081, and the contract with Estiba is in [erp-legacy/README.md](erp-legacy/README.md). `make erp-up` also starts the `scheduler`, which looks for the ERP's new orders every 30 seconds and registers them. It needs to know who receives them: put the id that `make demo` prints in `ERP_TENANT_ID` (in `.env` of the project root, which Compose reads) and run `make erp-up` again. `docker compose exec php bin/console app:erp:import-orders` imports once, now ([ADR 0048](docs/adr/0048-a-scheduled-import-of-erp-orders.md)).
 
+### Production images
+
+`make images` builds the two images a deployment runs, `estiba-backend` and `estiba-frontend` ([ADR 0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md)). The backend one is FrankenPHP with the application and its production dependencies, the Symfony container already compiled, and no Composer, Git or development tools. The frontend one is Caddy serving the built app and sending `/api` to the API, at the address in `API_UPSTREAM`. Neither holds a secret: the configuration comes from the environment when the container starts. The API, the worker and the scheduler run the same backend image with a different command.
+
 ## Quality checks
 
 | Command | What it does |
@@ -156,7 +160,7 @@ The simulated legacy ERP that Estiba integrates with does not start with the res
 
 ### Continuous integration
 
-[GitHub Actions](.github/workflows/ci.yml) runs on every pull request and every push to `main`, as six independent jobs:
+[GitHub Actions](.github/workflows/ci.yml) runs on every pull request and every push to `main`, as independent jobs:
 
 | Job | Checks |
 |---|---|
@@ -166,6 +170,7 @@ The simulated legacy ERP that Estiba integrates with does not start with the res
 | Tests | PHPUnit against real PostgreSQL 17 and Redis 7.4 services |
 | Frontend | `npm ci`, `npm audit` of what ships, ESLint, Prettier, TypeScript, Vitest and the build |
 | PR title | The title follows Conventional Commits, since it becomes the squash commit |
+| Images | The production images build, hold what they must and nothing of development, and the frontend one serves the app |
 
 A new push to the same branch cancels the run still in progress.
 
