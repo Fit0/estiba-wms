@@ -360,7 +360,7 @@ jobs:
 
       - name: Show the logs of the backend container when it fails
         if: failure()
-        run: docker logs backend
+        run: docker logs backend || true
 
       - name: Build the frontend image
         run: docker build --target frontend_prod --tag estiba-frontend:ci frontend
@@ -379,4 +379,4 @@ jobs:
 
       - name: Show the logs of the frontend container when it fails
         if: failure()
-        run: docker logs frontend
+        run: docker logs frontend || true
