@@ -32,6 +32,7 @@ export interface PaginationState {
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizes?: readonly number[];
+  label?: string;
 }
 
 const cellKind = {

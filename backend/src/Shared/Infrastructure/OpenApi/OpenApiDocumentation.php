@@ -87,6 +87,7 @@ final readonly class OpenApiDocumentation
             'audit-log' => 'Audit',
             'kpis' => 'Analytics',
             'notifications' => 'Notifications',
+            'erp' => 'Erp',
             default => 'Other',
         };
     }

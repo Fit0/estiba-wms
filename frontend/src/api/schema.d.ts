@@ -116,6 +116,72 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/erp/confirmations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the confirmations of shipments sent to the ERP
+         * @description The latest first. A confirmation is `pending` until the ERP takes it (and while it is retried, with `attempts` and `nextAttemptAt`), `sent` once it did, and `failed` when the ERP refused it or the retries ran out; `lastError` says why.
+         *
+         *     **Role:** supervisor or admin.
+         */
+        get: operations["api_erpconfirmations_get_collection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/erp/confirmations/{shipmentId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Put a failed confirmation back in the queue
+         * @description Only a `failed` confirmation can be retried: it goes back to `pending` with no attempts and the error cleared, and the next run of the job (within 30 seconds) sends it. It does not call the ERP itself. Any other confirmation answers 404 `erp.failed_confirmation_not_found`.
+         *
+         *     **Role:** supervisor or admin.
+         */
+        post: operations["api_erpconfirmations_shipmentIdretry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/erp/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the order files imported from the ERP
+         * @description The latest first. Each file the import dealt with is `processed` (with the number of orders it held) or `rejected` (with the code and the message of why).
+         *
+         *     **Role:** supervisor or admin.
+         */
+        get: operations["api_erpimports_get_collection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/kpis": {
         parameters: {
             query?: never;
@@ -1414,6 +1480,32 @@ export interface components {
             readonly title?: string | null;
             readonly instance?: string | null;
         };
+        ErpConfirmation: {
+            shipmentId: string;
+            orderReference: string;
+            /** @enum {string} */
+            status: "pending" | "sent" | "failed";
+            attempts: number;
+            carrier: string;
+            trackingNumber?: string | null;
+            parcels: number;
+            lines: unknown[];
+            shippedAt: string;
+            nextAttemptAt: string;
+            lastError?: string | null;
+            createdAt: string;
+            sentAt?: string | null;
+        };
+        ErpImport: {
+            id: string;
+            fileName: string;
+            /** @enum {string} */
+            result: "processed" | "rejected";
+            orders: number;
+            errorCode?: string | null;
+            message?: string | null;
+            recordedAt: string;
+        };
         /** @description A representation of common errors. */
         Error: {
             /** @description A short, human-readable summary of the problem. */
@@ -2283,6 +2375,119 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditEntry"][];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    api_erpconfirmations_get_collection: {
+        parameters: {
+            query?: {
+                /** @description The collection page number */
+                page?: number;
+                /** @description How many to show in a page: 30 by default, 100 at most. */
+                itemsPerPage?: number;
+                /**
+                 * @description Only the confirmations in this status.
+                 * @example pending
+                 */
+                status?: "pending" | "sent" | "failed";
+            };
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ErpConfirmation collection */
+            200: {
+                headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErpConfirmation"][];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    api_erpconfirmations_shipmentIdretry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path: {
+                /** @description ErpConfirmation identifier */
+                shipmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ErpConfirmation resource created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErpConfirmation"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    api_erpimports_get_collection: {
+        parameters: {
+            query?: {
+                /** @description The collection page number */
+                page?: number;
+                /** @description How many to show in a page: 30 by default, 100 at most. */
+                itemsPerPage?: number;
+                /**
+                 * @description Only the files with this result.
+                 * @example processed
+                 */
+                result?: "processed" | "rejected";
+            };
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description ErpImport collection */
+            200: {
+                headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErpImport"][];
                 };
             };
             400: components["responses"]["BadRequest"];

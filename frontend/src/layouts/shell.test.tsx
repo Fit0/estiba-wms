@@ -140,6 +140,7 @@ describe('the side navigation', () => {
       'nav.picking',
       'nav.stock',
       'nav.audit',
+      'nav.erp',
     ]);
   });
 });

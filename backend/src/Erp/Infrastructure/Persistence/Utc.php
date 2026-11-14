@@ -19,4 +19,16 @@ final class Utc
     {
         return $at->setTimezone(new \DateTimeZone('UTC'))->format(self::FORMAT);
     }
+
+    /**
+     * @throws \UnexpectedValueException when the database gave something that is not a date with time
+     */
+    public static function parse(mixed $text): \DateTimeImmutable
+    {
+        if (!\is_string($text)) {
+            throw new \UnexpectedValueException('The database gave a date that is not text.');
+        }
+
+        return new \DateTimeImmutable($text, new \DateTimeZone('UTC'));
+    }
 }

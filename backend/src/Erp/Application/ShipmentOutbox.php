@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Erp\Application;
 
+use App\Shared\Domain\Page;
+use App\Shared\Domain\PageRequest;
 use App\Shared\Domain\TenantId;
 
 /**
@@ -36,4 +38,19 @@ interface ShipmentOutbox
      * It will not be tried again, until a person decides to.
      */
     public function markFailed(string $shipmentId, int $attempts, string $reason): void;
+
+    /**
+     * The confirmations of the tenant, the latest first, optionally only the ones in a state.
+     *
+     * @return Page<OutboxEntry>
+     */
+    public function search(TenantId $tenantId, ?OutboxStatus $status, PageRequest $page): Page;
+
+    /**
+     * Puts a failed confirmation back to be sent, as if it had just been queued. Anything that is not failed, or that
+     * is not of the tenant, is left alone.
+     *
+     * @return OutboxEntry|null the confirmation as it is now, or nothing if there was no failed one to put back
+     */
+    public function retry(TenantId $tenantId, string $shipmentId, \DateTimeImmutable $at): ?OutboxEntry;
 }

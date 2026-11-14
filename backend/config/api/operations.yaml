@@ -27,6 +27,7 @@ tags:
   Audit: 'The trail of everything that happened, and who did it.'
   Analytics: 'The operating figures of the warehouse: orders, picking, stock and storage locations.'
   Notifications: 'What happens in the warehouse, as it happens: live notifications for supervisors.'
+  Erp: 'The integration with the legacy ERP: the confirmations of shipments that go out and the order files that come in.'
 
 operations:
   # ------------------------------------------------------------------ Identity
@@ -372,6 +373,27 @@ operations:
     role: supervisor
     conflicts: false
     paged: false
+
+  # ------------------------------------------------------------------ Erp
+  'GET /api/erp/confirmations':
+    summary: 'List the confirmations of shipments sent to the ERP'
+    description: 'The latest first. A confirmation is `pending` until the ERP takes it (and while it is retried, with `attempts` and `nextAttemptAt`), `sent` once it did, and `failed` when the ERP refused it or the retries ran out; `lastError` says why.'
+    role: supervisor
+    conflicts: false
+    query:
+      - { name: status, description: 'Only the confirmations in this status.', enum: [pending, sent, failed] }
+  'POST /api/erp/confirmations/{shipmentId}/retry':
+    summary: 'Put a failed confirmation back in the queue'
+    description: 'Only a `failed` confirmation can be retried: it goes back to `pending` with no attempts and the error cleared, and the next run of the job (within 30 seconds) sends it. It does not call the ERP itself. Any other confirmation answers 404 `erp.failed_confirmation_not_found`.'
+    role: supervisor
+    conflicts: false
+  'GET /api/erp/imports':
+    summary: 'List the order files imported from the ERP'
+    description: 'The latest first. Each file the import dealt with is `processed` (with the number of orders it held) or `rejected` (with the code and the message of why).'
+    role: supervisor
+    conflicts: false
+    query:
+      - { name: result, description: 'Only the files with this result.', enum: [processed, rejected] }
 
   # ------------------------------------------------------------------ Labels (not a JSON resource)
   'GET /api/shipments/{id}/parcels/{sscc}/label.{format}':

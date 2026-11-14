@@ -37,6 +37,7 @@ export function Pagination({
   onPageChange,
   onPageSizeChange,
   pageSizes = [10, 25, 50],
+  label,
 }: {
   page: number;
   pageSize: number;
@@ -44,6 +45,8 @@ export function Pagination({
   onPageChange: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
   pageSizes?: readonly number[];
+  /** The name of the controls when a page has more than one list; without it, the generic one. */
+  label?: string;
 }) {
   const { t, language } = useTranslation();
   const selectId = useId();
@@ -54,7 +57,7 @@ export function Pagination({
 
   return (
     <nav
-      aria-label={t('pagination.label')}
+      aria-label={label ?? t('pagination.label')}
       className="flex flex-wrap items-center justify-between gap-gutter px-3 py-2 text-body-md text-fg-secondary"
     >
       <p aria-live="polite" className="tnum">

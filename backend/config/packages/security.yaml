@@ -59,6 +59,8 @@ security:
         # The figures of the warehouse are for the people who run it.
         - { path: ^/api/kpis, roles: ROLE_SUPERVISOR }
         - { path: ^/api/notifications, roles: ROLE_SUPERVISOR }
+        # What the integration with the ERP did, and sending a failed confirmation again, is for supervisors (ADR 0050).
+        - { path: ^/api/erp, roles: ROLE_SUPERVISOR }
         - { path: ^/api, methods: [GET, HEAD, OPTIONS], roles: ROLE_OPERATOR }
         - { path: ^/api, roles: ROLE_SUPERVISOR }
 
