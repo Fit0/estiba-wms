@@ -319,7 +319,7 @@ jobs:
         run: |
           docker run --rm --entrypoint sh estiba-backend:ci -c '
             set -eu
-            for extension in apcu intl opcache pdo_pgsql redis soap zip; do
+            for extension in apcu intl "Zend OPcache" pdo_pgsql redis soap zip; do
               php -r "exit(extension_loaded(\"$extension\") ? 0 : 1);" || { echo "missing extension: $extension"; exit 1; }
             done
             test ! -d tests
