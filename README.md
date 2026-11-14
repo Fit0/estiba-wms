@@ -43,8 +43,9 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 - [0001](docs/adr/0001-modular-monolith-with-hexagonal-bounded-contexts.md) Modular monolith with hexagonal bounded contexts
 - [0002](docs/adr/0002-doctrine-xml-mapping-outside-the-domain.md) Doctrine XML mapping outside the domain
 - [0003](docs/adr/0003-cross-context-communication-through-published-contracts.md) Cross-context communication through published contracts
+- [0051](docs/adr/0051-the-erp-integration-as-a-whole.md) The ERP integration as a whole (the pieces are in [0046](docs/adr/0046-a-simulated-legacy-erp.md) to [0050](docs/adr/0050-an-integration-panel-and-a-contract-test-for-the-erp.md))
 
-See also the [system context diagram](docs/architecture/c4-context.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
+See also the [system context diagram](docs/architecture/c4-context.md), the [ERP integration diagrams](docs/architecture/erp-integration.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
 
 ## Tech stack
 

@@ -42,4 +42,5 @@ flowchart TB
 ## Notes
 
 - Authentication is part of Estiba WMS (JWT, roles `admin`, `supervisor` and `operator`), so there is no external identity provider at this level.
+- The integration with the ERP is drawn in detail in [ERP integration](erp-integration.md).
 - Every integration with an external system goes through an adapter in the `Infrastructure` layer of the context that needs it (see [ADR 0001](../adr/0001-modular-monolith-with-hexagonal-bounded-contexts.md)).
