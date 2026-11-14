@@ -5,7 +5,7 @@ PHP := $(DC) exec -T php
 FRONT := $(DC) exec -T frontend
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
+.PHONY: help env up down build images logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,10 @@ down: ## Stop the stack, the legacy ERP included
 
 build: ## Rebuild the Docker images
 	$(DC) build --pull
+
+images: ## Build the production images (estiba-backend and estiba-frontend), as the deployment builds them
+	docker build --target frankenphp_prod --tag estiba-backend:local backend
+	docker build --target frontend_prod --tag estiba-frontend:local frontend
 
 logs: ## Follow PHP logs
 	$(DC) logs -f php

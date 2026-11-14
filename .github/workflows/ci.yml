@@ -299,3 +299,84 @@ jobs:
           name: playwright-report
           path: frontend/playwright-report
           retention-days: 7
+
+  # The production images (ADR 0052). Built as the deployment builds them, then looked into: what a
+  # production image must not hold is as important as what it must.
+  images:
+    name: Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the backend image
+        run: docker build --target frankenphp_prod --tag estiba-backend:ci backend
+
+      - name: The backend image holds the application and nothing of development
+        run: |
+          docker run --rm --entrypoint sh estiba-backend:ci -c '
+            set -eu
+            for extension in apcu intl opcache pdo_pgsql redis soap zip; do
+              php -r "exit(extension_loaded(\"$extension\") ? 0 : 1);" || { echo "missing extension: $extension"; exit 1; }
+            done
+            test ! -d tests
+            test ! -d vendor/phpunit
+            test ! -e config/jwt/private.pem
+            test ! -s .env
+            test -d var/cache/prod
+          '
+
+      # The image starts with nothing but its environment. With no database and no Redis behind it, the
+      # health check must answer 503 and say which checks failed: a 500 would mean the application did
+      # not even start. The values are for this test and are not secrets.
+      - name: The backend image starts from its environment
+        run: |
+          docker run --detach --name backend --publish 8090:80 \
+            --env APP_SECRET=ci-only \
+            --env DATABASE_URL="postgresql://u:p@127.0.0.1:5432/d?serverVersion=17&charset=utf8" \
+            --env REDIS_URL=redis://127.0.0.1:6379 \
+            --env MESSENGER_TRANSPORT_DSN=redis://127.0.0.1:6379/messages \
+            --env MESSENGER_FAILED_TRANSPORT_DSN="doctrine://default?queue_name=failed&auto_setup=0" \
+            --env JWT_SECRET_KEY=/tmp/private.pem \
+            --env JWT_PUBLIC_KEY=/tmp/public.pem \
+            --env JWT_PASSPHRASE=ci-only \
+            --env DEFAULT_URI=http://localhost \
+            --env MERCURE_URL=http://localhost/.well-known/mercure \
+            --env MERCURE_PUBLISHER_JWT_KEY=ci-only-publisher-key-0123456789abcdef0123456789abcdef \
+            --env MERCURE_SUBSCRIBER_JWT_KEY=ci-only-subscriber-key-0123456789abcdef0123456789abcdef \
+            estiba-backend:ci
+          code=000
+          for attempt in $(seq 1 30); do
+            code=$(curl --silent --output /tmp/health.json --write-out '%{http_code}' http://127.0.0.1:8090/health || true)
+            [ "$code" != "000" ] && break
+            sleep 1
+          done
+          cat /tmp/health.json
+          test "$code" = "503"
+          grep -q '"status":"degraded"' /tmp/health.json
+
+      - name: Show the logs of the backend container when it fails
+        if: failure()
+        run: docker logs backend
+
+      - name: Build the frontend image
+        run: docker build --target frontend_prod --tag estiba-frontend:ci frontend
+
+      - name: The frontend image serves the app
+        run: |
+          docker run --detach --name frontend --publish 8080:80 --env API_UPSTREAM=http://127.0.0.1:9 estiba-frontend:ci
+          curl --silent --show-error --fail --retry 15 --retry-delay 1 --retry-connrefused --output /dev/null http://127.0.0.1:8080/
+          # A route of the app is the app: the browser asks for /orders on a reload.
+          curl --silent --show-error --fail http://127.0.0.1:8080/orders | grep -q 'id="root"'
+          curl --silent --head http://127.0.0.1:8080/orders | grep -qi '^cache-control: no-cache'
+          # The files of a build have a hash in their name and are kept for a year.
+          asset=$(curl --silent http://127.0.0.1:8080/ | grep -o '/assets/[^"]*\.js' | head -n 1)
+          test -n "$asset"
+          curl --silent --head "http://127.0.0.1:8080$asset" | grep -qi '^cache-control:.*immutable'
+
+      - name: Show the logs of the frontend container when it fails
+        if: failure()
+        run: docker logs frontend
