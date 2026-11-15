@@ -13,10 +13,13 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		php bin/console lexik:jwt:generate-keypair --skip-if-exists --no-interaction || true
 	fi
 
-	# Let both the web server and the host user write to var/.
+	# Let both the web server and the host user write to var/. Changing the permissions is for root: the
+	# production image runs as an unprivileged user that already owns var/ (ADR 0053).
 	mkdir -p var/cache var/log
-	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
-	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
+	if [ "$(id -u)" = '0' ]; then
+		setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
+		setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
+	fi
 fi
 
 exec docker-php-entrypoint "$@"

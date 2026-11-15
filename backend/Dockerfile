@@ -1,5 +1,9 @@
 #syntax=docker/dockerfile:1
 
+# The user the production image runs as (ADR 0053). Not root, and with a fixed number so a platform can
+# say so in its own settings.
+ARG APP_UID=10001
+
 # FrankenPHP: PHP 8.4 embedded in the Caddy web server.
 FROM dunglas/frankenphp:1-php8.4 AS frankenphp_upstream
 
@@ -58,6 +62,8 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 # reaches the final image.
 FROM frankenphp_base AS frankenphp_build
 
+ARG APP_UID
+
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
 
@@ -82,21 +88,38 @@ RUN set -eux; \
     cp .env.example .env; \
     APP_SECRET=build-only php bin/console cache:warmup --env=prod --no-debug; \
     : > .env; \
-    mkdir -p var/log
+    mkdir -p var/log; \
+    chown -R "$APP_UID:$APP_UID" var
 
 # Production image: the runtime and the application, ready to run. Configuration and secrets come from
 # the environment. The migrations are in the image and are run by the deployment, not by the start.
 FROM frankenphp_runtime AS frankenphp_prod
 
+ARG APP_UID
+
 ENV APP_ENV=prod
 ENV APP_DEBUG=0
 # TLS is ended in front of the container, by the platform or a proxy. Caddy listens on plain HTTP and
-# does not try to get a certificate for "localhost".
-ENV SERVER_NAME=:80
+# does not try to get a certificate for "localhost". The port is above 1024, so the process needs no
+# privilege to take it (ADR 0053).
+ENV SERVER_NAME=:8080
+# Caddy keeps its state in a directory of its own, which the user of the image owns. The ones the base
+# image uses are volumes, and what is changed in a volume at build time is lost.
+ENV XDG_CONFIG_HOME=/var/caddy/config
+ENV XDG_DATA_HOME=/var/caddy/data
+
+RUN set -eux; \
+    useradd --uid "$APP_UID" --user-group --no-create-home --shell /usr/sbin/nologin app; \
+    mkdir -p "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"; \
+    chown -R app:app /var/caddy
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
+# The code stays owned by root, so the process cannot change it: it owns var/ only, which the build
+# stage prepared.
 COPY --link --from=frankenphp_build /app /app
 
-EXPOSE 80
+USER app
+
+EXPOSE 8080
