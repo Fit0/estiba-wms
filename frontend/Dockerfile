@@ -2,7 +2,7 @@
 # is the production image (ADR 0052): the app built once and served as static files by Caddy.
 
 # The development image.
-FROM node:24-alpine AS frontend_dev
+FROM node:26-alpine AS frontend_dev
 
 WORKDIR /app
 
@@ -16,7 +16,7 @@ EXPOSE 5173
 
 # Build stage of the production image: installs exactly what package-lock.json says and builds the app.
 # The app calls the API through relative paths, so nothing about the environment is baked in.
-FROM node:24-alpine AS frontend_build
+FROM node:26-alpine AS frontend_build
 
 WORKDIR /app
 
