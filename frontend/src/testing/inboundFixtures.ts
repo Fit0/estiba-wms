@@ -95,3 +95,23 @@ export const movement = (id: string, overrides: Record<string, unknown> = {}) =>
   occurredAt: '2026-10-28T09:00:00+00:00',
   ...overrides,
 });
+
+export const putawayTask = (overrides: Record<string, unknown> = {}) => ({
+  id: 't-1',
+  receiptId: 'r-1',
+  reference: 'ASN-2026-0042',
+  productId: 'p-1',
+  units: 100,
+  lot: null,
+  expiryDate: null,
+  quarantine: false,
+  sourceLocationId: 'l-D-01',
+  suggestedLocationId: 'l-A-01-01',
+  status: 'pending',
+  confirmedLocationId: null,
+  overrideReason: null,
+  createdAt: '2026-10-28T08:30:00+00:00',
+  confirmedAt: null,
+  stockMoved: false,
+  ...overrides,
+});

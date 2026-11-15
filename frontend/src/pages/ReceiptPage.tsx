@@ -205,6 +205,15 @@ export function ReceiptPage() {
             )}
           </Facts>
 
+          {!isOpen && data.stockBooked && (
+            <Link
+              to={`/putaway?receipt=${id}&status=all`}
+              className="inline-flex min-h-control items-center text-body-md text-accent hover:underline"
+            >
+              {t('receipt.putaway')}
+            </Link>
+          )}
+
           {isOpen && (
             <section aria-labelledby="count-title" className="grid gap-gutter">
               <h2 id="count-title" className="text-headline-md">

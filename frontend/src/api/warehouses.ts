@@ -164,3 +164,37 @@ export function useDockLocations(warehouseId: string | undefined) {
     },
   });
 }
+
+/**
+ * Every active location of a warehouse, a page of 100 at a time. It is what turns the ids a screen
+ * receives into codes a person reads, and what a destination is chosen from.
+ */
+export function useActiveLocations(warehouseId: string | undefined) {
+  const api = useApi();
+  const id = warehouseId ?? '';
+
+  return useQuery({
+    queryKey: [...warehouseKeys.locations(id), 'active'] as const,
+    enabled: warehouseId !== undefined,
+    queryFn: async ({ signal }): Promise<Location[]> => {
+      const locations: Location[] = [];
+      for (let page = 1; page <= 50; page += 1) {
+        const result = unwrapPage(
+          await api.GET('/api/warehouses/{warehouseId}/locations', {
+            params: {
+              path: { warehouseId: id },
+              query: { page, itemsPerPage: 100, status: 'active' },
+            },
+            signal,
+          }),
+        );
+        locations.push(...result.items);
+        if (page * 100 >= result.total) {
+          break;
+        }
+      }
+
+      return locations;
+    },
+  });
+}
