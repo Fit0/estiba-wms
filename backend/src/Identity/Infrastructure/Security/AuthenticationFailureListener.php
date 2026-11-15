@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Core\Exception\TooManyLoginAttemptsAuthenticationException;
 
 /**
  * Answers every authentication failure with the same translated problem shape as the rest of the
@@ -20,6 +21,10 @@ use Symfony\Component\HttpFoundation\Response;
  *
  * Signing in with a wrong password, an unknown email or a disabled account all answer the same
  * way, so the answer does not tell whether the account exists.
+ *
+ * A sign-in that the limiter refuses (ADR 0053) is a 429 and not a 401, and says how long to wait in
+ * `Retry-After`. The limit counts tries by email and by address, whether or not the account exists, so
+ * the answer does not tell that either.
  */
 final readonly class AuthenticationFailureListener
 {
@@ -32,6 +37,13 @@ final readonly class AuthenticationFailureListener
     #[AsEventListener(event: Events::AUTHENTICATION_FAILURE)]
     public function onCredentialsInvalid(AuthenticationFailureEvent $event): void
     {
+        $exception = $event->getException();
+        if ($exception instanceof TooManyLoginAttemptsAuthenticationException) {
+            $event->setResponse($this->throttled($event, $exception));
+
+            return;
+        }
+
         $event->setResponse($this->unauthorized($event, HttpProblem::CredentialsInvalid));
     }
 
@@ -51,6 +63,20 @@ final readonly class AuthenticationFailureListener
     public function onTokenExpired(AuthenticationFailureEvent $event): void
     {
         $event->setResponse($this->unauthorized($event, HttpProblem::TokenExpired, bearer: true));
+    }
+
+    private function throttled(AuthenticationFailureEvent $event, TooManyLoginAttemptsAuthenticationException $exception): JsonResponse
+    {
+        $request = $event->getRequest() ?? $this->requests->getCurrentRequest() ?? new Request();
+
+        // The exception says how long to wait in whole minutes, rounded up.
+        $minutes = $exception->getMessageData()['%minutes%'] ?? null;
+        $seconds = \is_int($minutes) && $minutes > 0 ? $minutes * 60 : 60;
+
+        $response = $this->problems->create($request, Response::HTTP_TOO_MANY_REQUESTS, HttpProblem::TooManyLoginAttempts->value, [], $exception->getMessage());
+        $response->headers->set('Retry-After', (string) $seconds);
+
+        return $response;
     }
 
     private function unauthorized(AuthenticationFailureEvent $event, HttpProblem $problem, bool $bearer = false): JsonResponse

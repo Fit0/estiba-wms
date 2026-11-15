@@ -94,6 +94,54 @@ final class AuthApiTest extends ApiTestCase
         self::assertSame('The email or the password is not correct.', $this->text($problem, 'detail'));
     }
 
+    // The sixth try is refused even with the right password: the limit counts tries, not what they say (ADR 0053).
+    public function testTooManyFailedSignInsAreRefusedForAWhile(): void
+    {
+        for ($attempt = 1; $attempt <= 5; ++$attempt) {
+            $this->assertProblem(401, 'identity.credentials_invalid', $this->signIn('admin@acme.test', 'not-the-password-at-all'));
+        }
+
+        $problem = $this->signIn('admin@acme.test', self::PASSWORD);
+
+        $this->assertProblem(429, 'identity.too_many_login_attempts', $problem);
+        $retryAfter = $this->client->getResponse()->headers->get('Retry-After');
+        self::assertIsString($retryAfter);
+        self::assertGreaterThan(0, (int) $retryAfter);
+        self::assertLessThanOrEqual(960, (int) $retryAfter, 'The window is fifteen minutes, and the wait is rounded up to the next whole minute.');
+    }
+
+    public function testTheLimitOfTheSignInIsPerEmail(): void
+    {
+        for ($attempt = 1; $attempt <= 6; ++$attempt) {
+            $this->signIn('admin@acme.test', 'not-the-password-at-all');
+        }
+        $this->assertStatus(429);
+
+        $this->signIn('sup@acme.test', self::PASSWORD);
+
+        $this->assertStatus(200);
+    }
+
+    public function testAnAccountThatDoesNotExistIsLimitedToo(): void
+    {
+        for ($attempt = 1; $attempt <= 6; ++$attempt) {
+            $this->signIn('nobody@acme.test', self::PASSWORD);
+        }
+
+        $this->assertStatus(429);
+    }
+
+    public function testExplainsARefusedSignInInTheRequestedLanguage(): void
+    {
+        $this->acceptLanguage = 'en';
+        $problem = [];
+        for ($attempt = 1; $attempt <= 6; ++$attempt) {
+            $problem = $this->signIn('admin@acme.test', 'not-the-password-at-all');
+        }
+
+        self::assertSame('Too many sign-in attempts. Wait a few minutes and try again.', $this->text($problem, 'detail'));
+    }
+
     public function testRejectsASignInWithoutAPassword(): void
     {
         $problem = $this->request('POST', '/api/auth/login', ['email' => 'admin@acme.test'], '');

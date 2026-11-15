@@ -72,7 +72,8 @@ Status is **Done**, **Partial** (there is a control and it has a known gap) or *
 | Tenants are separated by design and not by convention | ADR 0008, A01 | Done |
 | Every architecture decision has an ADR, and the rules of the layers are enforced by PHPat | `docs/adr/`, `ArchitectureTest` | Done |
 | There is no written threat model | | Open |
-| Nothing limits how often a client may call the API | | Open |
+| The sign-in is limited: five tries for each email from each address and twenty-five from an address, in fifteen minutes | `login_throttling` in `security.yaml`, `AuthApiTest`, ADR 0054 | Done |
+| The rest of the API is not limited per client | | Open |
 
 ## A07. Authentication Failures
 
@@ -83,7 +84,8 @@ Status is **Done**, **Partial** (there is a control and it has a known gap) or *
 | The refresh token rotates at each use, and a token just spent still counts for a few seconds as a second request of the same client | ADR 0022 | Done |
 | The refresh token is a cookie `HttpOnly`, `SameSite=Strict`, sent only to the sign-in routes. The access token lives in memory and never in `localStorage` | `RefreshCookie`, `AuthClient` | Done |
 | The cookie is `Secure` when the request is HTTPS, which behind a TLS proxy needs `SYMFONY_TRUSTED_PROXIES` | `RefreshCookie`, `framework.yaml` | Partial |
-| **A password can be tried as often as the server allows.** Sign-in is not limited | | Open |
+| A password cannot be tried as often as the server allows: after five wrong tries the sign-in answers 429, whatever the password, and an email that does not exist counts like one that does | `login_throttling`, `AuthenticationFailureListener`, `AuthApiTest` | Done |
+| The limit does not slow an attack from many addresses, and the count of an email takes spaces around it as another email | ADR 0054 | Partial |
 | No second factor | | Open |
 
 ## A08. Software or Data Integrity Failures
@@ -121,8 +123,7 @@ Status is **Done**, **Partial** (there is a control and it has a known gap) or *
 
 ## What is open, in order
 
-1. **Limit sign-in attempts** (A07, A06). It needs `symfony/rate-limiter`, which is waiting for approval.
-2. **Check the SFTP server key** of the ERP import (A08), and replace the default ERP password in any real environment (A02).
-3. **Pin the Actions to a commit**, scan the images, and sign them (A03, A08).
-4. **Record failed sign-ins and refusals**, and structure the logs (A09, with E10-04).
-5. Write a short threat model (A06).
+1. **Check the SFTP server key** of the ERP import (A08), and replace the default ERP password in any real environment (A02).
+2. **Pin the Actions to a commit**, scan the images, and sign them (A03, A08).
+3. **Record failed sign-ins and refusals**, and structure the logs (A09, with E10-04).
+4. Write a short threat model, and decide whether the rest of the API needs a limit per client (A06).
