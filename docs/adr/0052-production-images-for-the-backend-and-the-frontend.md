@@ -1,6 +1,6 @@
 # 0052. Production images for the backend and the frontend
 
-- Status: Accepted
+- Status: Accepted. The user and the port of the containers were changed by [ADR 0053](0053-security-headers-non-root-images-and-dependency-updates.md): they run as `app` and listen on 8080.
 - Date: 2026-11-14
 
 ## Context

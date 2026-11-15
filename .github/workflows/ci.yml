@@ -327,6 +327,10 @@ jobs:
             test ! -e config/jwt/private.pem
             test ! -s .env
             test -d var/cache/prod
+            # Not root, and unable to change its own code: it writes in var/ and nowhere else (ADR 0053).
+            test "$(id -u)" != 0
+            touch var/log/write-test && rm var/log/write-test
+            test ! -w src
           '
 
       # The image starts with nothing but its environment. With no database and no Redis behind it, the
@@ -334,7 +338,7 @@ jobs:
       # not even start. The values are for this test and are not secrets.
       - name: The backend image starts from its environment
         run: |
-          docker run --detach --name backend --publish 8090:80 \
+          docker run --detach --name backend --publish 8090:8080 \
             --env APP_SECRET=ci-only \
             --env DATABASE_URL="postgresql://u:p@127.0.0.1:5432/d?serverVersion=17&charset=utf8" \
             --env REDIS_URL=redis://127.0.0.1:6379 \
@@ -357,6 +361,9 @@ jobs:
           cat /tmp/health.json
           test "$code" = "503"
           grep -q '"status":"degraded"' /tmp/health.json
+          # The answer carries the security headers of ADR 0053, and the process is not root.
+          curl --silent --include http://127.0.0.1:8090/health | grep -qi '^x-content-type-options: nosniff'
+          test "$(docker exec backend id -u)" != 0
 
       - name: Show the logs of the backend container when it fails
         if: failure()
@@ -367,11 +374,19 @@ jobs:
 
       - name: The frontend image serves the app
         run: |
-          docker run --detach --name frontend --publish 8080:80 --env API_UPSTREAM=http://127.0.0.1:9 estiba-frontend:ci
+          docker run --detach --name frontend --publish 8080:8080 --env API_UPSTREAM=http://127.0.0.1:9 estiba-frontend:ci
           curl --silent --show-error --fail --retry 15 --retry-delay 1 --retry-connrefused --retry-all-errors --output /dev/null http://127.0.0.1:8080/
           # A route of the app is the app: the browser asks for /orders on a reload.
           curl --silent --show-error --fail http://127.0.0.1:8080/orders | grep -q 'id="root"'
           curl --silent --head http://127.0.0.1:8080/orders | grep -qi '^cache-control: no-cache'
+          # The security headers of ADR 0053, and a content policy that lets the app load only from itself.
+          headers=$(curl --silent --head http://127.0.0.1:8080/orders)
+          printf '%s' "$headers" | grep -qi '^x-content-type-options: nosniff'
+          printf '%s' "$headers" | grep -qi '^content-security-policy:.*default-src .self.'
+          printf '%s' "$headers" | grep -qi '^content-security-policy:.*frame-ancestors .none.'
+          printf '%s' "$headers" | grep -qi '^x-frame-options: deny'
+          # Not root.
+          test "$(docker exec frontend id -u)" != 0
           # The files of a build have a hash in their name and are kept for a year.
           asset=$(curl --silent http://127.0.0.1:8080/ | grep -o '/assets/[^"]*\.js' | head -n 1)
           test -n "$asset"

@@ -5,6 +5,12 @@ framework:
     # Note that the session will be started ONLY if you read or write from it.
     session: true
 
+    # The proxy that ends TLS in front of the application, by address or range, comma separated. Without it
+    # the application sees plain HTTP: the refresh cookie would not be marked Secure and the HSTS header would
+    # not be sent (ADR 0053). Empty by default, which trusts nobody: a header of the proxy from anyone else
+    # is not believed.
+    trusted_proxies: '%env(default::SYMFONY_TRUSTED_PROXIES)%'
+
     #esi: true
     #fragments: true
 

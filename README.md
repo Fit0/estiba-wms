@@ -44,6 +44,8 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 - [0002](docs/adr/0002-doctrine-xml-mapping-outside-the-domain.md) Doctrine XML mapping outside the domain
 - [0003](docs/adr/0003-cross-context-communication-through-published-contracts.md) Cross-context communication through published contracts
 - [0051](docs/adr/0051-the-erp-integration-as-a-whole.md) The ERP integration as a whole (the pieces are in [0046](docs/adr/0046-a-simulated-legacy-erp.md) to [0050](docs/adr/0050-an-integration-panel-and-a-contract-test-for-the-erp.md))
+- [0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md) Production images for the backend and the frontend
+- [0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md) Security headers, images that do not run as root, and dependency updates
 
 See also the [system context diagram](docs/architecture/c4-context.md), the [ERP integration diagrams](docs/architecture/erp-integration.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
 
@@ -142,7 +144,11 @@ The simulated legacy ERP that Estiba integrates with does not start with the res
 
 ### Production images
 
-`make images` builds the two images a deployment runs, `estiba-backend` and `estiba-frontend` ([ADR 0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md)). The backend one is FrankenPHP with the application and its production dependencies, the Symfony container already compiled, and no Composer, Git or development tools. The frontend one is Caddy serving the built app and sending `/api` to the API, at the address in `API_UPSTREAM`. Neither holds a secret: the configuration comes from the environment when the container starts. The API, the worker and the scheduler run the same backend image with a different command.
+`make images` builds the two images a deployment runs, `estiba-backend` and `estiba-frontend` ([ADR 0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md)). The backend one is FrankenPHP with the application and its production dependencies, the Symfony container already compiled, and no Composer, Git or development tools. The frontend one is Caddy serving the built app and sending `/api` to the API, at the address in `API_UPSTREAM`. Neither holds a secret: the configuration comes from the environment when the container starts. The API, the worker and the scheduler run the same backend image with a different command. Both run as a user without privileges and listen on port 8080 ([ADR 0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md)).
+
+### Security
+
+Every answer of the API carries security headers, the frontend server adds its own and a content policy to the files it serves, the images do not run as root, and Dependabot opens a weekly pull request for each ecosystem ([ADR 0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md)). What the project does about each risk of the OWASP Top 10:2025, and what is still open, is in the [security checklist](docs/security/owasp-checklist.md).
 
 ## Quality checks
 
@@ -170,7 +176,7 @@ The simulated legacy ERP that Estiba integrates with does not start with the res
 | Tests | PHPUnit against real PostgreSQL 17 and Redis 7.4 services |
 | Frontend | `npm ci`, `npm audit` of what ships, ESLint, Prettier, TypeScript, Vitest and the build |
 | PR title | The title follows Conventional Commits, since it becomes the squash commit |
-| Images | The production images build, hold what they must and nothing of development, and the frontend one serves the app |
+| Images | The production images build, hold what they must and nothing of development, run as a user without privileges, and the frontend one serves the app with its security headers |
 
 A new push to the same branch cancels the run still in progress.
 

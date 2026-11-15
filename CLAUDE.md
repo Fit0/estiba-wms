@@ -33,7 +33,8 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | ERP integration | The `Erp` context: `ext-soap` for the SOAP client, a reader of the CSV files, and a translator into `OrderIntake` of Outbound ([ADR 0047](docs/adr/0047-an-anti-corruption-layer-for-the-erp.md)) | In use (E08-02) |
 | ERP import | `phpseclib/phpseclib` (pure PHP SFTP client, no extension) and `symfony/scheduler` (the 30-second schedule), on a `job.bus` without transaction ([ADR 0048](docs/adr/0048-a-scheduled-import-of-erp-orders.md)) | In use (E08-03). The confirmations of shipments go out through a database outbox ([ADR 0049](docs/adr/0049-a-database-outbox-for-erp-confirmations.md)), no new package (E08-04). A panel of the integration and a contract test of the WSDL ([ADR 0050](docs/adr/0050-an-integration-panel-and-a-contract-test-for-the-erp.md), E08-05) |
 | CI | GitHub Actions | In use |
-| Production images | Targets `frankenphp_prod` (FrankenPHP with the application and no development tools, the container compiled) and `frontend_prod` (the built app served by `caddy:2-alpine`) ([ADR 0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md)) | In use (E10-01) |
+| Dependency updates | Dependabot, weekly, for Composer, npm, Docker and the Actions (`.github/dependabot.yml`, [ADR 0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md)) | In use (E10-05) |
+| Production images | Targets `frankenphp_prod` (FrankenPHP with the application and no development tools, the container compiled) and `frontend_prod` (the built app served by `caddy:2-alpine`) ([ADR 0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md)) | In use (E10-01). They run as the user `app` and listen on 8080 ([ADR 0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md)) |
 
 Do not add a dependency that is not in this table without asking first. When one is approved, add it here.
 
@@ -221,6 +222,9 @@ Review every generated migration before keeping it. Committed migrations are nev
 - A password never leaves `PlainPassword`: do not log it, print it, put it in an error, or take it as a console argument. Never trust the roles or the tenant in a token: the user is loaded from the database on every request.
 - Never return a 401 or a 403 by hand. They go through `ProblemFactory`, so they are translated and keep the common shape.
 - The API tests send real tokens: `ApiTestCase::request()` acts as an admin of `$this->tenant`, `$this->role` changes the role, and an empty tenant sends no token.
+- The security headers of the API come from `SecurityHeadersListener`, never from a controller, and those of the frontend from the `security_headers` snippet of `frontend/Caddyfile`. A change that makes the frontend load something from another origin (a script, a font, an image, a connection) widens the content policy there in the same change, and says why in an ADR ([ADR 0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md)).
+- A production image runs as a user without privileges and listens on a port above 1024. Do not add `USER root`, `setcap` or a port below 1024 to make something work: change where it writes instead.
+- [docs/security/owasp-checklist.md](docs/security/owasp-checklist.md) says what the project does about each risk of the OWASP Top 10:2025 and what is open. A change that adds a control or closes a gap updates it in the same pull request.
 
 ### Accessibility (frontend, from E05)
 

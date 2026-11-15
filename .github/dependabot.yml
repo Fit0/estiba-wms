@@ -1,0 +1,85 @@
+# Dependabot (E10-05, ADR 0053): a weekly pull request for each ecosystem the project uses, so an update
+# of a dependency with a known flaw does not wait for somebody to remember.
+#
+# The titles follow Conventional Commits (`build(deps): ...`, `ci(deps): ...`), since the title of the
+# pull request becomes the commit of the squash merge and the PR title check reads it.
+#
+# erp-legacy/ is left out on purpose: it is PHP 5.6 because the simulated ERP is meant to be old (ADR 0046),
+# and an update of it would be wrong.
+version: 2
+
+updates:
+  # PHP: the backend. The Symfony packages are pinned to 7.4.* in composer.json, so they only get patches.
+  - package-ecosystem: composer
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: build
+      prefix-development: build
+      include: scope
+    groups:
+      symfony:
+        patterns: ["symfony/*"]
+      doctrine:
+        patterns: ["doctrine/*"]
+      dev-tools:
+        dependency-type: development
+
+  # JavaScript: the frontend.
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    commit-message:
+      prefix: build
+      prefix-development: build
+      include: scope
+    groups:
+      react:
+        patterns: ["react", "react-dom", "react-router*", "@types/react*"]
+      ui-primitives:
+        patterns: ["radix-ui", "cmdk", "sonner"]
+      tooling:
+        dependency-type: development
+
+  # The base images of the Dockerfiles: FrankenPHP and PHP, Node and Caddy.
+  - package-ecosystem: docker
+    directories: [/backend, /frontend]
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message:
+      prefix: build
+      include: scope
+
+  # The actions the workflows use.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Madrid
+    open-pull-requests-limit: 3
+    labels: [dependencies]
+    commit-message:
+      prefix: ci
+      include: scope
+    groups:
+      actions:
+        patterns: ["*"]

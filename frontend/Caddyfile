@@ -3,13 +3,35 @@
 # (ADR 0021).
 #
 # API_UPSTREAM is where the API is, as an address with its scheme: http://php:80 or https://api.example.com.
-# PORT is where this server listens. TLS is ended in front of the container, by the platform or a proxy.
+# PORT is where this server listens, 8080 unless told otherwise: the image does not run as root, so it
+# cannot take a port below 1024. TLS is ended in front of the container, by the platform or a proxy.
 {
 	admin off
 	auto_https off
 }
 
-:{$PORT:80} {
+# The headers of every file this server sends itself (ADR 0053). What the API answers carries its own, so
+# they are not added to the proxied paths, or the browser would see each one twice.
+#
+# The content policy lets the app load from its own address and nothing else. Styles may be inline
+# because Radix and Sonner put a <style> element in the page when they start; scripts may not. The
+# camera is for the scanner of the picking screen. Strict-Transport-Security is sent only when the proxy
+# in front says the request came over HTTPS, since this server never sees TLS itself.
+(security_headers) {
+	@https header X-Forwarded-Proto https
+	header {
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; media-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=()"
+		Cross-Origin-Opener-Policy same-origin
+		Cross-Origin-Resource-Policy same-origin
+	}
+	header @https Strict-Transport-Security "max-age=31536000; includeSubDomains"
+}
+
+:{$PORT:8080} {
 	encode zstd gzip
 
 	@api path /api/* /health
@@ -30,6 +52,7 @@
 	# The files of a build carry a hash in their name, so they never change under the same name.
 	handle /assets/* {
 		root * /srv
+		import security_headers
 		header Cache-Control "public, max-age=31536000, immutable"
 		file_server
 	}
@@ -38,6 +61,7 @@
 	# browser which version to use. A route of the app, such as /orders, is index.html.
 	handle {
 		root * /srv
+		import security_headers
 		header Cache-Control "no-cache"
 		try_files {path} /index.html
 		file_server
