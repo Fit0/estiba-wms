@@ -156,7 +156,7 @@ Every answer of the API carries security headers, the frontend server adds its o
 
 ### Performance
 
-`make perf-seed` loads 20 000 products, 500 000 stock movements and 20 000 orders into a development database, `make perf-explain` prints the plan of the queries behind the lists, and `make perf-load` runs a k6 load test with a budget per endpoint. The method is in [ADR 0055](docs/adr/0055-measuring-performance-with-volume-data-and-k6.md), the steps in [perf/README.md](perf/README.md) and the measurements in [docs/performance/results.md](docs/performance/results.md).
+`make perf-seed` loads 20 000 products, 500 000 stock movements and 20 000 orders into a development database, `make perf-clean` removes it again, `make perf-explain` prints the plan of the queries behind the lists, and `make perf-load` runs a k6 load test with a budget per endpoint. The method is in [ADR 0055](docs/adr/0055-measuring-performance-with-volume-data-and-k6.md), the steps in [perf/README.md](perf/README.md) and the measurements in [docs/performance/results.md](docs/performance/results.md).
 
 ## Quality checks
 

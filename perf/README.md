@@ -8,11 +8,12 @@ You need a development stack with the demo loaded (`make up`, `make demo`).
 
 ```bash
 make perf-seed                       # 20 000 products, 500 000 movements, 20 000 orders (about a minute)
+make perf-clean                      # removes all of it again and leaves the demo data as it was
 make perf-explain > perf/before.txt  # the plan of each list query
 make perf-load PASSWORD='...'        # k6 against http://localhost:8080 with the demo password (development stack)
 ```
 
-The development container is slow for reasons that have nothing to do with the code (debug kernel, bind mount). For latency, measure the production image: `make perf-prod-up`, then `make perf-load PASSWORD='...' URL=http://host.docker.internal:8082`, and `make perf-prod-down` when done. Do the same again after a change and compare. `perf-seed` can be run again: it replaces what it wrote, and it never touches the data of `make demo`.
+The development container is slow for reasons that have nothing to do with the code (debug kernel, bind mount). For latency, measure the production image: `make perf-prod-up`, then `make perf-load PASSWORD='...' URL=http://host.docker.internal:8082`, and `make perf-prod-down` when done. Do the same again after a change and compare. Leave the seed in only while measuring: it fills every reserve and pick face with stock, so a location with a limit has no room left and a putaway to it is refused. `make perf-clean` removes it. `perf-seed` can be run again: it replaces what it wrote, and it never touches the data of `make demo`.
 
 ## What the load test asks
 

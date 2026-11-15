@@ -5,7 +5,7 @@ PHP := $(DC) exec -T php
 FRONT := $(DC) exec -T frontend
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build images logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check perf-seed perf-explain perf-load perf-prod-up perf-prod-down failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
+.PHONY: help env up down build images logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check perf-seed perf-clean perf-explain perf-load perf-prod-up perf-prod-down failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -67,6 +67,9 @@ erp-check: ## Try the ERP end to end: an order, its CSV file and its SOAP confir
 ## —— Performance (E10-06, ADR 0055) ————————————————————————
 perf-seed: ## Load volume data to measure with (20k products, 500k movements, 20k orders). Needs `make demo` first. Development only
 	$(DC) exec -T database sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' < perf/seed.sql
+
+perf-clean: ## Remove the data of perf-seed and leave the demo data as it was
+	$(DC) exec -T database sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' < perf/clean.sql
 
 perf-explain: ## Print the plan of the queries behind the lists, over the data of perf-seed
 	$(DC) exec -T database sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' < perf/explain.sql
