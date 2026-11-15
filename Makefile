@@ -37,19 +37,19 @@ composer: ## Run Composer, e.g. make composer c="require foo/bar"
 	$(PHP) composer $(c)
 
 console: ## Run the Symfony console, e.g. make console c=about
-	$(PHP) bin/console $(c)
+	$(PHP) php bin/console $(c)
 
 jwt-keys: ## Generate the JWT key pair (kept out of git). Done on first start in development.
-	$(PHP) bin/console lexik:jwt:generate-keypair --skip-if-exists
+	$(PHP) php bin/console lexik:jwt:generate-keypair --skip-if-exists
 
 tenant: ## Create a tenant and its admin, e.g. make tenant name="Acme" email=admin@acme.test (asks for the password)
-	$(DC) exec php bin/console app:tenant:create "$(name)" "$(email)"
+	$(DC) exec php php bin/console app:tenant:create "$(name)" "$(email)"
 
 demo: ## Load the fashion demo (a company, a distribution centre and a collection). Asks for a password.
-	$(DC) exec php bin/console app:demo:load
+	$(DC) exec php php bin/console app:demo:load
 
 stock-rebuild: ## Build the stock read model again from the ledger (ADR 0013)
-	$(PHP) bin/console app:stock-overview:rebuild
+	$(PHP) php bin/console app:stock-overview:rebuild
 
 ## —— Legacy ERP (ADR 0046) ————————————————————————————————————
 erp-up: ## Start the simulated legacy ERP, its SFTP server and the scheduler that imports its orders (not part of `make up`)
@@ -72,10 +72,10 @@ worker-restart: ## Restart the worker, so it runs the code you just changed
 	$(DC) restart worker
 
 failed: ## List the events that failed every retry. Show one with: make failed id=<id>
-	$(PHP) bin/console messenger:failed:show $(id) -vv
+	$(PHP) php bin/console messenger:failed:show $(id) -vv
 
 retry-failed: ## Handle the failed events again, asking for each one
-	$(DC) exec php bin/console messenger:failed:retry
+	$(DC) exec php php bin/console messenger:failed:retry
 
 ## —— Quality ————————————————————————————————————————————————
 validate: ## Validate composer.json and the lock file, and audit dependencies
@@ -83,14 +83,14 @@ validate: ## Validate composer.json and the lock file, and audit dependencies
 	$(PHP) composer audit
 
 test: ## Run the PHPUnit test suite
-	$(PHP) bin/console doctrine:database:create --if-not-exists --env=test --quiet
-	$(PHP) bin/phpunit $(c)
+	$(PHP) php bin/console doctrine:database:create --if-not-exists --env=test --quiet
+	$(PHP) php bin/phpunit $(c)
 
 test-unit: ## Run only the unit tests (no database, about a second)
-	$(PHP) bin/phpunit tests/Unit
+	$(PHP) php bin/phpunit tests/Unit
 
 stan: ## Run PHPStan static analysis
-	$(PHP) bin/console cache:warmup --env=dev --quiet
+	$(PHP) php bin/console cache:warmup --env=dev --quiet
 	$(PHP) vendor/bin/phpstan analyse --memory-limit=1G
 
 cs: ## Check code style without changing files
