@@ -33,7 +33,7 @@ operations:
   # ------------------------------------------------------------------ Identity
   'POST /api/auth/login':
     summary: 'Sign in and get a token'
-    description: 'Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. The answer also sets the `estiba_refresh` cookie (`HttpOnly`, `SameSite=Strict`, only sent to `/api/auth`), which keeps the session alive for `POST /api/auth/refresh`. Wrong credentials answer 401.'
+    description: 'Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. The answer also sets the `estiba_refresh` cookie (`HttpOnly`, `SameSite=Strict`, only sent to `/api/auth`), which keeps the session alive for `POST /api/auth/refresh`. Wrong credentials answer 401. After five wrong tries for the same email from the same address in fifteen minutes, or twenty-five from one address, it answers 429 `identity.too_many_login_attempts` with a `Retry-After` header in seconds, even if the next try has the right password.'
     example: { email: 'ana@marea-moda.example', password: 'the-password-of-ana' }
   'POST /api/auth/refresh':
     summary: 'Renew the session and get a new token'

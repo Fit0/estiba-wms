@@ -60,6 +60,7 @@ curl -s -X POST http://localhost:8080/api/warehouses \
 | 409 | The change clashes with the current state: a code already used, a location already blocked |
 | 415 | The request is not sent as JSON |
 | 422 | The request is well formed but breaks a business rule |
+| 429 | Too many tries to sign in. `Retry-After` says how many seconds to wait. |
 | 500 | Something unexpected failed. The real cause is only in the server log. |
 
 ## Codes

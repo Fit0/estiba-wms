@@ -4,3 +4,10 @@ services:
     App\Tests\Support\RecordingNotifier: ~
 
     App\Shared\Application\Notifier: '@App\Tests\Support\RecordingNotifier'
+
+    # The tries of the sign-in are counted here in the tests (ADR 0054). Not a cache pool: the tests do not
+    # reboot the kernel between requests, and Symfony empties a pool in memory each time it resets the
+    # services, so the count would start again at every request. This is a plain service that is not reset,
+    # and each test has its own because each test boots its own kernel.
+    test.login_throttling_storage:
+        class: Symfony\Component\RateLimiter\Storage\InMemoryStorage

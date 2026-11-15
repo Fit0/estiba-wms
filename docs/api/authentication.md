@@ -77,10 +77,17 @@ The API reads the roles from the database on every request, not from the token, 
 | 401 | `shared.unauthenticated` | The request carries no token |
 | 401 | `shared.token_invalid` | The token is malformed, forged, or belongs to a disabled user |
 | 401 | `shared.token_expired` | The token is older than one hour |
+| 429 | `identity.too_many_login_attempts` | Signing in after too many tries. See [Limits](#limits). |
 | 401 | `identity.refresh_token_invalid` | Renewing a session whose cookie is missing, unknown, expired, revoked or spent, or whose user is disabled. The cookie is cleared. |
 | 403 | `shared.forbidden` | The user's role does not allow this |
 
-A 401 caused by a token carries `WWW-Authenticate: Bearer`. All of them use the [common error shape](errors.md) and the language of `Accept-Language`.
+A 401 caused by a token carries `WWW-Authenticate: Bearer`. A 429 carries `Retry-After`, in seconds. All of them use the [common error shape](errors.md) and the language of `Accept-Language`.
+
+## Limits
+
+Signing in is limited, so a password cannot be guessed by trying them all ([ADR 0054](../adr/0054-throttling-the-sign-in.md)). In fifteen minutes the API accepts five tries for the same email from the same address, and twenty-five from one address whatever the email. The next one answers `429` with the code `identity.too_many_login_attempts` and a `Retry-After` header that says how many seconds to wait. It is refused even if the password is right, and it does not tell whether the account exists: an email that does not exist is counted like one that does. A sign-in that works starts the count of that email again.
+
+Behind a proxy that ends TLS, set `SYMFONY_TRUSTED_PROXIES` to the proxy. Otherwise every client has the address of the proxy and shares one limit.
 
 ## Setting up a tenant
 

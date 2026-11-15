@@ -33,6 +33,16 @@ security:
                 password_path: password
                 success_handler: lexik_jwt_authentication.handler.authentication_success
                 failure_handler: lexik_jwt_authentication.handler.authentication_failure
+            # Five tries for each email from each address, and twenty-five from an address for any email,
+            # in fifteen minutes. The sixth is refused with a 429, even with the right password, until the
+            # window moves on (ADR 0054). The state lives in Redis, so every instance counts the same tries.
+            login_throttling:
+                max_attempts: 5
+                interval: '15 minutes'
+                cache_pool: cache.login_throttling
+                # Without the Lock component, two tries at the same instant can both get in. That is a few
+                # extra tries, not a way round the limit.
+                lock_factory: null
 
         api:
             pattern: ^/api
@@ -66,6 +76,10 @@ security:
 
 when@test:
     security:
+        firewalls:
+            login:
+                login_throttling:
+                    storage_service: test.login_throttling_storage
         password_hashers:
             # Password hashers are resource-intensive by design to ensure security.
             # In tests, it's safe to reduce their cost to improve performance.
