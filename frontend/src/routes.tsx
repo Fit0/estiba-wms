@@ -15,6 +15,7 @@ import { OrdersPage } from './pages/OrdersPage';
 import { PickListPage } from './pages/PickListPage';
 import { PickingPage } from './pages/PickingPage';
 import { ProductPage } from './pages/ProductPage';
+import { PutawayPage } from './pages/PutawayPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { ReceiptPage } from './pages/ReceiptPage';
 import { StockPage } from './pages/StockPage';
@@ -66,6 +67,7 @@ export const routes: RouteObject[] = [
           { path: 'inbound', element: <AsnsPage /> },
           { path: 'inbound/:id', element: <AsnPage /> },
           { path: 'receipts/:id', element: <ReceiptPage /> },
+          { path: 'putaway', element: <PutawayPage /> },
           { path: 'orders', element: <OrdersPage /> },
           { path: 'orders/:id', element: <OrderPage /> },
           { path: 'waves', element: <WavesPage /> },

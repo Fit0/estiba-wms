@@ -62,6 +62,28 @@ describe('a receipt at the dock', () => {
     );
   });
 
+  it('links a closed receipt to its putaway tasks, and an open one does not', async () => {
+    open(
+      '/receipts/r-1',
+      api(['operator'], () => receipt({ status: 'closed', stockBooked: true })),
+    );
+
+    const link = await screen.findByRole('link', { name: 'Ver las tareas de ubicación' });
+    expect(link).toHaveAttribute('href', '/putaway?receipt=r-1&status=all');
+  });
+
+  it('offers no putaway link while the receipt is open', async () => {
+    open(
+      '/receipts/r-1',
+      api(['operator'], () => receipt()),
+    );
+
+    await screen.findByRole('heading', { name: 'Recepción de ASN-2026-0042' });
+    expect(
+      screen.queryByRole('link', { name: 'Ver las tareas de ubicación' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('counts an item, sends what was typed and clears the form for the next one', async () => {
     const user = userEvent.setup();
     const sent: unknown[] = [];

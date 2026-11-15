@@ -486,6 +486,37 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('the putaway tasks, with the dialogs to put away and to split', async () => {
+    const user = userEvent.setup();
+    const putaway = apiOf(['operator'], {
+      ...withSession(['operator']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/warehouses/w-1/locations?page=1&itemsPerPage=100&status=active': () =>
+        paged([
+          { ...location, id: 'l-D-01', code: 'D-01', type: 'dock' },
+          { ...location, id: 'l-A-01-01', code: 'A-01-01' },
+        ]),
+      'GET /api/products/p-1': () => json(inboundFixtures.product),
+      'GET /api/putaway-tasks?page=1&itemsPerPage=30&status=pending': () =>
+        paged([inboundFixtures.putawayTask()]),
+    });
+    open('/putaway', putaway);
+    await screen.findByText('CAM-LIN · Camisa de lino');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Ubicar CAM-LIN · Camisa de lino' }));
+    const confirm = await screen.findByRole('dialog', { name: 'Ubicar CAM-LIN · Camisa de lino' });
+    await within(confirm).findByRole('combobox', { name: 'Ubicación de destino' });
+    await expectNoViolations();
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', { name: 'Dividir CAM-LIN · Camisa de lino' }));
+    const split = await screen.findByRole('dialog', { name: 'Dividir CAM-LIN · Camisa de lino' });
+    await user.click(within(split).getByRole('button', { name: 'Dividir tarea' }));
+    await within(split).findByText('Escribe un número entero, sin signo.');
+    await expectNoViolations();
+  });
+
   it('the stock, on hand and as a ledger of movements', async () => {
     const user = userEvent.setup();
     const stock = apiOf(['operator'], {
