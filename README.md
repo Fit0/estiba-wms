@@ -47,6 +47,9 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 - [0052](docs/adr/0052-production-images-for-the-backend-and-the-frontend.md) Production images for the backend and the frontend
 - [0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md) Security headers, images that do not run as root, and dependency updates
 - [0054](docs/adr/0054-throttling-the-sign-in.md) Throttling the sign-in
+- [0055](docs/adr/0055-measuring-performance-with-volume-data-and-k6.md) Measuring performance with volume data and k6
+- [0056](docs/adr/0056-an-index-for-the-latest-movements.md) An index for the latest movements
+- [0057](docs/adr/0057-http-caching-of-the-api.md) HTTP caching of the API
 
 See also the [system context diagram](docs/architecture/c4-context.md), the [ERP integration diagrams](docs/architecture/erp-integration.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
 
@@ -150,6 +153,10 @@ The simulated legacy ERP that Estiba integrates with does not start with the res
 ### Security
 
 Every answer of the API carries security headers, the frontend server adds its own and a content policy to the files it serves, the images do not run as root, the sign-in is limited to a few tries ([ADR 0054](docs/adr/0054-throttling-the-sign-in.md)), and Dependabot opens a weekly pull request for each ecosystem ([ADR 0053](docs/adr/0053-security-headers-non-root-images-and-dependency-updates.md)). What the project does about each risk of the OWASP Top 10:2025, and what is still open, is in the [security checklist](docs/security/owasp-checklist.md).
+
+### Performance
+
+`make perf-seed` loads 20 000 products, 500 000 stock movements and 20 000 orders into a development database, `make perf-explain` prints the plan of the queries behind the lists, and `make perf-load` runs a k6 load test with a budget per endpoint. The method is in [ADR 0055](docs/adr/0055-measuring-performance-with-volume-data-and-k6.md), the steps in [perf/README.md](perf/README.md) and the measurements in [docs/performance/results.md](docs/performance/results.md).
 
 ## Quality checks
 

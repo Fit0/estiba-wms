@@ -5,7 +5,7 @@ PHP := $(DC) exec -T php
 FRONT := $(DC) exec -T frontend
 
 .DEFAULT_GOAL := help
-.PHONY: help env up down build images logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
+.PHONY: help env up down build images logs sh composer console jwt-keys tenant demo stock-rebuild worker-logs worker-restart erp-up erp-logs erp-order erp-check perf-seed perf-explain perf-load perf-prod-up perf-prod-down failed retry-failed validate test test-unit stan cs fix rector qa front-sh front-npm front-lint front-format front-typecheck front-test front-build front-api-types front-qa
 
 help: ## List available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[33m%-10s\033[0m %s\n", $$1, $$2}'
@@ -63,6 +63,23 @@ erp-order: ## Make the ERP take made-up orders, e.g. make erp-order n=5
 
 erp-check: ## Try the ERP end to end: an order, its CSV file and its SOAP confirmation
 	$(DC) exec -T -u www-data erp php /var/www/bin/comprobar.php
+
+## —— Performance (E10-06, ADR 0055) ————————————————————————
+perf-seed: ## Load volume data to measure with (20k products, 500k movements, 20k orders). Needs `make demo` first. Development only
+	$(DC) exec -T database sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' < perf/seed.sql
+
+perf-explain: ## Print the plan of the queries behind the lists, over the data of perf-seed
+	$(DC) exec -T database sh -c 'psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"' < perf/explain.sql
+
+perf-load: ## Load test the API with k6: make perf-load PASSWORD=... [URL=http://host.docker.internal:8082 for the production image] [VUS=20 to push it to its limit]
+	@test -n "$(PASSWORD)" || { echo "Give the demo password: make perf-load PASSWORD=..."; exit 1; }
+	docker run --rm -i -e PASSWORD="$(PASSWORD)" -e VUS="$(or $(VUS),3)" -e BASE_URL="$(or $(URL),http://host.docker.internal:8080)" grafana/k6:latest run - < perf/k6/load.js
+
+perf-prod-up: ## Build and start the production image of the API on port 8082, over the development database (see compose.perf.yaml)
+	docker compose -f compose.yaml -f compose.perf.yaml --profile perf up -d --build --wait api-prod
+
+perf-prod-down: ## Stop the production image of the API
+	docker compose -f compose.yaml -f compose.perf.yaml --profile perf rm -sf api-prod
 
 ## —— Worker ————————————————————————————————————————————————
 worker-logs: ## Follow the worker that handles the asynchronous events

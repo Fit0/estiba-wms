@@ -6,6 +6,7 @@
     <entity name="App\Inventory\Domain\StockMovement" table="stock_movements" read-only="true">
         <indexes>
             <index name="idx_stock_movements_item" columns="stock_item_id,occurred_at"/>
+            <index name="idx_stock_movements_tenant_time" columns="tenant_id,occurred_at,id"/>
         </indexes>
 
         <id name="id" type="stock_movement_id"/>
