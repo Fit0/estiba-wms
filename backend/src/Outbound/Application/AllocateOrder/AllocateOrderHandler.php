@@ -6,6 +6,7 @@ namespace App\Outbound\Application\AllocateOrder;
 
 use App\Inventory\Application\Contract\AllocationRequest;
 use App\Inventory\Application\Contract\StockReservations;
+use App\Outbound\Application\LineReservationReference;
 use App\Outbound\Application\OrderLookup;
 use App\Outbound\Domain\LineAllocation;
 use App\Outbound\Domain\Order;
@@ -59,7 +60,7 @@ final readonly class AllocateOrderHandler implements CommandHandler
     {
         $result = $this->reservations->allocate(new AllocationRequest(
             $this->tenant->id(),
-            \sprintf('order:%s:%d', $order->id()->value, $line->lineNumber),
+            LineReservationReference::of($order, $line),
             $line->productId->value,
             $order->warehouseId()->value,
             $line->orderedUnits,

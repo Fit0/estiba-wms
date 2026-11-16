@@ -228,6 +228,127 @@ describe('one order', () => {
     expect(api.calls).toContain('POST /api/orders/o-1/allocate');
   });
 
+  describe('why it is not fully reserved', () => {
+    const short = (obstacles: unknown[]) => [
+      {
+        lineNumber: 1,
+        productId: 'p-1',
+        orderedUnits: 24,
+        allocatedUnits: 0,
+        shortageUnits: 24,
+        obstacles,
+      },
+    ];
+    const registeredShort = () => order({ status: 'registered', shortageUnits: 24 });
+
+    it('says that the stock is at a dock, and where, and links to the putaway', async () => {
+      open(
+        '/orders/o-1',
+        page(['operator'], registeredShort(), {
+          'GET /api/orders/o-1/shortages': () =>
+            json(short([{ reason: 'at_dock', units: 40, locationCodes: ['D-02-01'] }])),
+        }),
+      );
+
+      const notice = await screen.findByRole('region', {
+        name: 'Por qué no se ha podido reservar todo',
+      });
+      expect(within(notice).getByText('Faltan 24')).toBeInTheDocument();
+      expect(
+        within(notice).getByText(/Hay 40 unidades en un muelle sin ubicar \(D-02-01\)/),
+      ).toBeInTheDocument();
+      expect(within(notice).getByRole('link', { name: 'Ir a ubicar' })).toHaveAttribute(
+        'href',
+        '/putaway',
+      );
+    });
+
+    it('says that there is no stock at all when there is nothing anywhere', async () => {
+      open(
+        '/orders/o-1',
+        page(['operator'], registeredShort(), {
+          'GET /api/orders/o-1/shortages': () => json(short([])),
+        }),
+      );
+
+      expect(
+        await screen.findByText('No hay stock de este producto en el almacén.'),
+      ).toBeInTheDocument();
+    });
+
+    it('lists every reason that applies, each with its units', async () => {
+      open(
+        '/orders/o-1',
+        page(['operator'], registeredShort(), {
+          'GET /api/orders/o-1/shortages': () =>
+            json(
+              short([
+                { reason: 'blocked_location', units: 10, locationCodes: ['A-01-01', 'A-01-02'] },
+                { reason: 'shelf_life', units: 6, locationCodes: ['B-01-01'] },
+                { reason: 'reserved_for_others', units: 12, locationCodes: [] },
+              ]),
+            ),
+        }),
+      );
+
+      const notice = await screen.findByRole('region', {
+        name: 'Por qué no se ha podido reservar todo',
+      });
+      expect(
+        within(notice).getByText('Hay 10 unidades en una ubicación bloqueada (A-01-01, A-01-02).'),
+      ).toBeInTheDocument();
+      expect(
+        within(notice).getByText(
+          'Hay 6 unidades que llegarían al cliente con poca caducidad restante (B-01-01).',
+        ),
+      ).toBeInTheDocument();
+      expect(
+        within(notice).getByText('Hay 12 unidades reservadas para otros pedidos.'),
+      ).toBeInTheDocument();
+    });
+
+    it('does not ask when nothing is short', async () => {
+      const api = page(['operator'], order({ status: 'allocated', shortageUnits: 0 }));
+      open('/orders/o-1', api);
+
+      await screen.findByRole('heading', { name: 'PED-2026-1187 · Marea Moda Zaragoza' });
+      expect(
+        screen.queryByRole('region', { name: 'Por qué no se ha podido reservar todo' }),
+      ).not.toBeInTheDocument();
+      expect(api.calls).not.toContain('GET /api/orders/o-1/shortages');
+    });
+
+    it('leaves the page as it is when the advice cannot be had', async () => {
+      open(
+        '/orders/o-1',
+        page(['operator'], registeredShort(), {
+          'GET /api/orders/o-1/shortages': () => problem(500, 'shared.internal_error'),
+        }),
+      );
+
+      await screen.findByRole('region', { name: 'Líneas del pedido' });
+      expect(
+        screen.queryByRole('region', { name: 'Por qué no se ha podido reservar todo' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('warns after reserving when part of the order could not be covered', async () => {
+      const user = userEvent.setup();
+      open(
+        '/orders/o-1',
+        page(['supervisor'], order(), {
+          'POST /api/orders/o-1/allocate': () =>
+            json(order({ status: 'partially_allocated', shortageUnits: 4 })),
+        }),
+      );
+
+      await user.click(await screen.findByRole('button', { name: 'Reservar stock' }));
+
+      expect(await screen.findByText(/faltan 4 unidades/)).toBeInTheDocument();
+    });
+  });
+
   it('offers the backorder only to a partly allocated order, and accepts it', async () => {
     const user = userEvent.setup();
     const api = page(['supervisor'], order({ status: 'partially_allocated', shortageUnits: 4 }), {

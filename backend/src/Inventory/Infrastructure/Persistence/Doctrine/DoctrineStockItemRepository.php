@@ -109,6 +109,25 @@ final readonly class DoctrineStockItemRepository implements StockItemRepository
     }
 
     #[\Override]
+    public function findOf(TenantId $tenantId, ProductId $productId): array
+    {
+        /** @var list<StockItem> $items */
+        $items = $this->entityManager->createQueryBuilder()
+            ->select('s')
+            ->from(StockItem::class, 's')
+            ->where('s.tenantId = :tenant')
+            ->andWhere('s.key.productId = :product')
+            ->andWhere('s.onHand > 0')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->setParameter('product', $productId, 'stock_product_id')
+            ->orderBy('s.id')
+            ->getQuery()
+            ->getResult();
+
+        return $items;
+    }
+
+    #[\Override]
     public function all(): iterable
     {
         /** @var iterable<StockItem> $items */

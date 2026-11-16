@@ -305,7 +305,7 @@ export interface paths {
         put?: never;
         /**
          * Sign in and get a token
-         * @description Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. The answer also sets the `estiba_refresh` cookie (`HttpOnly`, `SameSite=Strict`, only sent to `/api/auth`), which keeps the session alive for `POST /api/auth/refresh`. Wrong credentials answer 401.
+         * @description Send the email and the password of a user. The token lasts one hour and goes in every other request as `Authorization: Bearer <token>`. The answer also sets the `estiba_refresh` cookie (`HttpOnly`, `SameSite=Strict`, only sent to `/api/auth`), which keeps the session alive for `POST /api/auth/refresh`. Wrong credentials answer 401. After five wrong tries for the same email from the same address in fifteen minutes, or twenty-five from one address, it answers 429 `identity.too_many_login_attempts` with a `Retry-After` header in seconds, even if the next try has the right password.
          *
          *     **Role:** none, it needs no token.
          */
@@ -448,6 +448,28 @@ export interface paths {
          *     **Role:** supervisor or admin.
          */
         post: operations["api_orders_idcancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/orders/{orderId}/shortages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Explain why an order is not fully reserved
+         * @description One entry for each line that is short, with the units that no stock covers and, in `obstacles`, the stock of the product that exists but cannot be promised: `at_dock` (received, not put away yet), `not_pickable_location` (staging, packing or quarantine), `blocked_location`, `other_warehouse`, `not_available` (quarantine, damaged or on hold), `shelf_life` (it would reach the customer too close to its expiry date) and `reserved_for_others`. Each one has its units and, when it is about a place, up to five location codes. A line with no obstacles has no stock of the product at all. It is worked out when asked, so it follows the stock: it stops mentioning a dock once the goods are put away.
+         *
+         *     **Role:** any signed-in user.
+         */
+        get: operations["api_orders_orderIdshortages_get_collection"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1447,7 +1469,6 @@ export interface components {
             expectedDate?: string;
             lines?: unknown[];
         };
-        /** @description One line of the audit trail: what happened, when, who did it and what the event carried. */
         AuditEntry: {
             id: string;
             eventType: string;
@@ -1522,10 +1543,6 @@ export interface components {
             /** @description A URI reference that identifies the problem type */
             readonly type?: string;
         };
-        /**
-         * @description The operating figures of the warehouse for a period: orders, picking, stock and storage
-         *     locations. A ratio with nothing to divide by is left out.
-         */
         Kpis: {
             from: string;
             until: string;
@@ -1568,10 +1585,6 @@ export interface components {
             occupied: number;
             occupancyPercent?: number | null;
         };
-        /**
-         * @description Who the token belongs to: the user, its roles and its tenant. A client calls it right after
-         *     signing in to know what to show.
-         */
         Me: {
             id: string;
             email: string;
@@ -1610,6 +1623,14 @@ export interface components {
             open: number;
             registered: number;
             shipped: number;
+        };
+        OrderShortage: {
+            lineNumber: number;
+            productId: string;
+            orderedUnits: number;
+            allocatedUnits: number;
+            shortageUnits: number;
+            obstacles: unknown[];
         };
         PickList: {
             id: string;
@@ -1707,10 +1728,6 @@ export interface components {
             heightMm?: number | null;
             weightGrams?: number | null;
         };
-        /**
-         * @description How much the tenant holds of a product, in total and by warehouse. `available` is the units in
-         *     available status; once reservations arrive (E04-01) it will leave out the reserved ones.
-         */
         ProductStock: {
             productId: string;
             sku: string;
@@ -1722,13 +1739,6 @@ export interface components {
             onHold: number;
             warehouses: unknown[];
         };
-        /**
-         * @description `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
-         *     the confirmation (ADR 0012).
-         *
-         *     The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
-         *     in `config/packages/security.yaml`.
-         */
         PutawayTask: {
             id: string;
             receiptId: string;
@@ -1748,34 +1758,13 @@ export interface components {
             confirmedAt?: string | null;
             stockMoved: boolean;
         };
-        /**
-         * @description `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
-         *     the confirmation (ADR 0012).
-         *
-         *     The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
-         *     in `config/packages/security.yaml`.
-         */
         "PutawayTask.ConfirmPutawayInput": {
             locationId?: string;
             reason?: string | null;
         };
-        /**
-         * @description `stockMoved` turns true once the worker has moved the stock of a confirmed task, a moment after
-         *     the confirmation (ADR 0012).
-         *
-         *     The operators' work after a receipt closes. They confirm and split tasks; see `access_control`
-         *     in `config/packages/security.yaml`.
-         */
         "PutawayTask.SplitPutawayTaskInput": {
             units?: number;
         };
-        /**
-         * @description `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
-         *     their putaway, a moment after it closes (ADR 0012).
-         *
-         *     Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
-         *     see `access_control` in `config/packages/security.yaml`.
-         */
         Receipt: {
             id: string;
             asnId: string;
@@ -1791,23 +1780,9 @@ export interface components {
             lines: unknown[];
             discrepancies: unknown[];
         };
-        /**
-         * @description `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
-         *     their putaway, a moment after it closes (ADR 0012).
-         *
-         *     Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
-         *     see `access_control` in `config/packages/security.yaml`.
-         */
         "Receipt.OpenReceiptInput": {
             dockLocationId?: string;
         };
-        /**
-         * @description `stockBooked` turns true once the worker has booked the goods of a closed receipt and planned
-         *     their putaway, a moment after it closes (ADR 0012).
-         *
-         *     Operators open, count and close receipts. Approving an over-receipt needs a supervisor (INB-08):
-         *     see `access_control` in `config/packages/security.yaml`.
-         */
         "Receipt.ReceiveItemInput": {
             gtin?: string;
             units?: number;
@@ -1829,10 +1804,6 @@ export interface components {
             city: string;
             countryCode: string;
         };
-        /**
-         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
-         *     not JSON: see ParcelLabelController.
-         */
         Shipment: {
             id: string;
             orderId: string;
@@ -1848,37 +1819,17 @@ export interface components {
             trackingNumber?: string | null;
             dispatchedAt?: string | null;
         };
-        /**
-         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
-         *     not JSON: see ParcelLabelController.
-         */
         "Shipment.CloseParcelInput": {
             weightGrams?: number;
             contents?: unknown[];
         };
-        /**
-         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
-         *     not JSON: see ParcelLabelController.
-         */
         "Shipment.DispatchShipmentInput": {
             carrier?: string;
             trackingNumber?: string | null;
         };
-        /**
-         * @description The label of a parcel is not an operation of this resource, because it is a PDF or a ZPL text and
-         *     not JSON: see ParcelLabelController.
-         */
         "Shipment.StartPackingInput": {
             orderId?: string;
         };
-        /**
-         * @description The stock of one product in one location, of one lot, expiry date and status, from the read
-         *     model (ADR 0013): it shows a movement a moment after it is recorded. Dates are days, as
-         *     `YYYY-MM-DD`.
-         *
-         *     The list holds the stock items with units, filtered by `productId`, `locationId`, `warehouseId`
-         *     and `status`.
-         */
         StockItem: {
             id: string;
             productId: string;
@@ -1901,11 +1852,6 @@ export interface components {
             damaged: number;
             onHold: number;
         };
-        /**
-         * @description The history of the stock: one line of the ledger, newest first, filtered by `stockItemId`,
-         *     `productId` and `locationId`. `change` is negative when units left; `balanceAfter` is what the
-         *     stock item held afterwards.
-         */
         StockMovement: {
             id: string;
             stockItemId: string;
@@ -3010,6 +2956,35 @@ export interface operations {
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
             422: components["responses"]["Unprocessable"];
+        };
+    };
+    api_orders_orderIdshortages_get_collection: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path: {
+                /** @description OrderResource identifier */
+                orderId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OrderShortage collection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderShortage"][];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
         };
     };
     "api_pick-lists_get_collection": {

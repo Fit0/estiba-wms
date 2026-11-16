@@ -33,6 +33,14 @@ interface StockItemRepository
     public function findReservable(TenantId $tenantId, ProductId $productId): array;
 
     /**
+     * Every stock item of the product that holds at least one unit, whatever its status and location.
+     * It is for explaining why stock cannot be promised, never for choosing what to promise.
+     *
+     * @return list<StockItem>
+     */
+    public function findOf(TenantId $tenantId, ProductId $productId): array;
+
+    /**
      * Every stock item of every tenant, for work that goes over the whole ledger, such as building
      * a read model again.
      *

@@ -2,7 +2,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useProductsById } from '../api/inbound';
-import { useChangeOrder, useOrder, type OrderAction } from '../api/orders';
+import { useChangeOrder, useOrder, useOrderShortages, type OrderAction } from '../api/orders';
 import { hasRole } from '../auth/roles';
 import { useAuth } from '../auth/useAuth';
 import { Fact, Facts } from '../catalog/Facts';
@@ -24,6 +24,7 @@ import {
   priorityTone,
 } from '../orders/display';
 import { parseOrderLines, type OrderLine } from '../orders/schemas';
+import { ShortageNotice } from '../orders/ShortageNotice';
 
 /**
  * One order: its data, its lines (ordered, reserved, picked, shipped and what is short) and, for a
@@ -44,6 +45,11 @@ export function OrderPage() {
     [order.data],
   );
   const products = useProductsById(lines.map((line) => line.productId));
+  // Advice only: if it cannot be had, the page is as it was without it.
+  const shortages = useOrderShortages(
+    id,
+    order.data !== undefined && order.data.status !== 'cancelled' && order.data.shortageUnits > 0,
+  );
 
   if (order.isError) {
     return (
@@ -61,7 +67,16 @@ export function OrderPage() {
     change.mutate(action, {
       onSuccess: (updated) => {
         setCancelling(false);
-        toast.success(t(`order.${action}.done`, { reference: updated.reference }));
+        if (action === 'allocate' && updated.shortageUnits > 0) {
+          toast.warning(
+            t('order.allocate.short', {
+              reference: updated.reference,
+              units: number(updated.shortageUnits),
+            }),
+          );
+        } else {
+          toast.success(t(`order.${action}.done`, { reference: updated.reference }));
+        }
       },
     });
   }
@@ -199,6 +214,10 @@ export function OrderPage() {
                 </Fact>
               </Facts>
             </section>
+
+            {shortages.data !== undefined && (
+              <ShortageNotice shortages={shortages.data} products={products} />
+            )}
 
             <section aria-labelledby="order-lines-title" className="grid gap-gutter">
               <h2 id="order-lines-title" className="text-headline-md">

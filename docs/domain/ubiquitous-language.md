@@ -72,6 +72,7 @@ One term, one meaning, in code, tests, screens and documents. Code is in English
 | Order | Pedido | A customer's request for products, imported from the ERP. |
 | Order line | Línea de pedido | One product and quantity within an order. |
 | Cut-off | Hora de corte | The time by which an order must be shipped to meet its delivery promise. |
+| Shortage reason | Motivo del faltante | Why units of a product that are in the warehouse cannot be promised to an order: at a dock and not put away, in a place that is not for picking, in a blocked location, in another warehouse, not in available status, with too little shelf life, or held by other orders. Worked out when asked, never stored (ADR 0058). |
 | Backorder | Pendiente de servir | The part of an order that could not be served for lack of stock. The customer can accept it, and then the covered part of the order can go to the floor. |
 | Wave | Ola | A group of orders released to the floor together. |
 | Pick list | Hoja de picking | The list of lines one operator picks, ordered by route. |
