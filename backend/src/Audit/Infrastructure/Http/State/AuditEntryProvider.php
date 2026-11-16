@@ -48,7 +48,7 @@ final readonly class AuditEntryProvider implements ProviderInterface
         ));
 
         return new TraversablePaginator(
-            new \ArrayIterator(array_map(AuditEntryResource::fromDomain(...), $page->items)),
+            new \ArrayIterator(array_map(AuditEntryResource::fromLine(...), $page->items)),
             $page->request->page,
             $page->request->itemsPerPage,
             $page->total,
