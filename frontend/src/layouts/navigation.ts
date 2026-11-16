@@ -8,6 +8,7 @@ import {
   PackageCheck,
   PackageOpen,
   Truck,
+  Users,
   Warehouse,
   Waves,
   type LucideIcon,
@@ -53,6 +54,7 @@ export const navigation: readonly NavGroup[] = [
     items: [
       { to: '/audit', label: 'nav.audit', icon: ClipboardList, minimum: 'supervisor' },
       { to: '/erp', label: 'nav.erp', icon: Cable, minimum: 'supervisor' },
+      { to: '/users', label: 'nav.users', icon: Users, minimum: 'admin' },
     ],
   },
 ];

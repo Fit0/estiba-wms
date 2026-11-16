@@ -11,6 +11,7 @@ use App\Identity\Domain\PasswordHasher;
 use App\Identity\Domain\PlainPassword;
 use App\Identity\Domain\RefreshToken;
 use App\Identity\Domain\RefreshTokenRepository;
+use App\Identity\Domain\Role;
 use App\Identity\Domain\Tenant;
 use App\Identity\Domain\TenantRepository;
 use App\Identity\Domain\User;
@@ -20,6 +21,8 @@ use App\Shared\Application\Bus\EventBus;
 use App\Shared\Application\Clock;
 use App\Shared\Application\IdGenerator;
 use App\Shared\Domain\DomainEvent;
+use App\Shared\Domain\Page;
+use App\Shared\Domain\PageRequest;
 use App\Shared\Domain\TenantId;
 use App\Tests\Unit\Support\Ids;
 
@@ -134,6 +137,21 @@ final class InMemoryUsers implements UserRepository
     public function isTaken(Email $email): bool
     {
         return isset($this->saved[$email->value]);
+    }
+
+    #[\Override]
+    public function search(TenantId $tenantId, PageRequest $page): Page
+    {
+        $users = array_values(array_filter($this->saved, static fn (User $user): bool => $user->tenantId()->equals($tenantId)));
+        usort($users, static fn (User $a, User $b): int => $a->email()->value <=> $b->email()->value);
+
+        return new Page(\array_slice($users, $page->offset(), $page->itemsPerPage), \count($users), $page);
+    }
+
+    #[\Override]
+    public function countIn(TenantId $tenantId): int
+    {
+        return \count(array_filter($this->saved, static fn (User $user): bool => $user->tenantId()->equals($tenantId) && $user->isActive() && $user->hasRole(Role::Admin)));
     }
 }
 

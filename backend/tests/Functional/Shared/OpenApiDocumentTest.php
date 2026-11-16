@@ -21,6 +21,9 @@ final class OpenApiDocumentTest extends ApiTestCase
     /** The operations that need no token: they are how a user gets one, keeps it or gives it up (ADR 0022). */
     private const array PUBLIC = ['POST /api/auth/login', 'POST /api/auth/refresh', 'POST /api/auth/logout'];
 
+    /** Each role includes the ones below it. */
+    private const array RANK = ['operator' => 1, 'supervisor' => 2, 'admin' => 3];
+
     /** @var array<string, mixed>|null */
     private ?array $document = null;
 
@@ -167,8 +170,8 @@ final class OpenApiDocumentTest extends ApiTestCase
     }
 
     /**
-     * The role an operation says is the one the firewall asks for: an operator is refused exactly the
-     * operations that say supervisor, and a supervisor is refused none. The firewall answers before
+     * The role an operation says is the one the firewall asks for: a role is refused exactly the
+     * operations that ask for a higher one. The firewall answers before
      * anything else, so the body and the ids do not matter.
      */
     public function testTheRoleOfEachOperationIsTheOneTheFirewallAsksFor(): void
@@ -180,15 +183,20 @@ final class OpenApiDocumentTest extends ApiTestCase
             }
             [$method, $path] = explode(' ', $key, 2);
             $uri = (string) preg_replace(['#\{format\}#', '#\{sscc\}#', '#\{position\}#', '#\{[a-zA-Z]+\}#'], ['pdf', '084000000000000017', '1', Ids::next()], $path);
-            $says = str_contains($this->asText($operation['description'] ?? null), '**Role:** any signed-in user.') ? 'operator' : 'supervisor';
+            $description = $this->asText($operation['description'] ?? null);
+            $says = match (true) {
+                str_contains($description, '**Role:** any signed-in user.') => Role::Operator,
+                str_contains($description, '**Role:** admin.') => Role::Admin,
+                default => Role::Supervisor,
+            };
 
-            foreach ([Role::Operator, Role::Supervisor] as $role) {
+            foreach ([Role::Operator, Role::Supervisor, Role::Admin] as $role) {
                 $this->role = $role;
                 $this->client->request($method, $uri, [], [], $this->headers(), 'GET' === $method ? null : '{}');
                 $refused = 403 === $this->client->getResponse()->getStatusCode();
-                $shouldRefuse = Role::Operator === $role && 'supervisor' === $says;
+                $shouldRefuse = self::RANK[$role->value] < self::RANK[$says->value];
                 if ($refused !== $shouldRefuse) {
-                    $mismatches[] = \sprintf('%s says %s but a%s %s is %s', $key, $says, Role::Operator === $role ? 'n' : '', $role->value, $refused ? 'refused' : 'allowed');
+                    $mismatches[] = \sprintf('%s says %s but a %s is %s', $key, $says->value, $role->value, $refused ? 'refused' : 'allowed');
                 }
             }
         }

@@ -26,6 +26,8 @@ Identity: `UserId`. Holds the tenant, the email address, the password hash, the 
 | IDN-04 | A user has at least one role. |
 | IDN-05 | A user belongs to one tenant for its whole life: nothing can move it. |
 | IDN-06 | A disabled user cannot sign in, and a token it already holds stops working at once, because the user is loaded on every request. Enforced by the security layer's user checker. |
+| IDN-11 | A tenant always keeps at least one active admin: the last one cannot be disabled or lose the admin role. |
+| IDN-12 | A user cannot disable itself or remove its own admin role, so an admin never locks itself out. Enforced by the handlers, since it depends on who is asking. |
 
 ### RefreshToken
 

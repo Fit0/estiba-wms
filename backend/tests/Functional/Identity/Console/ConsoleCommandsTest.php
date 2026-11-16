@@ -107,6 +107,15 @@ final class ConsoleCommandsTest extends PersistenceTestCase
     {
         $this->command('app:tenant:create', ['name' => 'Acme', 'admin-email' => 'admin@acme.test']);
 
+        // IDN-11: the only admin of the tenant cannot be disabled, from the console either.
+        $last = $this->command('app:user:disable', ['email' => 'admin@acme.test']);
+        self::assertSame(1, $last->getStatusCode());
+        $this->entityManager->clear();
+        self::assertTrue($this->user('admin@acme.test')->isActive());
+
+        $tenantId = $this->user('admin@acme.test')->tenantId()->value;
+        $this->command('app:user:create', ['tenant-id' => $tenantId, 'email' => 'second@acme.test', '--role' => ['admin']]);
+
         self::assertSame(0, $this->command('app:user:disable', ['email' => 'admin@acme.test'])->getStatusCode());
         $this->entityManager->clear();
         self::assertFalse($this->user('admin@acme.test')->isActive());

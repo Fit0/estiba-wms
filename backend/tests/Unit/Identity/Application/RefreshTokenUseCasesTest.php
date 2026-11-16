@@ -103,7 +103,7 @@ final class RefreshTokenUseCasesTest extends TestCase
     public function testADisabledUserCannotRenewTheSession(): void
     {
         $first = $this->issue()(new IssueRefreshToken($this->user->id()->value));
-        $this->user->disable($this->clock->now);
+        $this->user->disable($this->clock->now, $this->fakes->users);
 
         self::assertNull($this->rotate()(new RotateRefreshToken($first->secret)));
     }

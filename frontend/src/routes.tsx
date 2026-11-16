@@ -6,6 +6,7 @@ import { PickingLayout } from './layouts/PickingLayout';
 import { AsnPage } from './pages/AsnPage';
 import { AsnsPage } from './pages/AsnsPage';
 import { AuditPage } from './pages/AuditPage';
+import { UsersPage } from './pages/UsersPage';
 import { ErpPage } from './pages/ErpPage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
@@ -79,6 +80,10 @@ export const routes: RouteObject[] = [
               { path: 'audit', element: <AuditPage /> },
               { path: 'erp', element: <ErpPage /> },
             ],
+          },
+          {
+            element: <RequireRole minimum="admin" />,
+            children: [{ path: 'users', element: <UsersPage /> }],
           },
           ...designRoutes,
           { path: '*', element: <NotFoundPage /> },

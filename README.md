@@ -52,6 +52,7 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 - [0057](docs/adr/0057-http-caching-of-the-api.md) HTTP caching of the API
 - [0058](docs/adr/0058-explaining-why-an-order-is-not-fully-reserved.md) Explaining why an order is not fully reserved
 - [0059](docs/adr/0059-naming-the-actor-in-the-audit-log.md) Naming the actor in the audit log
+- [0060](docs/adr/0060-managing-the-users-of-a-tenant.md) Managing the users of a tenant
 
 See also the [system context diagram](docs/architecture/c4-context.md), the [ERP integration diagrams](docs/architecture/erp-integration.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
 

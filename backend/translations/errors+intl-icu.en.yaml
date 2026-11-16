@@ -48,10 +48,12 @@ erp:
     warehouse_unknown: 'The warehouse {code} that serves the ERP orders does not exist.'
 
 identity:
+    cannot_change_own_access: 'You cannot disable yourself or give up your own admin role.'
     credentials_invalid: 'The email or the password is not correct.'
     email_already_used: 'Another user already uses the email address {email}.'
     email_invalid: '"{value}" is not a valid email address.'
     language_invalid: '"{value}" is not a language. Use es or en.'
+    last_admin_required: 'The tenant needs at least one active administrator.'
     password_invalid: 'A password must have {minLength} to {maxLength} characters.'
     refresh_token_invalid: 'The session cannot be renewed. Sign in again.'
     role_invalid: '"{value}" is not a role. Use admin, supervisor or operator.'
@@ -60,6 +62,7 @@ identity:
     tenant_not_found: 'There is no tenant with id {id}.'
     too_many_login_attempts: 'Too many sign-in attempts. Wait a few minutes and try again.'
     user_already_disabled: 'User {email} is already disabled.'
+    user_id_not_found: 'There is no user with id {id}.'
     user_not_disabled: 'User {email} is not disabled.'
     user_not_found: 'There is no user with email {email}.'
 

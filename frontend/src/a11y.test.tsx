@@ -688,6 +688,52 @@ describe('accessibility of the audit log', () => {
   });
 });
 
+describe('accessibility of the users', () => {
+  it('has no violations with the table and the dialogs open, in both languages', async () => {
+    const user = userEvent.setup();
+    open(
+      '/users',
+      apiOf(['admin'], {
+        ...withSession(['admin']),
+        'GET /api/users?page=1&itemsPerPage=25': () =>
+          paged([
+            {
+              id: 'u-2',
+              email: 'luis@marea-moda.example',
+              roles: ['operator'],
+              status: 'active',
+            },
+          ]),
+      }),
+    );
+    await screen.findByText('luis@marea-moda.example');
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Nuevo usuario' }));
+    await screen.findByRole('dialog', { name: 'Nuevo usuario' });
+    await expectNoViolations();
+    await user.keyboard('{Escape}');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Cambiar los roles de luis@marea-moda.example' }),
+    );
+    await screen.findByRole('dialog', { name: 'Roles de luis@marea-moda.example' });
+    await expectNoViolations();
+    await user.keyboard('{Escape}');
+
+    await user.click(
+      screen.getByRole('button', { name: 'Deshabilitar a luis@marea-moda.example' }),
+    );
+    await screen.findByRole('dialog', { name: 'Deshabilitar a luis@marea-moda.example' });
+    await expectNoViolations();
+    await user.keyboard('{Escape}');
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a inglés' }));
+    await screen.findByRole('button', { name: 'New user' });
+    await expectNoViolations();
+  });
+});
+
 describe('the audit itself', () => {
   it('fails on a page that is not accessible', async () => {
     render(<input type="text" />);
