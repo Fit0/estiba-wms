@@ -657,6 +657,37 @@ describe('the ERP integration panel', () => {
   });
 });
 
+describe('accessibility of the audit log', () => {
+  it('has no violations with entries, in both languages', async () => {
+    const user = userEvent.setup();
+    open(
+      '/audit',
+      apiOf(['supervisor'], {
+        ...withSession(['supervisor']),
+        'GET /api/audit-log?page=1&itemsPerPage=30': () =>
+          paged([
+            {
+              id: 'a-1',
+              eventType: 'outbound.order_registered',
+              occurredAt: '2026-11-10T10:00:00+00:00',
+              recordedAt: '2026-11-10T10:00:01+00:00',
+              actorId: '0192f2b4-7c3e-7a18-8d5b-3c1f0a8e6b28',
+              subjectId: '0192f2b4-7c3e-7a14-8d5b-3c1f0a8e6b2b',
+              data: { reference: 'PED-0001' },
+            },
+          ]),
+      }),
+    );
+    await screen.findByRole('link', { name: 'Pedido PED-0001' });
+    await user.click(screen.getByText('Ver datos'));
+    await expectNoViolations();
+
+    await user.click(screen.getByRole('button', { name: 'Cambiar a inglés' }));
+    await screen.findByRole('link', { name: 'Order PED-0001' });
+    await expectNoViolations();
+  });
+});
+
 describe('the audit itself', () => {
   it('fails on a page that is not accessible', async () => {
     render(<input type="text" />);

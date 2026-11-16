@@ -52,7 +52,7 @@ flowchart TB
 | Outbound | Downstream. Sends goods out. | Catalog, Warehouse, Inventory |
 | Analytics | Downstream, read only. Puts together the figures a supervisor looks at (orders, picking speed, short picks, stock by status, occupancy of the storage locations). It owns no table: each context answers for its own data through a contract and Analytics adds and divides ([ADR 0043](../adr/0043-operating-figures-asked-from-each-context.md)). Nothing depends on it. | Warehouse, Inventory, Outbound |
 | Erp | Downstream. The anti-corruption layer of the ERP: every 30 seconds it reads the orders the ERP leaves, translates them into the warehouse's words and hands them to Outbound, and tells the ERP when a shipment left. The ERP's model never goes further ([ADR 0047](../adr/0047-an-anti-corruption-layer-for-the-erp.md)). Nothing depends on it. | Catalog, Outbound, Warehouse |
-| Audit | Observer. Writes down every domain event of the others and answers who did what. It reads them through the event bus and knows none of them, so it depends on nothing and nothing depends on it ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)). | Nothing |
+| Audit | Observer. Writes down every domain event of the others and answers who did what. It reads them through the event bus and knows none of them. The only thing it asks of another context is the email of the user behind an entry, when it lists the trail ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md), [ADR 0059](../adr/0059-naming-the-actor-in-the-audit-log.md)). Nothing depends on it. | Identity |
 
 The ERP is reached through the `Erp` context, an anti-corruption layer, so the ERP's model never reaches the domain. Only orders and shipment confirmations cross so far; the purchase side for Inbound is not built.
 
@@ -62,7 +62,11 @@ Everything below lives in the context's `Application/Contract` namespace. Other 
 
 ### Identity
 
-None. The other contexts need no contract from it. The tenant of a request reaches them through the `CurrentTenant` port in `Shared`, which Identity implements from the signed-in user ([ADR 0008](../adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md)).
+| Contract | Purpose |
+|---|---|
+| `UserDirectory` | The email address of the users of the tenant among some ids, so the audit trail can say who did something without storing it ([ADR 0059](../adr/0059-naming-the-actor-in-the-audit-log.md)). |
+
+The tenant of a request reaches the other contexts through the `CurrentTenant` port in `Shared`, which Identity implements from the signed-in user ([ADR 0008](../adr/0008-jwt-authentication-and-tenancy-from-the-signed-in-user.md)).
 
 ### Catalog
 
@@ -100,7 +104,7 @@ None. The other contexts need no contract from it. The tenant of a request reach
 
 ### Audit
 
-None. It publishes no contract and uses none: it describes any event by reflection ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)).
+It publishes no contract. It describes any event by reflection ([ADR 0018](../adr/0018-audit-trail-of-every-domain-event.md)) and uses one contract, Identity's `UserDirectory`, to put an email to the actor of the entries it lists ([ADR 0059](../adr/0059-naming-the-actor-in-the-audit-log.md)).
 
 ### Outbound
 

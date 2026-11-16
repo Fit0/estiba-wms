@@ -351,7 +351,7 @@ operations:
   # ------------------------------------------------------------------ Audit
   'GET /api/audit-log':
     summary: 'List the audit trail'
-    description: 'Every domain event of the tenant, the latest first, with who caused it, the aggregate it is about and what it carried. Personal data such as email addresses is not kept in it.'
+    description: 'Every domain event of the tenant, the latest first, with who caused it, the aggregate it is about and what it carried. Personal data such as email addresses is not kept in it: `actorEmail` is the address the user has now, looked up when the list is read, and is null when the user is not found or the event had no user.'
     role: supervisor
     query:
       - { name: eventType, description: 'Only this kind of event.', example: 'outbound.pick_list_started' }

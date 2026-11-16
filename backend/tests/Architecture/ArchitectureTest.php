@@ -33,8 +33,8 @@ final class ArchitectureTest
         'Inventory' => ['Catalog', 'Warehouse'],
         'Inbound' => ['Catalog', 'Warehouse', 'Inventory'],
         'Outbound' => ['Catalog', 'Warehouse', 'Inventory'],
-        // The audit trail reads every event through the event bus, and knows no context.
-        'Audit' => [],
+        // The audit trail reads every event through the event bus and knows no context, except that it asks Identity for the email of the user behind an entry (ADR 0059).
+        'Audit' => ['Identity'],
         // The figures are asked from the contracts of the contexts that own the data, and nothing depends on them.
         'Analytics' => ['Warehouse', 'Inventory', 'Outbound'],
         // The anti-corruption layer of the ERP (ADR 0047): it reads the catalogue and the warehouses and hands orders to Outbound.

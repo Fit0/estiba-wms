@@ -38,6 +38,18 @@ final class AuditApiTest extends OutboundApiTestCase
         self::assertSame($this->id($me), $this->entriesOf('outbound.order_registered')[0]['actorId']);
     }
 
+    // AUD-02: the trail keeps the id, and the list says whose it is as the user is now
+    public function testTheListNamesTheActorByTheirEmailAndLeavesItOutOfTheTrail(): void
+    {
+        $me = $this->request('GET', '/api/me');
+        $this->registerOrder('PED-1', [['productId' => $this->shirtId, 'units' => 5]]);
+
+        $entry = $this->entriesOf('outbound.order_registered')[0];
+
+        self::assertSame($me['email'], $entry['actorEmail']);
+        self::assertArrayNotHasKey('email', $this->dataOf($entry));
+    }
+
     public function testTheTrailTellsEveryEventOfARequest(): void
     {
         $this->stock($this->shirtId, $this->location($this->warehouseId, $this->zoneId, 'A-03-01', 'reserve'), 5);

@@ -279,7 +279,7 @@ Identity: `AuditEntryId`. It is a record, not an aggregate: it has no behavior, 
 | ID | Invariant |
 |---|---|
 | AUD-01 | An entry is written once and never changed or deleted. The trail only grows, and nothing in the API can alter it. |
-| AUD-02 | Every domain event that is published is written down, in the transaction of the change that caused it: a change that is rolled back leaves no entry, and one that is committed always does. The actor is the signed-in user, or nobody when a policy runs in a worker. |
+| AUD-02 | Every domain event that is published is written down, in the transaction of the change that caused it: a change that is rolled back leaves no entry, and one that is committed always does. The actor is the signed-in user, or nobody when a policy runs in a worker. The entry keeps the id of the actor and never the email: the list adds the address the user has when it is read. |
 | AUD-03 | The trail holds no personal data. A field of an event marked `#[Sensitive]`, such as the email of a user, is left out. |
 | AUD-04 | An entry belongs to a tenant and is read only by that tenant's supervisors and admins. An event that names no tenant takes the one of the signed-in user, and one with neither is reported in the log and not written. |
 
