@@ -252,6 +252,11 @@ operations:
     summary: 'Get an order'
     description: 'With its lines, what is allocated, picked and shipped of each, and the shortage.'
     role: operator
+  'GET /api/orders/{orderId}/shortages':
+    summary: 'Explain why an order is not fully reserved'
+    description: 'One entry for each line that is short, with the units that no stock covers and, in `obstacles`, the stock of the product that exists but cannot be promised: `at_dock` (received, not put away yet), `not_pickable_location` (staging, packing or quarantine), `blocked_location`, `other_warehouse`, `not_available` (quarantine, damaged or on hold), `shelf_life` (it would reach the customer too close to its expiry date) and `reserved_for_others`. Each one has its units and, when it is about a place, up to five location codes. A line with no obstacles has no stock of the product at all. It is worked out when asked, so it follows the stock: it stops mentioning a dock once the goods are put away.'
+    role: operator
+    paged: false
   'POST /api/orders/{id}/allocate':
     summary: 'Reserve stock for an order'
     description: 'Takes the oldest expiry date first (FEFO) for products with expiry and the oldest receipt first (FIFO) for the rest. What cannot be covered is the shortage, and the order is partially allocated.'

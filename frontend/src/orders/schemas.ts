@@ -25,6 +25,29 @@ export function parseOrderLines(lines: readonly unknown[]): OrderLine[] {
   return lines.map((line) => orderLineSchema.parse(line));
 }
 
+/** Why units that exist cannot be reserved (ADR 0058). The API types its `obstacles` as unknown. */
+export const shortageReasons = [
+  'at_dock',
+  'not_pickable_location',
+  'blocked_location',
+  'other_warehouse',
+  'not_available',
+  'shelf_life',
+  'reserved_for_others',
+] as const;
+
+const shortageObstacleSchema = z.object({
+  reason: z.enum(shortageReasons),
+  units: z.number().int(),
+  locationCodes: z.array(z.string()),
+});
+
+export type ShortageObstacle = z.infer<typeof shortageObstacleSchema>;
+
+export function parseObstacles(obstacles: readonly unknown[]): ShortageObstacle[] {
+  return obstacles.map((obstacle) => shortageObstacleSchema.parse(obstacle));
+}
+
 export const priorities = ['low', 'normal', 'high', 'urgent'] as const;
 
 const text = (max: number) =>

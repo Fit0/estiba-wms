@@ -12,6 +12,7 @@ import type { paths } from './schema';
 
 export type Order = Schema<'Order'>;
 export type OrderStatus = Order['status'];
+export type OrderShortage = Schema<'OrderShortage'>;
 export type OrderPriority = Order['priority'];
 export type OrderSearch = NonNullable<paths['/api/orders']['get']['parameters']['query']>;
 export type RegisterOrderBody = NonNullable<
@@ -26,6 +27,7 @@ export const orderKeys = {
   lists: () => [...orderKeys.all, 'list'] as const,
   list: (search: OrderSearch) => [...orderKeys.lists(), search] as const,
   detail: (id: string) => [...orderKeys.all, 'detail', id] as const,
+  shortages: (id: string) => [...orderKeys.all, 'shortages', id] as const,
 };
 
 /** The orders of a page, the most urgent first, and how many there are in all. */
@@ -53,6 +55,28 @@ export function useOrder(id: string) {
   });
 }
 
+/**
+ * Why each line that is short is not fully reserved (ADR 0058), as the stock is now. It is only asked
+ * for while there is something short, and it is asked again with the order, so the advice goes away
+ * by itself when the goods are put away.
+ */
+export function useOrderShortages(id: string, enabled: boolean) {
+  const api = useApi();
+
+  return useQuery({
+    queryKey: orderKeys.shortages(id),
+    enabled: enabled && id !== '',
+    queryFn: async ({ signal }): Promise<OrderShortage[]> =>
+      unwrap(
+        await api.GET('/api/orders/{orderId}/shortages', {
+          params: { path: { orderId: id } },
+          signal,
+        }),
+      ),
+    refetchInterval: orderRefreshMs,
+  });
+}
+
 /** Every change answers with the order as it is now: it replaces the cached one and the lists refresh. */
 function useOrderMutation<Variables>(
   id: string | undefined,
@@ -64,7 +88,10 @@ function useOrderMutation<Variables>(
     mutationFn: call,
     onSuccess: async (order) => {
       queries.setQueryData(orderKeys.detail(id ?? order.id), order);
-      await queries.invalidateQueries({ queryKey: orderKeys.lists() });
+      await Promise.all([
+        queries.invalidateQueries({ queryKey: orderKeys.lists() }),
+        queries.invalidateQueries({ queryKey: orderKeys.shortages(id ?? order.id) }),
+      ]);
     },
   });
 }

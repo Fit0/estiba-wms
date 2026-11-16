@@ -50,6 +50,7 @@ Architecture decisions are recorded as ADRs in [`docs/adr`](docs/adr):
 - [0055](docs/adr/0055-measuring-performance-with-volume-data-and-k6.md) Measuring performance with volume data and k6
 - [0056](docs/adr/0056-an-index-for-the-latest-movements.md) An index for the latest movements
 - [0057](docs/adr/0057-http-caching-of-the-api.md) HTTP caching of the API
+- [0058](docs/adr/0058-explaining-why-an-order-is-not-fully-reserved.md) Explaining why an order is not fully reserved
 
 See also the [system context diagram](docs/architecture/c4-context.md), the [ERP integration diagrams](docs/architecture/erp-integration.md) and the [domain model](docs/domain/README.md): ubiquitous language, event storming, aggregates with numbered invariants, and the context map.
 

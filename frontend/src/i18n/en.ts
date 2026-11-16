@@ -574,6 +574,25 @@ export const en: Record<keyof typeof es, string> = {
   'order.error.product': 'Choose a product.',
   'order.error.lines': 'The order needs at least one line.',
   'order.allocate': 'Reserve stock',
+  'order.allocate.short':
+    'Reserved what there was for {{reference}}: {{units}} units are short. See below why.',
+  'shortage.title': 'Why not everything could be reserved',
+  'shortage.intro':
+    'What there is of the product in the warehouse and what keeps it from being used right now.',
+  'shortage.missing': '{{units}} short',
+  'shortage.noStock': 'There is no stock of this product in the warehouse.',
+  'shortage.putaway': 'Go to putaway',
+  'shortage.reason.at_dock':
+    '{{units}} units are at a dock and not put away ({{codes}}): they have to be put away before they can be reserved.',
+  'shortage.reason.not_pickable_location':
+    '{{units}} units are in an area that is not for picking ({{codes}}).',
+  'shortage.reason.blocked_location': '{{units}} units are in a blocked location ({{codes}}).',
+  'shortage.reason.other_warehouse': '{{units}} units are in another warehouse ({{codes}}).',
+  'shortage.reason.not_available':
+    '{{units}} units are not available: in quarantine, damaged or on hold ({{codes}}).',
+  'shortage.reason.shelf_life':
+    '{{units}} units would reach the customer with too little shelf life ({{codes}}).',
+  'shortage.reason.reserved_for_others': '{{units}} units are reserved for other orders.',
   'order.allocate.done': 'Stock reserved for {{reference}}',
   'order.acceptBackorder': 'Accept backorder',
   'order.accept-backorder.done': 'Backorder of {{reference}} accepted',

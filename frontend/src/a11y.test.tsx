@@ -486,6 +486,61 @@ describe('accessibility (axe)', () => {
     await expectNoViolations();
   });
 
+  it('an order with the reasons it could not be reserved', async () => {
+    const delivery = {
+      id: 'o-1',
+      reference: 'PED-2026-1187',
+      warehouseId: 'w-1',
+      customer: 'Marea Moda Zaragoza',
+      shipTo: {
+        street: 'Calle Mayor 12',
+        postalCode: '50001',
+        city: 'Zaragoza',
+        countryCode: 'ES',
+      },
+      priority: 'urgent',
+      cutOffAt: '2026-10-30T14:00:00+00:00',
+      registeredAt: '2026-10-29T09:00:00+00:00',
+      status: 'registered',
+      shortageUnits: 24,
+      backorderAccepted: false,
+      waveId: null,
+      lines: [
+        {
+          lineNumber: 1,
+          productId: 'p-1',
+          orderedUnits: 24,
+          allocatedUnits: 0,
+          shortageUnits: 24,
+          pickedUnits: 0,
+          shippedUnits: 0,
+          reservationId: null,
+        },
+      ],
+    };
+    const orderApi = apiOf(['operator'], {
+      ...withSession(['operator']),
+      'GET /api/warehouses': () => json([warehouse]),
+      'GET /api/products/p-1': () => json(inboundFixtures.product),
+      'GET /api/orders/o-1': () => json(delivery),
+      'GET /api/orders/o-1/shortages': () =>
+        json([
+          {
+            lineNumber: 1,
+            productId: 'p-1',
+            orderedUnits: 24,
+            allocatedUnits: 0,
+            shortageUnits: 24,
+            obstacles: [{ reason: 'at_dock', units: 40, locationCodes: ['D-02-01'] }],
+          },
+        ]),
+    });
+    open('/orders/o-1', orderApi);
+
+    await screen.findByRole('region', { name: 'Por qué no se ha podido reservar todo' });
+    await expectNoViolations();
+  });
+
   it('the putaway tasks, with the dialogs to put away and to split', async () => {
     const user = userEvent.setup();
     const putaway = apiOf(['operator'], {

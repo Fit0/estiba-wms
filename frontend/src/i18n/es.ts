@@ -573,6 +573,25 @@ export const es = {
   'order.error.product': 'Elige un producto.',
   'order.error.lines': 'El pedido necesita al menos una línea.',
   'order.allocate': 'Reservar stock',
+  'order.allocate.short':
+    'Reservado lo que había en {{reference}}: faltan {{units}} unidades. Mira abajo por qué.',
+  'shortage.title': 'Por qué no se ha podido reservar todo',
+  'shortage.intro': 'Lo que hay del producto en el almacén y lo que impide usarlo ahora mismo.',
+  'shortage.missing': 'Faltan {{units}}',
+  'shortage.noStock': 'No hay stock de este producto en el almacén.',
+  'shortage.putaway': 'Ir a ubicar',
+  'shortage.reason.at_dock':
+    'Hay {{units}} unidades en un muelle sin ubicar ({{codes}}): hay que ubicarlas para poder reservarlas.',
+  'shortage.reason.not_pickable_location':
+    'Hay {{units}} unidades en una zona que no es de picking ({{codes}}).',
+  'shortage.reason.blocked_location':
+    'Hay {{units}} unidades en una ubicación bloqueada ({{codes}}).',
+  'shortage.reason.other_warehouse': 'Hay {{units}} unidades en otro almacén ({{codes}}).',
+  'shortage.reason.not_available':
+    'Hay {{units}} unidades que no están disponibles: en cuarentena, dañadas o retenidas ({{codes}}).',
+  'shortage.reason.shelf_life':
+    'Hay {{units}} unidades que llegarían al cliente con poca caducidad restante ({{codes}}).',
+  'shortage.reason.reserved_for_others': 'Hay {{units}} unidades reservadas para otros pedidos.',
   'order.allocate.done': 'Stock reservado para {{reference}}',
   'order.acceptBackorder': 'Aceptar backorder',
   'order.accept-backorder.done': 'Backorder de {{reference}} aceptado',
