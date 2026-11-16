@@ -18,7 +18,7 @@
 # Ids in the examples are made up but valid.
 
 tags:
-  Identity: 'Signing in and the signed-in user.'
+  Identity: 'Signing in, the signed-in user and the users of the tenant.'
   Warehouse: 'Warehouses, their zones and their locations.'
   Catalog: 'Products, their barcodes and their packaging.'
   Inventory: 'Stock by location, its ledger of movements and what each product has.'
@@ -46,6 +46,32 @@ operations:
     summary: 'Get the signed-in user'
     description: 'The user, the roles and the tenant that the token stands for. The roles are read from the database on every request, not from the token.'
     role: operator
+  'GET /api/users':
+    summary: 'List the users of the tenant'
+    description: 'By email address. It has no password in it: only the id, the email, the roles and whether the user is `active` or `disabled`.'
+    role: admin
+  'POST /api/users':
+    summary: 'Create a user'
+    description: 'The user belongs to the tenant of the administrator who creates it. The email address is unique in the whole system, ignoring case, and is kept in lower case. The password has 12 to 72 characters: the administrator chooses it and gives it to the person, and it is never shown again. A user has at least one role, among `admin`, `supervisor` and `operator`, each including the ones below it.'
+    role: admin
+    example: { email: 'carlos@marea-moda.example', password: 'una-contrasena-larga-1', roles: ['operator'] }
+  'GET /api/users/{id}':
+    summary: 'Get a user of the tenant'
+    description: 'A user of another tenant answers 404, the same as one that does not exist.'
+    role: admin
+  'POST /api/users/{id}/roles':
+    summary: 'Replace the roles of a user'
+    description: 'The roles sent are the ones the user has from now on, in place of the old ones. Asking for the roles the user already has changes nothing. It answers 422 `identity.last_admin_required` if the user is the last active admin and would lose the role, and 422 `identity.cannot_change_own_access` if it is the signed-in administrator giving up its own admin role.'
+    role: admin
+    example: { roles: ['supervisor'] }
+  'POST /api/users/{id}/disable':
+    summary: 'Disable a user'
+    description: 'A disabled user cannot sign in and any token it holds stops working at once. A user already disabled answers 409. It answers 422 `identity.last_admin_required` for the last active admin, and 422 `identity.cannot_change_own_access` for the signed-in administrator itself.'
+    role: admin
+  'POST /api/users/{id}/enable':
+    summary: 'Enable a user'
+    description: 'Lets a disabled user sign in again. A user that is not disabled answers 409.'
+    role: admin
 
   # ------------------------------------------------------------------ Warehouse
   'GET /api/warehouses':

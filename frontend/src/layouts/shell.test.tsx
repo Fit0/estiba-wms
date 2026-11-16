@@ -145,6 +145,14 @@ describe('the side navigation', () => {
       'nav.erp',
     ]);
   });
+
+  it('shows an admin the users too', () => {
+    const labels = visibleNavigation(['admin']).flatMap((group) =>
+      group.items.map((item) => item.label),
+    );
+
+    expect(labels.slice(-3)).toEqual(['nav.audit', 'nav.erp', 'nav.users']);
+  });
 });
 
 /**

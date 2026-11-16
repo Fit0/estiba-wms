@@ -1158,6 +1158,122 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the users of the tenant
+         * @description By email address. It has no password in it: only the id, the email, the roles and whether the user is `active` or `disabled`.
+         *
+         *     **Role:** admin.
+         */
+        get: operations["api_users_get_collection"];
+        put?: never;
+        /**
+         * Create a user
+         * @description The user belongs to the tenant of the administrator who creates it. The email address is unique in the whole system, ignoring case, and is kept in lower case. The password has 12 to 72 characters: the administrator chooses it and gives it to the person, and it is never shown again. A user has at least one role, among `admin`, `supervisor` and `operator`, each including the ones below it.
+         *
+         *     **Role:** admin.
+         */
+        post: operations["api_users_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a user of the tenant
+         * @description A user of another tenant answers 404, the same as one that does not exist.
+         *
+         *     **Role:** admin.
+         */
+        get: operations["api_users_id_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{id}/disable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Disable a user
+         * @description A disabled user cannot sign in and any token it holds stops working at once. A user already disabled answers 409. It answers 422 `identity.last_admin_required` for the last active admin, and 422 `identity.cannot_change_own_access` for the signed-in administrator itself.
+         *
+         *     **Role:** admin.
+         */
+        post: operations["api_users_iddisable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{id}/enable": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enable a user
+         * @description Lets a disabled user sign in again. A user that is not disabled answers 409.
+         *
+         *     **Role:** admin.
+         */
+        post: operations["api_users_idenable_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replace the roles of a user
+         * @description The roles sent are the ones the user has from now on, in place of the old ones. Asking for the roles the user already has changes nothing. It answers 422 `identity.last_admin_required` if the user is the last active admin and would lose the role, and 422 `identity.cannot_change_own_access` if it is the signed-in administrator giving up its own admin role.
+         *
+         *     **Role:** admin.
+         */
+        post: operations["api_users_idroles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/warehouses": {
         parameters: {
             query?: never;
@@ -1877,6 +1993,21 @@ export interface components {
             id: string;
             name: string;
             defaultLanguage: string;
+        };
+        User: {
+            id: string;
+            email: string;
+            roles: unknown[];
+            /** @enum {string} */
+            status: "active" | "disabled";
+        };
+        "User.ChangeUserRolesInput": {
+            roles?: unknown[];
+        };
+        "User.CreateUserInput": {
+            email?: string;
+            password?: string;
+            roles?: unknown[];
         };
         Warehouse: {
             id: string;
@@ -4283,6 +4414,221 @@ export interface operations {
             };
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
+        };
+    };
+    api_users_get_collection: {
+        parameters: {
+            query?: {
+                /** @description The collection page number */
+                page?: number;
+                /** @description How many to show in a page: 30 by default, 100 at most. */
+                itemsPerPage?: number;
+            };
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User collection */
+            200: {
+                headers: {
+                    /**
+                     * @description How many items match the filters, in all the pages.
+                     * @example 125
+                     */
+                    "X-Total-Count"?: number;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    api_users_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** @description The new User resource */
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "email": "carlos@marea-moda.example",
+                 *       "password": "una-contrasena-larga-1",
+                 *       "roles": [
+                 *         "operator"
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["User.CreateUserInput"];
+            };
+        };
+        responses: {
+            /** @description User resource created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    api_users_id_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path: {
+                /** @description User identifier */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User resource */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    api_users_iddisable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path: {
+                /** @description User identifier */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User resource created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    api_users_idenable_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path: {
+                /** @description User identifier */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description User resource created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
+        };
+    };
+    api_users_idroles_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description The language of the texts in the answer: `es` (default) or `en`. */
+                "Accept-Language"?: components["parameters"]["AcceptLanguage"];
+            };
+            path: {
+                /** @description User identifier */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description The new User resource */
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "roles": [
+                 *         "supervisor"
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["User.ChangeUserRolesInput"];
+            };
+        };
+        responses: {
+            /** @description User resource created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["User"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["Unprocessable"];
         };
     };
     api_warehouses_get_collection: {

@@ -30,7 +30,7 @@ final readonly class DisableUserHandler implements CommandHandler
     public function __invoke(DisableUser $command): User
     {
         $user = $this->users->findByEmail(Email::fromString($command->email)) ?? throw UserNotFound::forEmail($command->email);
-        $user->disable($this->clock->now());
+        $user->disable($this->clock->now(), $this->users);
         $this->users->save($user);
 
         $this->events->publish(...$user->pullEvents());

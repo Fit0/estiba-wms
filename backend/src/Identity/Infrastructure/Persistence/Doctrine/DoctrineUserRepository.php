@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace App\Identity\Infrastructure\Persistence\Doctrine;
 
 use App\Identity\Domain\Email;
+use App\Identity\Domain\Role;
 use App\Identity\Domain\User;
 use App\Identity\Domain\UserId;
 use App\Identity\Domain\UserRepository;
+use App\Identity\Domain\UserStatus;
+use App\Shared\Domain\Page;
+use App\Shared\Domain\PageRequest;
+use App\Shared\Domain\TenantId;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -46,6 +51,44 @@ final readonly class DoctrineUserRepository implements UserRepository
     public function save(User $user): void
     {
         $this->entityManager->persist($user);
+    }
+
+    #[\Override]
+    public function search(TenantId $tenantId, PageRequest $page): Page
+    {
+        $total = $this->entityManager->createQueryBuilder()
+            ->select('COUNT(u.id)')
+            ->from(User::class, 'u')
+            ->where('u.tenantId = :tenant')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        /** @var list<User> $items */
+        $items = $this->entityManager->createQueryBuilder()
+            ->select('u')
+            ->from(User::class, 'u')
+            ->where('u.tenantId = :tenant')
+            ->setParameter('tenant', $tenantId, 'tenant_id')
+            ->orderBy('u.email', 'ASC')
+            ->setFirstResult($page->offset())
+            ->setMaxResults($page->itemsPerPage)
+            ->getQuery()
+            ->getResult();
+
+        return new Page($items, (int) $total, $page);
+    }
+
+    #[\Override]
+    public function countIn(TenantId $tenantId): int
+    {
+        // A plain query on the column: the roles are a JSON list and the rule is only about the admin.
+        $count = $this->entityManager->getConnection()->fetchOne(
+            'SELECT COUNT(*) FROM users WHERE tenant_id = ? AND status = ? AND roles::jsonb @> ?::jsonb',
+            [$tenantId->value, UserStatus::Active->value, json_encode([Role::Admin->value], \JSON_THROW_ON_ERROR)],
+        );
+
+        return is_numeric($count) ? (int) $count : 0;
     }
 
     #[\Override]

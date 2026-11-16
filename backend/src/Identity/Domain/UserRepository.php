@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Identity\Domain;
 
-interface UserRepository extends EmailRegistry
+use App\Shared\Domain\Page;
+use App\Shared\Domain\PageRequest;
+use App\Shared\Domain\TenantId;
+
+interface UserRepository extends EmailRegistry, ActiveAdmins
 {
     public function find(UserId $id): ?User;
 
@@ -14,4 +18,11 @@ interface UserRepository extends EmailRegistry
     public function findByEmail(Email $email): ?User;
 
     public function save(User $user): void;
+
+    /**
+     * The users of the tenant, by email address.
+     *
+     * @return Page<User>
+     */
+    public function search(TenantId $tenantId, PageRequest $page): Page;
 }

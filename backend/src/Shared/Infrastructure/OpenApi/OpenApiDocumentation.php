@@ -78,7 +78,7 @@ final readonly class OpenApiDocumentation
         $segment = explode('/', $path)[2] ?? '';
 
         return match ($segment) {
-            'auth', 'me' => 'Identity',
+            'auth', 'me', 'users' => 'Identity',
             'warehouses', 'zones', 'locations' => 'Warehouse',
             'products' => 'Catalog',
             'stock-items', 'stock-movements' => 'Inventory',

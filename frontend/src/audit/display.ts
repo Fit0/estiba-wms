@@ -17,6 +17,7 @@ export const eventTypes = [
   'identity.user_disabled',
   'identity.user_enabled',
   'identity.user_registered',
+  'identity.user_roles_changed',
   'inbound.asn_cancelled',
   'inbound.asn_closed',
   'inbound.asn_registered',

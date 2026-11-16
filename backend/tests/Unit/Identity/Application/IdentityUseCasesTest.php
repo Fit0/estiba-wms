@@ -118,7 +118,8 @@ final class IdentityUseCasesTest extends TestCase
 
     public function testDisablesAndEnablesAUser(): void
     {
-        $this->registerTenant()(new RegisterTenant('Acme', 'es', 'admin@acme.test', 'correct-horse-battery'));
+        $tenant = $this->registerTenant()(new RegisterTenant('Acme', 'es', 'admin@acme.test', 'correct-horse-battery'))->tenant;
+        $this->registerUser()(new RegisterUser($tenant->id()->value, 'second@acme.test', 'correct-horse-battery', ['admin']));
         $disable = new DisableUserHandler($this->fakes->users, IdentityFakes::events(), IdentityFakes::clock());
         $enable = new EnableUserHandler($this->fakes->users, IdentityFakes::events(), IdentityFakes::clock());
 

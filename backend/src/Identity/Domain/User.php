@@ -7,7 +7,9 @@ namespace App\Identity\Domain;
 use App\Identity\Domain\Event\UserDisabled;
 use App\Identity\Domain\Event\UserEnabled;
 use App\Identity\Domain\Event\UserRegistered;
+use App\Identity\Domain\Event\UserRolesChanged;
 use App\Identity\Domain\Exception\EmailAlreadyUsed;
+use App\Identity\Domain\Exception\LastAdminRequired;
 use App\Identity\Domain\Exception\UserAlreadyDisabled;
 use App\Identity\Domain\Exception\UserNotDisabled;
 use App\Identity\Domain\Exception\UserWithoutRole;
@@ -30,7 +32,7 @@ final class User extends AggregateRoot
         private readonly TenantId $tenantId,
         private readonly Email $email,
         private readonly PasswordHash $passwordHash,
-        private readonly array $roles,
+        private array $roles,
     ) {
     }
 
@@ -66,15 +68,46 @@ final class User extends AggregateRoot
 
     /**
      * @throws UserAlreadyDisabled
+     * @throws LastAdminRequired   IDN-11
      */
-    public function disable(\DateTimeImmutable $at): void
+    public function disable(\DateTimeImmutable $at, ActiveAdmins $admins): void
     {
         if (UserStatus::Disabled === $this->status) {
             throw UserAlreadyDisabled::forEmail($this->email);
         }
 
+        $this->assertAnotherAdminRemains($admins);
+
         $this->status = UserStatus::Disabled;
         $this->record(new UserDisabled($this->id, $this->email, $at));
+    }
+
+    /**
+     * Gives the user these roles in place of the ones it has. Asking for what it already has changes nothing
+     * and says nothing.
+     *
+     * @param list<Role> $roles
+     *
+     * @throws UserWithoutRole   IDN-04
+     * @throws LastAdminRequired IDN-11
+     */
+    public function changeRoles(array $roles, \DateTimeImmutable $at, ActiveAdmins $admins): void
+    {
+        $unique = array_values(array_unique($roles, \SORT_REGULAR));
+        if ([] === $unique) {
+            throw UserWithoutRole::none();
+        }
+
+        if ($this->hasTheSameRolesAs($unique)) {
+            return;
+        }
+
+        if (!\in_array(Role::Admin, $unique, true)) {
+            $this->assertAnotherAdminRemains($admins);
+        }
+
+        $this->roles = $unique;
+        $this->record(new UserRolesChanged($this->id, $this->tenantId, $unique, $at));
     }
 
     /**
@@ -88,6 +121,42 @@ final class User extends AggregateRoot
 
         $this->status = UserStatus::Active;
         $this->record(new UserEnabled($this->id, $this->email, $at));
+    }
+
+    /**
+     * IDN-11: an active administrator is only taken away if another one stays.
+     *
+     * @throws LastAdminRequired
+     */
+    private function assertAnotherAdminRemains(ActiveAdmins $admins): void
+    {
+        if ($this->isActive() && $this->hasRole(Role::Admin) && $admins->countIn($this->tenantId) <= 1) {
+            throw LastAdminRequired::create();
+        }
+    }
+
+    /**
+     * @param non-empty-list<Role> $roles
+     */
+    private function hasTheSameRolesAs(array $roles): bool
+    {
+        return $this->sortedNames($roles) === $this->sortedNames($this->roles);
+    }
+
+    /**
+     * @param list<Role> $roles
+     *
+     * @return list<string>
+     */
+    private function sortedNames(array $roles): array
+    {
+        $names = [];
+        foreach ($roles as $role) {
+            $names[] = $role->value;
+        }
+        sort($names);
+
+        return $names;
     }
 
     /**

@@ -48,10 +48,12 @@ erp:
     warehouse_unknown: 'El almacén {code} que atiende los pedidos del ERP no existe.'
 
 identity:
+    cannot_change_own_access: 'No puedes deshabilitarte ni quitarte tu propio rol de administrador.'
     credentials_invalid: 'El correo o la contraseña no son correctos.'
     email_already_used: 'Ya existe otro usuario con el correo {email}.'
     email_invalid: '"{value}" no es una dirección de correo válida.'
     language_invalid: '"{value}" no es un idioma. Usa es o en.'
+    last_admin_required: 'El cliente necesita al menos un administrador activo.'
     password_invalid: 'La contraseña debe tener entre {minLength} y {maxLength} caracteres.'
     refresh_token_invalid: 'No se ha podido renovar la sesión. Inicia sesión de nuevo.'
     role_invalid: '"{value}" no es un rol. Usa admin, supervisor u operator.'
@@ -60,6 +62,7 @@ identity:
     tenant_not_found: 'No existe ningún cliente con el identificador {id}.'
     too_many_login_attempts: 'Demasiados intentos de inicio de sesión. Espera unos minutos y vuelve a intentarlo.'
     user_already_disabled: 'El usuario {email} ya está deshabilitado.'
+    user_id_not_found: 'No existe ningún usuario con el identificador {id}.'
     user_not_disabled: 'El usuario {email} no está deshabilitado.'
     user_not_found: 'No existe ningún usuario con el correo {email}.'
 

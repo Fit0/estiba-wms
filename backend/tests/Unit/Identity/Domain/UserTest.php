@@ -8,6 +8,7 @@ use App\Identity\Domain\Email;
 use App\Identity\Domain\Event\UserDisabled;
 use App\Identity\Domain\Event\UserEnabled;
 use App\Identity\Domain\Event\UserRegistered;
+use App\Identity\Domain\Event\UserRolesChanged;
 use App\Identity\Domain\PasswordHash;
 use App\Identity\Domain\Role;
 use App\Identity\Domain\User;
@@ -78,7 +79,7 @@ final class UserTest extends TestCase
         $user = IdentityMother::user();
         $user->pullEvents();
 
-        $user->disable(IdentityMother::at());
+        $user->disable(IdentityMother::at(), IdentityMother::admins(2));
 
         self::assertSame(UserStatus::Disabled, $user->status());
         self::assertFalse($user->isActive());
@@ -88,17 +89,17 @@ final class UserTest extends TestCase
     public function testDisablingAUserThatIsAlreadyDisabledIsRejected(): void
     {
         $user = IdentityMother::user('ana@example.com');
-        $user->disable(IdentityMother::at());
+        $user->disable(IdentityMother::at(), IdentityMother::admins(2));
         $user->pullEvents();
 
-        self::assertDomainError('identity.user_already_disabled', ['email' => 'ana@example.com'], static fn () => $user->disable(IdentityMother::at()));
+        self::assertDomainError('identity.user_already_disabled', ['email' => 'ana@example.com'], static fn () => $user->disable(IdentityMother::at(), IdentityMother::admins(2)));
         self::assertSame([], $user->pullEvents());
     }
 
     public function testEnablingBringsTheUserBack(): void
     {
         $user = IdentityMother::user();
-        $user->disable(IdentityMother::at());
+        $user->disable(IdentityMother::at(), IdentityMother::admins(2));
         $user->pullEvents();
 
         $user->enable(IdentityMother::at());
@@ -112,6 +113,89 @@ final class UserTest extends TestCase
         $user = IdentityMother::user('ana@example.com');
 
         self::assertDomainError('identity.user_not_disabled', ['email' => 'ana@example.com'], static fn () => $user->enable(IdentityMother::at()));
+    }
+
+    public function testChangingTheRolesReplacesThemAndRaisesAnEvent(): void
+    {
+        $user = IdentityMother::user('ana@example.com', [Role::Operator]);
+        $user->pullEvents();
+
+        $user->changeRoles([Role::Supervisor, Role::Operator], IdentityMother::at(), IdentityMother::admins(1));
+
+        self::assertSame([Role::Supervisor, Role::Operator], $user->roles());
+        $events = $user->pullEvents();
+        self::assertCount(1, $events);
+        self::assertInstanceOf(UserRolesChanged::class, $events[0]);
+        self::assertSame([Role::Supervisor, Role::Operator], $events[0]->roles);
+        self::assertTrue($events[0]->tenantId->equals($user->tenantId()));
+    }
+
+    public function testAskingForTheRolesItAlreadyHasChangesNothing(): void
+    {
+        $user = IdentityMother::user('ana@example.com', [Role::Supervisor, Role::Operator]);
+        $user->pullEvents();
+
+        $user->changeRoles([Role::Operator, Role::Supervisor], IdentityMother::at(), IdentityMother::admins(1));
+
+        self::assertSame([Role::Supervisor, Role::Operator], $user->roles());
+        self::assertSame([], $user->pullEvents());
+    }
+
+    // IDN-04
+    public function testChangingTheRolesCannotLeaveAUserWithoutRoles(): void
+    {
+        $user = IdentityMother::user();
+
+        self::assertDomainError('identity.roles_required', [], static fn () => $user->changeRoles([], IdentityMother::at(), IdentityMother::admins(2)));
+        self::assertSame([Role::Supervisor], $user->roles());
+    }
+
+    // IDN-11: a tenant keeps an active administrator
+    public function testTheLastActiveAdminCannotBeDisabled(): void
+    {
+        $user = IdentityMother::user(roles: [Role::Admin]);
+
+        self::assertDomainError('identity.last_admin_required', [], static fn () => $user->disable(IdentityMother::at(), IdentityMother::admins(1)));
+        self::assertTrue($user->isActive());
+    }
+
+    public function testTheLastActiveAdminCannotLoseTheAdminRole(): void
+    {
+        $user = IdentityMother::user(roles: [Role::Admin, Role::Operator]);
+
+        self::assertDomainError('identity.last_admin_required', [], static fn () => $user->changeRoles([Role::Supervisor], IdentityMother::at(), IdentityMother::admins(1)));
+        self::assertSame([Role::Admin, Role::Operator], $user->roles());
+    }
+
+    public function testAnAdminCanBeDisabledOrDemotedWhileAnotherOneStays(): void
+    {
+        $first = IdentityMother::user('ana@example.com', [Role::Admin]);
+        $second = IdentityMother::user('luis@example.com', [Role::Admin]);
+
+        $first->disable(IdentityMother::at(), IdentityMother::admins(2));
+        $second->changeRoles([Role::Supervisor], IdentityMother::at(), IdentityMother::admins(2));
+
+        self::assertFalse($first->isActive());
+        self::assertSame([Role::Supervisor], $second->roles());
+    }
+
+    public function testADisabledAdminDoesNotCountAndCanBeDemoted(): void
+    {
+        $user = IdentityMother::user(roles: [Role::Admin]);
+        $user->disable(IdentityMother::at(), IdentityMother::admins(2));
+
+        $user->changeRoles([Role::Operator], IdentityMother::at(), IdentityMother::admins(0));
+
+        self::assertSame([Role::Operator], $user->roles());
+    }
+
+    public function testAnAdminKeepsItsRoleWhenTheChangeKeepsAdmin(): void
+    {
+        $user = IdentityMother::user(roles: [Role::Admin]);
+
+        $user->changeRoles([Role::Admin, Role::Operator], IdentityMother::at(), IdentityMother::admins(1));
+
+        self::assertSame([Role::Admin, Role::Operator], $user->roles());
     }
 
     // IDN-05: a user belongs to one tenant for its whole life, so nothing can move it.

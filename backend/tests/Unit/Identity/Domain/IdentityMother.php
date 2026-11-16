@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Identity\Domain;
 
+use App\Identity\Domain\ActiveAdmins;
 use App\Identity\Domain\Email;
 use App\Identity\Domain\PasswordHash;
 use App\Identity\Domain\Role;
@@ -20,6 +21,24 @@ final class IdentityMother
     public static function at(): \DateTimeImmutable
     {
         return new \DateTimeImmutable('2026-10-20T10:00:00+00:00');
+    }
+
+    /**
+     * The administrators a tenant has, whatever the tenant: a unit test says how many there are.
+     */
+    public static function admins(int $count): ActiveAdmins
+    {
+        return new readonly class($count) implements ActiveAdmins {
+            public function __construct(private int $count)
+            {
+            }
+
+            #[\Override]
+            public function countIn(TenantId $tenantId): int
+            {
+                return $this->count;
+            }
+        };
     }
 
     public static function userId(): UserId
