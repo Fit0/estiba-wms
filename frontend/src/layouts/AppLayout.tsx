@@ -1,6 +1,7 @@
-import { useCallback, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { Outlet } from 'react-router';
 import { useAuth } from '../auth/useAuth';
+import { RouteLoading } from '../components/RouteLoading';
 import { CommandPalette, useCommandPaletteShortcut } from '../components/ui/CommandPalette';
 import { useTranslation } from '../i18n';
 import { NotificationStream } from '../notifications/NotificationStream';
@@ -44,7 +45,9 @@ export function AppLayout() {
             onOpenPalette={togglePalette}
           />
           <main id="content" tabIndex={-1} className="flex-1 p-margin lg:p-margin-lg">
-            <Outlet />
+            <Suspense fallback={<RouteLoading />}>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
         <CommandPalette

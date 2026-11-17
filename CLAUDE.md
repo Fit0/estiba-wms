@@ -109,6 +109,7 @@ The frontend lives in `frontend/` and runs in Docker like everything else: never
 - Server state goes through TanStack Query (a hook per resource in `src/api/`, with its keys), never copied into local state. The session (`AuthClient`) is the exception: it is what the queries depend on. Calls go through `useApi()`, which sends the token and the language; nothing else sends a token.
 - The access token lives only in memory (`AuthClient`), never in `localStorage`, `sessionStorage` or a cookie of the app. The refresh token is a cookie the server sets and JavaScript cannot read (ADR 0022).
 - Function components and hooks only.
+- Every screen is loaded when someone goes to it: in `routes.tsx` a page is written with `page(() => import('./pages/X'), 'X')`, never with a static `import`, so the first load stays small. Only signing in and "not found" are in the main file (`routes.test.tsx` fails otherwise). `npm run size` checks the build against `frontend/bundle-budget.json` in `make front-qa` and CI; raise the budget only with a reason written in the pull request ([ADR 0061](docs/adr/0061-lazy-screens-and-a-size-budget.md)).
 
 ### Design (from UI-01)
 

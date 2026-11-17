@@ -53,6 +53,21 @@ Every endpoint costs the same, including the cheapest, and the database answers 
 
 Reading the two together: what a request costs is 50 ms to 125 ms on top of a floor of 18 ms, and for the two slowest (movements, page 600 of the orders) the database takes the larger share: the count of the ledger and the sort of the orders. Nothing else is left that a measurement justifies changing.
 
+## 4. JavaScript of the frontend (E10-07)
+
+`npm run build`, then `npm run size`. Sizes in gzip. The budget is in `frontend/bundle-budget.json` ([ADR 0061](../adr/0061-lazy-screens-and-a-size-budget.md)).
+
+| File | Before | After |
+|---|---|---|
+| Main file | 984 kB raw, 279 kB gzip | 418 kB raw, 130 kB gzip |
+| Initial JavaScript in all (what the first screen downloads: the main file and the four it preloads) | 279 kB | 220 kB |
+| Screens, one file each | 0 | 19, the largest (stock) 12 kB raw, 5 kB gzip |
+| Form and validation code, shared by the screens that have forms | in the main file | 89 kB raw, 25 kB gzip, plus 47 kB raw, 16 kB gzip for the schemas library, downloaded with the first form |
+| ZXing, for the camera, already lazy | 454 kB raw, 118 kB gzip | unchanged |
+| Warning of the build about the size of a file | yes | no |
+
+The first screen is about 60 kB of gzip lighter (21 %). Most of what is left is React, the router, TanStack Query and the shared primitives, which every screen needs. Splitting those by hand would help the browser cache between releases, not the first load, so it is left for the day the numbers ask for it.
+
 ## Left as it is, on purpose
 
 - **`GET /api/pick-lists` is not paged.** It is read with `waveId` by the screens, and a wave holds at most 50 lists (OUT-16). Without the filter it returns every list of the tenant. Paging it changes the contract of the API and the picking screens, for a list nobody reads whole. It goes in the list of known limits.

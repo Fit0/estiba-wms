@@ -266,6 +266,8 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Size of the JavaScript against its budget
+        run: npm run size
 
   frontend-e2e:
     name: Frontend E2E

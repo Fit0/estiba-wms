@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 import { AuthClient } from './auth/AuthClient';
 import { routes } from './routes';
+import routesSource from './routes.tsx?raw';
 import { apiOf, noSession, open, signIn, withSession } from './testing/renderApp';
 
 describe('routes and authentication', () => {
@@ -168,5 +169,15 @@ describe('routes and authentication', () => {
     await user.click(screen.getByRole('button', { name: 'Ocultar la contraseña' }));
 
     expect(password).toHaveAttribute('type', 'password');
+  });
+});
+
+describe('the size of the app (E10-07)', () => {
+  it('writes only signing in and "not found" into the main file, every other screen is lazy', () => {
+    const written = [...routesSource.matchAll(/^import \{[^}]*\} from '\.\/pages\/(\w+)';$/gm)].map(
+      (match) => match[1],
+    );
+
+    expect(written.sort()).toEqual(['LoginPage', 'NotFoundPage']);
   });
 });
