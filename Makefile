@@ -156,3 +156,4 @@ front-qa: ## Run every frontend check (the ones the Frontend job of CI runs)
 	$(FRONT) npm run typecheck
 	$(FRONT) npm run test
 	$(FRONT) npm run build
+	$(FRONT) npm run size

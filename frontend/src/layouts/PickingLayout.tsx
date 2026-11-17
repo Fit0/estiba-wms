@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Link, Outlet } from 'react-router';
 import { BrandMark } from '../components/BrandMark';
+import { RouteLoading } from '../components/RouteLoading';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { useTranslation } from '../i18n';
 import { PendingConfirmations } from '../offline/PendingConfirmations';
@@ -41,7 +42,9 @@ export function PickingLayout() {
       </header>
       <main id="content" tabIndex={-1} className="grid flex-1 content-start gap-gutter-lg p-margin">
         <PendingConfirmations />
-        <Outlet />
+        <Suspense fallback={<RouteLoading />}>
+          <Outlet />
+        </Suspense>
       </main>
       <footer className="border-t border-line bg-surface-1 p-margin">
         <Link

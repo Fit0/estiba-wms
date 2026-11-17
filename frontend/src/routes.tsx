@@ -1,29 +1,45 @@
+import { lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import type { RouteObject } from 'react-router';
 import { RequireAuth } from './auth/RequireAuth';
 import { RequireRole } from './auth/RequireRole';
 import { AppLayout } from './layouts/AppLayout';
 import { PickingLayout } from './layouts/PickingLayout';
-import { AsnPage } from './pages/AsnPage';
-import { AsnsPage } from './pages/AsnsPage';
-import { AuditPage } from './pages/AuditPage';
-import { UsersPage } from './pages/UsersPage';
-import { ErpPage } from './pages/ErpPage';
-import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { OrderPage } from './pages/OrderPage';
-import { OrdersPage } from './pages/OrdersPage';
-import { PickListPage } from './pages/PickListPage';
-import { PickingPage } from './pages/PickingPage';
-import { ProductPage } from './pages/ProductPage';
-import { PutawayPage } from './pages/PutawayPage';
-import { ProductsPage } from './pages/ProductsPage';
-import { ReceiptPage } from './pages/ReceiptPage';
-import { StockPage } from './pages/StockPage';
-import { WavePage } from './pages/WavePage';
-import { WavesPage } from './pages/WavesPage';
-import { WarehousePage } from './pages/WarehousePage';
-import { WarehousesPage } from './pages/WarehousesPage';
+
+/**
+ * A screen that the browser downloads when someone goes to it, not with the app. Each page is its own
+ * file, so signing in and the first screen do not carry the ones the person never opens (E10-07). The
+ * frame around the routes (`AppLayout`, `PickingLayout`) shows a loading status while the file arrives.
+ * Only the screens of signing in and "not found" are written into the main file: a page that is not
+ * lazy fails the test of `routes.test.tsx`.
+ */
+function page<Name extends string>(
+  load: () => Promise<Record<Name, ComponentType>>,
+  name: Name,
+): LazyExoticComponent<ComponentType> {
+  return lazy(async () => ({ default: (await load())[name] }));
+}
+
+const AsnPage = page(() => import('./pages/AsnPage'), 'AsnPage');
+const AsnsPage = page(() => import('./pages/AsnsPage'), 'AsnsPage');
+const AuditPage = page(() => import('./pages/AuditPage'), 'AuditPage');
+const UsersPage = page(() => import('./pages/UsersPage'), 'UsersPage');
+const ErpPage = page(() => import('./pages/ErpPage'), 'ErpPage');
+const HomePage = page(() => import('./pages/HomePage'), 'HomePage');
+const OrderPage = page(() => import('./pages/OrderPage'), 'OrderPage');
+const OrdersPage = page(() => import('./pages/OrdersPage'), 'OrdersPage');
+const PickListPage = page(() => import('./pages/PickListPage'), 'PickListPage');
+const PickingPage = page(() => import('./pages/PickingPage'), 'PickingPage');
+const ProductPage = page(() => import('./pages/ProductPage'), 'ProductPage');
+const PutawayPage = page(() => import('./pages/PutawayPage'), 'PutawayPage');
+const ProductsPage = page(() => import('./pages/ProductsPage'), 'ProductsPage');
+const ReceiptPage = page(() => import('./pages/ReceiptPage'), 'ReceiptPage');
+const StockPage = page(() => import('./pages/StockPage'), 'StockPage');
+const WavePage = page(() => import('./pages/WavePage'), 'WavePage');
+const WavesPage = page(() => import('./pages/WavesPage'), 'WavesPage');
+const WarehousePage = page(() => import('./pages/WarehousePage'), 'WarehousePage');
+const WarehousesPage = page(() => import('./pages/WarehousesPage'), 'WarehousesPage');
 
 /**
  * The component gallery exists only while developing (UI-03): it is not in the build and not in the
