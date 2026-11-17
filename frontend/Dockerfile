@@ -45,4 +45,8 @@ COPY --link Caddyfile /etc/caddy/Caddyfile
 
 USER app
 
+# The server is the process that has to answer. The port is the one Caddy listens on (PORT, 8080 by default).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -q -O /dev/null "http://127.0.0.1:${PORT:-8080}/" || exit 1
+
 EXPOSE 8080

@@ -60,7 +60,7 @@ Nothing about the environment is built into the frontend, since it calls the API
 - The image does not migrate the database. The migrations are in it, and the deployment runs them (E10-03).
 - The JWT key pair is not in the image. The deployment gives the two paths as files or secrets (E10-02).
 - Both images run as root. Running as a user without privileges needs changes to the entrypoint, which writes ACLs under `var/`, and to Caddy's directories. It goes with the security work of E10-05, with the security headers and a content security policy, which the frontend server does not set yet.
-- The images have no `HEALTHCHECK`. The platform probes `/health` for the API and `/` for the frontend.
+- The images have no `HEALTHCHECK`. The platform probes `/health` for the API and `/` for the frontend. (ADR 0062 later added one to each image, and `/health/live`.)
 - PHP's preload (`opcache.preload`) was not used. It would shorten the first requests a little and has not been measured.
 - The images are not scanned for vulnerabilities yet. Dependabot and its checks are E10-05.
 - The demo data (`make demo`) was meant for development. Whether the public demo of E10-03 can load it in a production image is for that task to settle.

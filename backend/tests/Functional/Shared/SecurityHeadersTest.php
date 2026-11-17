@@ -31,6 +31,14 @@ final class SecurityHeadersTest extends WebTestCase
         self::assertResponseHeaderSame('Content-Security-Policy', SecurityHeadersListener::CONTENT_SECURITY_POLICY);
     }
 
+    public function testTheLivenessAnswerCarriesThemToo(): void
+    {
+        $this->client->request('GET', '/health/live');
+
+        self::assertResponseHeaderSame('X-Content-Type-Options', 'nosniff');
+        self::assertResponseHeaderSame('Content-Security-Policy', SecurityHeadersListener::CONTENT_SECURITY_POLICY);
+    }
+
     public function testErrorAnswersCarryTheSecurityHeadersToo(): void
     {
         // No token: the firewall answers with a 401 problem, not the endpoint.

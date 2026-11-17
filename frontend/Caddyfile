@@ -34,7 +34,7 @@
 :{$PORT:8080} {
 	encode zstd gzip
 
-	@api path /api/* /health
+	@api path /api/* /health /health/*
 	handle @api {
 		reverse_proxy {$API_UPSTREAM:http://php:80} {
 			header_up Host {upstream_hostport}
