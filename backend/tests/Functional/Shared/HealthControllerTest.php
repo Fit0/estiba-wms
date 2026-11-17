@@ -20,4 +20,14 @@ final class HealthControllerTest extends WebTestCase
             (string) $client->getResponse()->getContent(),
         );
     }
+
+    public function testLivenessAnswersWithoutLookingAtAnyDependency(): void
+    {
+        $client = self::createClient();
+
+        $client->request('GET', '/health/live');
+
+        self::assertResponseIsSuccessful();
+        self::assertJsonStringEqualsJsonString('{"status":"ok"}', (string) $client->getResponse()->getContent());
+    }
 }

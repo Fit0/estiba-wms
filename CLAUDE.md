@@ -13,6 +13,7 @@ Estiba WMS is an open-source Warehouse Management System and the flagship of the
 | Web server | FrankenPHP 1.x (Caddy), classic mode | In use |
 | Persistence | Doctrine ORM 3, Doctrine Migrations, PostgreSQL 17 | In use |
 | Cache and queues | Redis 7.4 (phpredis extension) | In use |
+| Logs | Monolog (`symfony/monolog-bundle`): JSON lines on the standard error in production, with the request, user and tenant in `extra` ([ADR 0062](docs/adr/0062-structured-logs-and-two-health-checks.md)) | In use (E10-04) |
 | Testing | PHPUnit 13 | In use |
 | Static analysis and style | PHPStan 2 (max level), PHP-CS-Fixer, Rector 2 | In use |
 | Architecture tests | PHPat 0.12 (runs inside PHPStan, rules in `backend/tests/Architecture/`) | In use |
@@ -216,6 +217,12 @@ Review every generated migration before keeping it. Committed migrations are nev
 | `backend/.env`, `backend/.env.dev` | **Never committed**: they hold `APP_SECRET` and `JWT_PASSPHRASE` and are git-ignored. `backend/.env.example` is the committed template, with no secrets. `make env` (run by `make up`) creates `.env` from it with new random secrets, and CI does the same through `backend/scripts/create-env.sh`. When a Composer recipe adds variables to `.env`, copy them to `.env.example`. Real secrets in production come from the deployment platform. |
 | `backend/config/jwt/*.pem` | The JWT key pair. Git ignores it, never commit or print it. Generate it with `make jwt-keys`. |
 | `LICENSE` | Legal text |
+
+### Logging
+
+- Log through `Psr\Log\LoggerInterface`, injected through the constructor. No `error_log()`, `var_dump()` or writing to the standard error by hand.
+- The request, the user and the tenant are added to every line by `LogContextProcessor`: do not repeat them in the message. Put what is specific in the context (`['order' => $id]`), with identifiers and never an email, a name, a password or a token (ADR 0062).
+- `/health/live` says the process answers and `/health` says the dependencies do. Docker asks the first; do not make it look at the database.
 
 ### Security
 

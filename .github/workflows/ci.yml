@@ -366,6 +366,12 @@ jobs:
           # The answer carries the security headers of ADR 0053, and the process is not root.
           curl --silent --include http://127.0.0.1:8090/health | grep -qi '^x-content-type-options: nosniff'
           test "$(docker exec backend id -u)" != 0
+          # Liveness does not look at the database: it answers 200 even with nothing behind the image, and every
+          # answer carries the identifier of the request (ADR 0062).
+          test "$(curl --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8090/health/live)" = "200"
+          curl --silent --include http://127.0.0.1:8090/health/live | grep -qi '^x-request-id: '
+          # The check of the image answers too: Docker runs it with the same command.
+          docker exec backend php -r 'exit(@file_get_contents("http://127.0.0.1:8080/health/live") === false ? 1 : 0);'
 
       - name: Show the logs of the backend container when it fails
         if: failure()

@@ -1,0 +1,36 @@
+# Where the logs go and in which shape (E10-04, ADR 0062). Everything is written to the standard error of the
+# process, which is where Docker collects it. In production each line is a JSON object, so a platform can
+# search it by field; `extra` carries the request, the user and the tenant (LogContextProcessor).
+
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: php://stderr
+                level: debug
+                channels: ['!event']
+
+when@prod:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: php://stderr
+                level: info
+                formatter: monolog.formatter.json
+                channels: ['!event']
+
+when@test:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+                excluded_http_codes: [404, 405]
+                channels: ['!event']
+            nested:
+                type: stream
+                path: '%kernel.logs_dir%/%kernel.environment%.log'
+                level: debug

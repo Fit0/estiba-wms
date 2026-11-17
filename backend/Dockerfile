@@ -122,4 +122,10 @@ COPY --link --from=frankenphp_build /app /app
 
 USER app
 
+# Docker asks the process, not the dependencies: if PostgreSQL is slow, restarting this container would not
+# help. Whether the database answers is `/health`, which the platform reads (ADR 0062). PHP is what is here
+# to ask with: the image has no curl of its own to rely on.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD php -r 'exit(@file_get_contents("http://127.0.0.1:8080/health/live") === false ? 1 : 0);'
+
 EXPOSE 8080

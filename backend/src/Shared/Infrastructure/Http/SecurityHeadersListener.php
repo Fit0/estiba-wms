@@ -67,7 +67,7 @@ final readonly class SecurityHeadersListener
             return false;
         }
 
-        return str_starts_with($path, '/api') || '/health' === $path;
+        return str_starts_with($path, '/api') || str_starts_with($path, '/health');
     }
 
     private function setUnlessPresent(Response $response, string $name, string $value): void

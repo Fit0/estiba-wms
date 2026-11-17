@@ -108,7 +108,8 @@ Status is **Done**, **Partial** (there is a control and it has a known gap) or *
 | The audit trail can be read by supervisors and admins | `GET /api/audit-log` | Done |
 | An unexpected error is logged with its exception | `ApiErrorListener` | Done |
 | Failed sign-ins and refused requests are not written down as security events | | Open |
-| Logs are not structured and nothing raises an alert | E10-04 | Open |
+| Logs are JSON lines with the request, user and tenant of each one, and every answer carries `X-Request-Id` | ADR 0062 | Done |
+| Nothing raises an alert when something goes wrong | | Open: there is no deployment to send alerts from |
 
 ## A10. Mishandling of Exceptional Conditions
 
@@ -125,5 +126,5 @@ Status is **Done**, **Partial** (there is a control and it has a known gap) or *
 
 1. **Check the SFTP server key** of the ERP import (A08), and replace the default ERP password in any real environment (A02).
 2. **Pin the Actions to a commit**, scan the images, and sign them (A03, A08).
-3. **Record failed sign-ins and refusals**, and structure the logs (A09, with E10-04).
+3. **Record failed sign-ins and refusals** (A09). The logs are structured now (ADR 0062).
 4. Write a short threat model, and decide whether the rest of the API needs a limit per client (A06).

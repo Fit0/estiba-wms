@@ -11,7 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
 /**
- * Liveness and dependency check used by Docker, CI and the deployment platform.
+ * Readiness: whether the application can do its work, which means that the database and Redis answer. Docker,
+ * CI and the deployment platform use it to decide whether to send traffic. Whether the process is alive is
+ * `/health/live` (E10-04, ADR 0062).
  */
 #[Route('/health', name: 'health', methods: ['GET'])]
 final readonly class HealthController
